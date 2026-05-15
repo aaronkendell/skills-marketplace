@@ -1,0 +1,157 @@
+{/*
+  Project case study template.
+
+  Copy this file to `apps/portfolio/app/content/projects/<your-slug>.mdx`,
+  rename, and fill in. Components are auto-imported via the app's
+  `mdx-components.tsx` — no explicit import needed.
+
+  Design reference: docs/apps/portfolio/design/case-study-template.md
+  Component source: packages/portfolio/ui/src/case-study/
+*/}
+
+export const meta = {
+	// human title — lowercase, no period at the end. shown in <title> and og.
+	title: "your project name",
+	// must match the filename (slug.mdx).
+	slug: "your-slug",
+	// the premise, not a tagline. one sentence. example:
+	//   "ball-flight prediction was locked inside $600 launch monitors. i put it in a phone."
+	thesis: "the premise of the project, in one sentence.",
+	// hero metric. the spring count-up handles the math; you supply the value + context.
+	heroMetric: {
+		value: 1.4,
+		suffix: "s",
+		decimals: 1,
+		context: "p95 vision inference · 14 days · 14 devices",
+	},
+	// optional 8-second silent autoplaying mp4 (≤1mb). stored in /public.
+	heroVideo: undefined, // e.g. "/videos/<slug>-hero.mp4"
+	// flip to true when ready. drafts render in dev, 404 in production.
+	published: false,
+	tags: ["mobile", "ai", "vision"],
+	// short summary used for og description and search snippets.
+	summary: "one-sentence summary for og + search.",
+};
+
+{/* ── 1. above-the-fold (62/38 split, asymmetric) ────────────────────── */}
+
+<CaseStudyHero
+	title={meta.title}
+	thesis={meta.thesis}
+	metric={meta.heroMetric}
+	statusRows={[
+		{ label: "status", value: "shipped" },
+		{ label: "stack", value: "next 16 · hono · neon" },
+		{ label: "repo", value: "bokendell/your-repo", href: "https://github.com/bokendell/your-repo" },
+	]}
+	media={
+		meta.heroVideo ? (
+			<video
+				src={meta.heroVideo}
+				autoPlay
+				muted
+				loop
+				playsInline
+				style={{ width: "100%", height: "100%", objectFit: "cover" }}
+			/>
+		) : null
+	}
+/>
+
+{/* ── 2. body — problem, approach, result ────────────────────────────── */}
+
+## 01 — problem
+
+two short paragraphs max. lead with the constraint that mattered (cost, latency, dx) — not the
+buzzword. the reader should feel the pinch in three sentences.
+
+second paragraph: what was true before you started? why did the existing options not work? this is
+not a sales pitch. it is a forensic note from the moment you decided to build.
+
+## 02 — approach
+
+<TechStackLine
+	groups={[
+		{ label: "mobile", items: ["expo 56", "react native 0.81", "reanimated 4"] },
+		{ label: "api", items: ["hono", "drizzle", "neon http edge"] },
+		{ label: "ai", items: ["mastra", "anthropic claude 4.7"] },
+		{ label: "infra", items: ["vercel edge", "cloudflare r2", "turbo remote cache"] },
+	]}
+	whyOneLiner="picked the edge stack because every request is a cache-miss; nothing to warm."
+/>
+
+the approach section is the longest. this is where taste lives. write it as the senior-IC voice:
+what tradeoffs you saw, what you tried, what you discarded.
+
+{/* ── decisions — max 3 pairs per project ────────────────────────────── */}
+
+<DecisionPair
+	chosen={{
+		name: "drizzle",
+		bullets: [
+			"bundle: 14kb",
+			"type inference from schema",
+			"neon http edge compatible",
+			"migrations: sql, reviewable",
+		],
+	}}
+	rejected={{
+		name: "prisma",
+		bullets: [
+			"bundle: 340kb",
+			"codegen step breaks build",
+			"requires persistent connection",
+			"migrations: opaque",
+		],
+	}}
+	narrative="did not consider supabase because realtime was irrelevant and i wanted neon branch isolation per-worktree."
+/>
+
+{/* architecture diagram — warm machine theme, edges draw in on scroll. */}
+
+<Mermaid
+	caption="request lifecycle"
+	chart={`flowchart LR
+		client[client] --> edge[hono on edge]
+		edge --> db[(neon postgres)]
+		edge --> ai[mastra agents]
+		ai --> db
+		classDef hot fill:oklch(30% 0.08 40),stroke:oklch(65% 0.15 40),color:oklch(94% 0.02 55)
+		class ai hot
+	`}
+/>
+
+{/* ── hard problems — max 3, the senior-IC signal ────────────────────── */}
+
+<HardProblem
+	headline="getting 60fps club-head tracing on a 2018 phone"
+	triedFirst="ran the vision model on every camera frame at 30fps."
+	whyFailed="watchdog killed the app at p95 because the gpu thermal-throttled after ~40s."
+>
+	first attempt fed every frame through the model. that worked for 30 seconds and then ios threw the
+	thermal warning. dropped to every-other-frame plus interpolation; landed at 1.4s p95 with no
+	thermal events on a batch of 14 devices over 14 days.
+</HardProblem>
+
+{/* ── interactive moment — one per page, between approach and result ─── */}
+
+<TryIt caption="drag the canvas to trace a club head; numbers update live.">
+	{/* drop your interactive component here. canvas, embed, terminal, whatever fits. */}
+	<div style={{ padding: "var(--sp-7)", textAlign: "center", color: "var(--faint)" }}>
+		interactive demo placeholder
+	</div>
+</TryIt>
+
+## 03 — result
+
+{/* ── metric strip — typographic, no cards ───────────────────────────── */}
+
+<MetricStrip
+	primary={{ value: "1.4s", label: "p95 vision inference" }}
+	secondary={[
+		{ value: "11.2s → 1.4s", label: "baseline → now", delta: "─8×─" },
+		{ value: "99.94%", label: "crash-free sessions" },
+		{ value: "2,847", label: "rounds recorded" },
+	]}
+	context="ran on 14 devices · avg rtt 380ms · zero server crashes in 6 weeks"
+/>

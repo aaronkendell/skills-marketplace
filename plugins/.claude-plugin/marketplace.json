@@ -1,0 +1,20 @@
+{
+	"name": "local",
+	"owner": {
+		"name": "bokendell"
+	},
+	"plugins": [
+		{
+			"name": "dev",
+			"source": "./dev",
+			"description": "Full SDLC: research, plan, build, ship. Unified design system, Linear integration, TDD, automated testing, code review. Works for golf, portfolio, and hive apps.",
+			"version": "1.0.0"
+		},
+		{
+			"name": "taste",
+			"source": "./taste",
+			"description": "Premium frontend design taste from github.com/Leonxlnx/taste-skill. Overrides LLM design biases with strict rules for typography, color, layout, motion, materiality. Includes taste, redesign, soft, minimalist, brutalist, stitch, output sub-skills.",
+			"version": "1.0.0"
+		}
+	]
+}
