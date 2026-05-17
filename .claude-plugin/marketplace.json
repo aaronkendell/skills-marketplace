@@ -1,0 +1,26 @@
+{
+	"$schema": "https://json.schemastore.org/claude-code-plugin-marketplace",
+	"name": "bokendell-skills",
+	"owner": {
+		"name": "bokendell",
+		"url": "https://github.com/bokendell"
+	},
+	"description": "Bokendell's personal marketplace: SDLC workflow (dev), design taste (taste), and a cross-cutting skills bundle (skills) covering framework references, AI tooling, GitHub helpers, code review, and Expo helpers.",
+	"plugins": [
+		{
+			"name": "dev",
+			"source": "./plugins/dev",
+			"description": "Full SDLC: research → plan → build → ship. Linear integration, TDD, automated testing, code review. Includes the workspace + design skills."
+		},
+		{
+			"name": "taste",
+			"source": "./plugins/taste",
+			"description": "Premium frontend design taste — overrides default LLM design biases. Includes taste-skill (main) + redesign, soft, minimalist, brutalist, stitch, and output sub-skills."
+		},
+		{
+			"name": "skills",
+			"source": "./plugins/skills",
+			"description": "Cross-cutting skill bundle: framework references, AI tooling, GitHub helpers, code/docs review, Expo helpers."
+		}
+	]
+}
