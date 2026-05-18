@@ -20,10 +20,35 @@ You manage all design work across three apps: **golf** (Fairway), **portfolio**,
 This skill is a thin orchestrator. It:
 1. Detects which app and platform (web/mobile) from the files being touched
 2. Loads the right app-specific tokens from `references/apps/<app>.md`
-3. Invokes external skills under the hood for specialized work
+3. Invokes **four external design skills** under the hood for specialized work (see below)
 4. Applies motion, anti-pattern, and quality principles consistently
 
 The heavy lifting comes from installed skills — this skill coordinates them and adds your project-specific standards.
+
+## Required external design skills (check before invoking)
+
+This orchestrator delegates the actual taste/finishing/heuristics/HTML-prototyping work to four upstream resources. Before any design work, verify they are installed. The canonical reference (sources, roles, exact install commands) is at:
+
+→ `~/repos/bokendell/skills-marketplace/references/design-stack.md` (or in the cache at `~/.claude/plugins/cache/bokendell-skills/references/design-stack.md`)
+
+**Quick install summary:**
+
+| Skill | Install command |
+|---|---|
+| `/taste-skill` | `/plugin install taste@bokendell-skills` (Leonxlnx/taste-skill, sourced live) |
+| `/impeccable:impeccable` | `/plugin marketplace add pbakaus/impeccable` + `/plugin install impeccable@impeccable` |
+| `/ui-ux-pro-max` | `/plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill` + `/plugin install ui-ux-pro-max@ui-ux-pro-max-skill` |
+| `/huashu-design` | `git clone https://github.com/alchaincyf/huashu-design ~/.claude/skills/huashu-design` *(upstream isn't a plugin — installs as user-scope skill; `git pull` to update)* |
+
+**Verification:** quickly check each is present —
+```bash
+ls ~/.claude/plugins/cache/bokendell-skills/taste/*/skills/ 2>/dev/null
+ls ~/.claude/plugins/cache/impeccable/impeccable/*/         2>/dev/null
+ls ~/.claude/plugins/cache/ui-ux-pro-max-skill/*/*/         2>/dev/null
+ls ~/.claude/skills/huashu-design/SKILL.md                  2>/dev/null
+```
+
+If any is missing, **stop and surface the install command to the user** rather than degrading silently.
 
 ## App Detection
 

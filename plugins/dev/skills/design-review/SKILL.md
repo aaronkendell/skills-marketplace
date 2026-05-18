@@ -3,13 +3,13 @@ name: design-review
 description: >
   Multi-agent taste review for a design flow. Composes
   `/design-verify` (structural / HARD-RULES evidence) with parallel passes
-  through `/taste-skill`, `/impeccable:impeccable`, and `/ui-ux-pro-max`.
-  Each agent writes its findings to swarm-api as annotations tagged with
-  its own author (`agent:taste`, `agent:impeccable`, `agent:ui-ux-pro-max`).
-  The pin layer's `agent` badge surfaces who said what. Triggers when the
-  user says: "review the flow", "do a design review", "what would taste-
-  skill say about this", "have impeccable polish-check it", or invokes
-  `/design-review`.
+  through `/taste-skill`, `/impeccable:impeccable`, `/ui-ux-pro-max`, and
+  `/huashu-design`. Each agent writes its findings to swarm-api as
+  annotations tagged with its own author (`agent:taste`, `agent:impeccable`,
+  `agent:ui-ux-pro-max`, `agent:huashu`). The pin layer's `agent` badge
+  surfaces who said what. Triggers when the user says: "review the flow",
+  "do a design review", "what would taste-skill say about this", "have
+  impeccable polish-check it", or invokes `/design-review`.
 ---
 
 # Design Review — Skill
@@ -18,7 +18,7 @@ The opinionated layer on top of `/design-verify`. Where verify finds
 structural drift, review finds taste drift — proportions, hierarchy,
 finishing, polish, UX heuristics.
 
-This skill runs **three parallel sub-agents** (via the `Agent` tool, with
+This skill runs **four parallel sub-agents** (via the `Agent` tool, with
 multiple invocations in a single response so they run concurrently). Each
 agent gets the same evidence bundle and produces annotations attributed
 to its author. An orchestrator pass dedupes near-duplicates and writes a
@@ -26,6 +26,23 @@ to its author. An orchestrator pass dedupes near-duplicates and writes a
 
 Build on top of `/design-verify` rather than re-capturing screenshots so
 you only pay the playwright cost once per review.
+
+## Required external skills (verify before spawning agents)
+
+All four sub-agents come from upstream resources. See
+`references/design-stack.md` for full details. Quick check:
+
+```bash
+ls ~/.claude/plugins/cache/bokendell-skills/taste/*/skills/ 2>/dev/null
+ls ~/.claude/plugins/cache/impeccable/impeccable/*/         2>/dev/null
+ls ~/.claude/plugins/cache/ui-ux-pro-max-skill/*/*/         2>/dev/null
+ls ~/.claude/skills/huashu-design/SKILL.md                  2>/dev/null
+```
+
+If any returns nothing, **stop and ask the user to install** before
+proceeding (install commands in `references/design-stack.md`). A review
+with only 3 of 4 voices is fine *if* the user explicitly opts in; default
+is fail-closed.
 
 ---
 
@@ -37,7 +54,7 @@ you only pay the playwright cost once per review.
    `--no-write` flag (if/when verify gets one) to skip its own POST step
    when the only goal is to seed evidence for review.
 
-2. **Spawn three sub-agents in parallel** via the `Agent` tool, all in
+2. **Spawn four sub-agents in parallel** via the `Agent` tool, all in
    the same response (so they run concurrently, not serially). Each
    agent gets:
    - The artboard's screenshot path + DOM dump path + computed styles
@@ -63,6 +80,14 @@ you only pay the playwright cost once per review.
        accessibility issues (contrast, hit targets, focus rings),
        palette/font alignment with the brand, anti-patterns.
 
+     **Huashu agent** (`/huashu-design`)
+       Voice: HTML-native design philosophy reviewer. Runs the 5-dimension
+       review (visual hierarchy, type system, color discipline, layout
+       rhythm, motion). Strong opinions on prototype fidelity vs.
+       implementation drift. Output: 5 dimensions × short verdict + 1-3
+       concrete findings per dimension. Especially valuable when the
+       flow involves slide-like or high-fidelity prototype-style mocks.
+
 3. **Collect findings** from each agent. Each agent should return a JSON
    array of `{ artboard, component, nth, total, note, severity }`. The
    orchestrator (you) merges them.
@@ -78,6 +103,7 @@ you only pay the playwright cost once per review.
    so the `SWARM_API_KEY` (`swarm_*` bearer) is injected from Infisical
    at runtime — never written to disk, never echoed. Each annotation
    carries `origin: "agent:<name>"` where `<name>` is one of `taste`,
+   `impeccable`, `ui-ux-pro-max`, `huashu`,
    `impeccable`, `ui-ux-pro-max`, or `merged` for deduped findings. The
    inline-thread card renders agent-origin rows as
    **Claude · &lt;name&gt;** with a small agent tag, distinct from human

@@ -3,13 +3,14 @@ name: golf-design-studio
 description: >
   Use this skill for ANY design work in `apps/golf/design/`,
   `packages/golf/ui/`, `packages/shared/design/`, or `apps/golf/mobile/`.
-  It bundles `/design`, `/impeccable`, `/taste-skill`, and
-  `/ui-ux-pro-max`, then layers in the Tobacco / Warm-Black brand context,
-  the current primitive catalog, the studio workflow, and the hard rules.
-  Triggers when the user mentions: design app, design studio, primitives,
-  mocks, flows, kits, "redesign a screen", "build a primitive", "migrate
-  to golf-ui", or invokes `swarm design *` commands. Use it INSTEAD of the
-  generic /design skill whenever the work is in the golf monorepo.
+  It bundles `/design`, `/impeccable`, `/taste-skill`, `/ui-ux-pro-max`,
+  and `/huashu-design`, then layers in the Tobacco / Warm-Black brand
+  context, the current primitive catalog, the studio workflow, and the
+  hard rules. Triggers when the user mentions: design app, design studio,
+  primitives, mocks, flows, kits, "redesign a screen", "build a primitive",
+  "migrate to golf-ui", or invokes `swarm design *` commands. Use it
+  INSTEAD of the generic /design skill whenever the work is in the golf
+  monorepo.
 ---
 
 # Golf Design Studio — Skill
@@ -18,11 +19,22 @@ You are operating inside the Tobacco / Warm-Black design system. The studio is t
 
 ## On invocation, ALWAYS do these in order
 
-1. **Load the four base skills.** Invoke each via the Skill tool, in this order:
-   - `/design` — the orchestrator workflow (mock-first decisions, app/platform detection, persistent tunnels)
-   - `/impeccable` — the anti-AI-slop directives (auto-reads `packages/golf/ui/.impeccable.md`)
-   - `/taste-skill` — high-agency frontend rules (typography bans, motion principles, layout diversification)
-   - `/ui-ux-pro-max` — palette/font/component recommendation (only at the *exploration* phase, not on every iteration)
+1. **Verify the five base skills are installed**, then load each via the Skill tool, in this order:
+   - `/design` — the orchestrator workflow (mock-first decisions, app/platform detection, persistent tunnels) *(this plugin)*
+   - `/impeccable` — the anti-AI-slop directives (auto-reads `packages/golf/ui/.impeccable.md`) *(upstream: [pbakaus/impeccable](https://github.com/pbakaus/impeccable))*
+   - `/taste-skill` — high-agency frontend rules (typography bans, motion principles, layout diversification) *(upstream: [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill))*
+   - `/ui-ux-pro-max` — palette/font/component recommendation (only at the *exploration* phase, not on every iteration) *(upstream: [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill))*
+   - `/huashu-design` — HTML-native prototype + 5-dimension review + 20 design philosophies (use for hi-fi mocks, slide-style flows, motion stories) *(upstream: [alchaincyf/huashu-design](https://github.com/alchaincyf/huashu-design))*
+
+   **Install check** — if any external skill is missing, surface the install
+   command (full table in `references/design-stack.md`) and stop until the
+   user installs it:
+   ```bash
+   ls ~/.claude/plugins/cache/bokendell-skills/taste/*/skills/ 2>/dev/null  # taste
+   ls ~/.claude/plugins/cache/impeccable/impeccable/*/         2>/dev/null  # impeccable
+   ls ~/.claude/plugins/cache/ui-ux-pro-max-skill/*/*/         2>/dev/null  # ui-ux-pro-max
+   ls ~/.claude/skills/huashu-design/SKILL.md                  2>/dev/null  # huashu-design (user-scope)
+   ```
 
 2. **Read the system docs.** In this exact order:
    - `apps/golf/design/README.md` — workflow + structure + sync model

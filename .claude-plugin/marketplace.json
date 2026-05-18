@@ -14,8 +14,13 @@
 		},
 		{
 			"name": "taste",
-			"source": "./plugins/taste",
-			"description": "Premium frontend design taste — overrides default LLM design biases. Includes taste-skill (main) + redesign, soft, minimalist, brutalist, stitch, and output sub-skills."
+			"source": {
+				"source": "github",
+				"repo": "Leonxlnx/taste-skill"
+			},
+			"description": "Premium frontend design taste — sourced live from Leonxlnx/taste-skill. Includes taste-skill (main), redesign, soft, minimalist, brutalist, stitch, output, plus image-to-code, imagegen-frontend-{web,mobile}, brandkit, gpt-tasteskill.",
+			"skills": ["./skills"],
+			"strict": false
 		},
 		{
 			"name": "skills",

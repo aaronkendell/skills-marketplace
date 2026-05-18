@@ -1,8 +1,0 @@
-{
-	"name": "taste",
-	"version": "1.0.0",
-	"description": "Premium frontend design taste \u2014 high-agency rules for typography, color, layout, motion, and materiality. Overrides default LLM design biases. Includes taste-skill (main), redesign, soft, minimalist, brutalist, stitch, and output sub-skills. Source: github.com/Leonxlnx/taste-skill",
-	"author": {
-		"name": "Leonxlnx (vendored)"
-	}
-}
