@@ -1,0 +1,39 @@
+{
+	"$schema": "https://json.schemastore.org/claude-code-plugin",
+	"name": "mcp-pack",
+	"version": "1.0.0",
+	"description": "Bundle of MCP servers that follow you across every repo and superset worktree: Neon (Postgres), Grafana (observability), Mapbox docs + DevKit, Proxyman. Enable at user scope so all sessions get them. Secrets read from shell env vars — never committed.",
+	"author": {
+		"name": "bokendell"
+	},
+	"keywords": ["mcp", "neon", "grafana", "mapbox", "proxyman", "infra"],
+	"mcpServers": {
+		"Neon": {
+			"type": "http",
+			"url": "https://mcp.neon.tech/mcp"
+		},
+		"grafana": {
+			"type": "stdio",
+			"command": "uvx",
+			"args": ["mcp-grafana"],
+			"env": {
+				"GRAFANA_URL": "https://bokendell.grafana.net",
+				"GRAFANA_SERVICE_ACCOUNT_TOKEN": "${GRAFANA_SERVICE_ACCOUNT_TOKEN}"
+			}
+		},
+		"mapbox-docs": {
+			"type": "http",
+			"url": "https://mcp-docs.mapbox.com/mcp"
+		},
+		"devkit": {
+			"type": "http",
+			"url": "https://mcp-devkit.mapbox.com/mcp"
+		},
+		"proxyman": {
+			"type": "stdio",
+			"command": "/Applications/Proxyman.app/Contents/MacOS/mcp-server",
+			"args": [],
+			"env": {}
+		}
+	}
+}

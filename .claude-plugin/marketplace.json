@@ -21,6 +21,11 @@
 			"name": "skills",
 			"source": "./plugins/skills",
 			"description": "Cross-cutting skill bundle: framework references, AI tooling, GitHub helpers, code/docs review, Expo helpers."
+		},
+		{
+			"name": "mcp-pack",
+			"source": "./plugins/mcp-pack",
+			"description": "Bundle of MCP servers (Neon, Grafana, Mapbox docs+DevKit, Proxyman) that follow you across every repo and superset worktree when enabled at user scope. Secrets via shell env vars."
 		}
 	]
 }
