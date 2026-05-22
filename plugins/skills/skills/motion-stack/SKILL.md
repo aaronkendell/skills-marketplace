@@ -32,6 +32,46 @@ Is this scroll-driven web motion (landing pages, portfolio)?
 └── LOAD: `gsap-scrolltrigger` OR `motion-framer` from claude-design-skillstack.
 ```
 
+## Preflight · prompt the user if anything's missing
+
+Before doing motion work, **silently check what's available and prompt the user only if something's missing.** Don't run the install commands without explicit approval — these touch global state.
+
+```
+1. For Remotion work:
+   - Check: `ls ~/.agents/skills/remotion-best-practices` (or the project's .agents/skills/)
+   - If missing: ask user to run `npx skills add remotion-dev/skills`
+
+2. For Rive / Lottie / Motion-Framer work:
+   - Check user's ~/.claude/settings.json for the `claude-design-skillstack` marketplace
+     under `extraKnownMarketplaces` and the plugin under `enabledPlugins`
+   - If missing: ask user to run
+     `/plugin marketplace add freshtechbro/claudedesignskills`
+     then `/plugin install rive-interactive@claude-design-skillstack` (etc.)
+
+3. For Higgsfield AI cinematic work:
+   - Check: `which higgsfield` (CLI) and `echo $HF_API_KEY` (env)
+   - If CLI missing: ask user to run `npm install -g @higgsfield/cli`
+   - If env missing: ask user to add HF_API_KEY + HF_SECRET to Infisical
+     at /infrastructure/higgsfield (or shell env directly), then wrap with
+     `infisical run --path=/infrastructure/higgsfield -- <command>`
+   - The higgsfield-mcp server is also enabled via mcp-pack (user-scope) —
+     if Claude Code has the `higgsfield` MCP tools available, use those
+     INSTEAD of shelling out to the CLI
+
+4. For Rive runtime in golf/portfolio/hive apps:
+   - Check: package.json has `@rive-app/react-native` (RN) or `@rive-app/canvas` (web)
+   - If missing: ask user to confirm before running `pnpm add @rive-app/react-native`
+     (or the web variant). Native install requires `cd ios && pod install` after.
+
+5. For the Motion primitive in @bokendell/design:
+   - Check: `ls core/packages/shared/design/src/packages/motion/` exists
+   - If missing: this is the cross-app promotion candidate. Refer to the
+     "Core primitives needed" section below; flag it as a drift entry and
+     ask the user before scaffolding the new core module.
+```
+
+The user has accounts for Rive and Higgsfield as of 2026-05-21. Remotion commercial license sign-up happens when scaffolding the first wrapped-render project.
+
 ## One-time setup (per machine)
 
 ### 1 · Install the official Remotion skills

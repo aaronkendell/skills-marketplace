@@ -1,12 +1,12 @@
 {
 	"$schema": "https://json.schemastore.org/claude-code-plugin",
 	"name": "mcp-pack",
-	"version": "1.0.0",
-	"description": "Bundle of MCP servers that follow you across every repo and superset worktree: Neon (Postgres), Grafana (observability), Mapbox docs + DevKit, Proxyman. Enable at user scope so all sessions get them. Secrets read from shell env vars — never committed.",
+	"version": "1.1.0",
+	"description": "Bundle of MCP servers that follow you across every repo and superset worktree: Neon (Postgres), Grafana (observability), Mapbox docs + DevKit, Proxyman, Higgsfield (AI cinematic video — Soul / Reve / DoP / Kling / Seedance). Enable at user scope so all sessions get them. Secrets read from shell env vars — never committed.",
 	"author": {
 		"name": "bokendell"
 	},
-	"keywords": ["mcp", "neon", "grafana", "mapbox", "proxyman", "infra"],
+	"keywords": ["mcp", "neon", "grafana", "mapbox", "proxyman", "higgsfield", "ai-video", "infra"],
 	"mcpServers": {
 		"Neon": {
 			"type": "http",
@@ -34,6 +34,15 @@
 			"command": "/Applications/Proxyman.app/Contents/MacOS/mcp-server",
 			"args": [],
 			"env": {}
+		},
+		"higgsfield": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "higgsfield-mcp"],
+			"env": {
+				"HF_API_KEY": "${HF_API_KEY}",
+				"HF_SECRET": "${HF_SECRET}"
+			}
 		}
 	}
 }
