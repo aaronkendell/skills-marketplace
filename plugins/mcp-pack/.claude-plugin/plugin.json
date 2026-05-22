@@ -1,12 +1,28 @@
 {
 	"$schema": "https://json.schemastore.org/claude-code-plugin",
 	"name": "mcp-pack",
-	"version": "1.1.0",
-	"description": "Bundle of MCP servers that follow you across every repo and superset worktree: Neon (Postgres), Grafana (observability), Mapbox docs + DevKit, Proxyman, Higgsfield (AI cinematic video — Soul / Reve / DoP / Kling / Seedance). Enable at user scope so all sessions get them. Secrets read from shell env vars — never committed.",
+	"version": "1.2.0",
+	"description": "Bundle of MCP servers that follow you across every repo and superset worktree. Infra: Neon (Postgres), Grafana (observability), Mapbox docs + DevKit, Proxyman. Motion: Higgsfield (AI cinematic video). Static assets: Recraft (vector SVG), Nano-Banana (Gemini Flash Image), Iconify (icon search), Unsplash (stock photo), Playwright (visual review). Enable at user scope so all sessions get them. Secrets read from shell env vars wrapped by Infisical — never committed.",
 	"author": {
 		"name": "bokendell"
 	},
-	"keywords": ["mcp", "neon", "grafana", "mapbox", "proxyman", "higgsfield", "ai-video", "infra"],
+	"keywords": [
+		"mcp",
+		"neon",
+		"grafana",
+		"mapbox",
+		"proxyman",
+		"higgsfield",
+		"recraft",
+		"nano-banana",
+		"iconify",
+		"unsplash",
+		"playwright",
+		"ai-video",
+		"ai-image",
+		"design",
+		"infra"
+	],
 	"mcpServers": {
 		"Neon": {
 			"type": "http",
@@ -43,6 +59,42 @@
 				"HF_API_KEY": "${HF_API_KEY}",
 				"HF_SECRET": "${HF_SECRET}"
 			}
+		},
+		"recraft": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "@recraft-ai/mcp-recraft-server"],
+			"env": {
+				"RECRAFT_API_KEY": "${RECRAFT_API_KEY}"
+			}
+		},
+		"nano-banana": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "nanobanana-mcp"],
+			"env": {
+				"GEMINI_API_KEY": "${GEMINI_API_KEY}"
+			}
+		},
+		"iconify": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "iconify-mcp-server@latest"],
+			"env": {}
+		},
+		"unsplash": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "@cevatkerim/unsplash-mcp"],
+			"env": {
+				"UNSPLASH_ACCESS_KEY": "${UNSPLASH_ACCESS_KEY}"
+			}
+		},
+		"playwright": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "@playwright/mcp@latest"],
+			"env": {}
 		}
 	}
 }

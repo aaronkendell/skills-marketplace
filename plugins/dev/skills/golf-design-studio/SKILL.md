@@ -357,9 +357,16 @@ Standalone repos (Shape A) need these paths:
 
 The original CLI scaffold writes Shape B paths (`packages/golf/ui`, etc.) which silently break Tailwind class generation in standalone repos — chrome (StudioNav, UserMenu, DesignToolbar) renders unstyled and invisible. Verify these paths exist before assuming Tailwind is working.
 
-## Animation stack — when to reach for what
+## Asset stacks — when to reach for what
 
-Tobacco uses a four-tier stack. Different tool per tier; none try to be all four. Load the **`motion-stack`** skill (sibling in the marketplace) for the full decision tree; the short version:
+Tobacco has two parallel stacks: **motion** (things that move) and **static** (things that stand still). Both are thin-orchestrator skills in the same marketplace.
+
+- Load **`motion-stack`** when the request involves animation, gestures, video, or Wrapped MP4 exports.
+- Load **`static-stack`** when the request involves icons, brand marks, illustrations, textures, stock photos, App Store screenshots, or OG share images. The static-stack skill points at the Recraft / Nano-Banana / Iconify / Unsplash MCPs bundled in `mcp-pack` v1.2.0+.
+
+### Animation stack — short version
+
+Tobacco uses a four-tier motion stack. Different tool per tier; none try to be all four. The short version:
 
 | Tier | Tool | For |
 |---|---|---|
@@ -382,6 +389,24 @@ Same pattern applies to:
 - Rive (free hobby tier) for authoring `.riv` files at rive.app
 - Remotion commercial license (~$25/mo solo, $99+/mo team) for product use
 - Higgsfield Creator plan (~$29/mo) for CLI / API access — marketing only
+
+### Static-asset stack — short version
+
+Tobacco uses a five-tool static stack via `mcp-pack` v1.2.0+. See **`static-stack`** for the full tree.
+
+| Tool | For | Account / cost |
+|---|---|---|
+| **Recraft V3** (MCP) | Vector SVG — brand icons, marks, illustrations | Free 50 credits → $10/mo Starter |
+| **Nano-Banana 2** (MCP, Gemini Flash Image) | Raster textures, hero images, painterly grain | ~$0.04–$0.15/img; Gemini API key |
+| **Iconify** (MCP) | Search 150+ icon collections (Lucide, Phosphor, Material, Tabler…) | Free, no key |
+| **Unsplash** (MCP) | Stock photo with attribution baked in | Free 50 req/hr |
+| **Playwright** (MCP) | Visual design review — see [[design-review]] | Free OSS |
+
+**Token-aware prompts:** when calling Recraft or Nano-Banana, always pass the Tobacco palette in OKLch directly — don't trust the model's notion of "warm" or "earthy".
+
+### End of every flow iteration — run `/design-review`
+
+After landing a flow edit, run `/design-review <flow-slug>` (the dev plugin skill). It composes `/design-verify` (Playwright-driven screenshot + DOM + computed-styles capture) with 4 parallel taste agents (`taste-skill`, `impeccable`, `ui-ux-pro-max`, `huashu-design`) and posts annotations attributed by author. Don't ship a flow without this pass — it's how the studio catches drift before it goes to code review.
 
 ## Signature compositions — the vocabulary that makes Tobacco *feel* Tobacco
 
