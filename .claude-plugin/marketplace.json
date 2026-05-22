@@ -5,7 +5,7 @@
 		"name": "bokendell",
 		"url": "https://github.com/bokendell"
 	},
-	"description": "Bokendell's personal marketplace: SDLC workflow (dev), design taste (taste), and a cross-cutting skills bundle (skills) covering framework references, AI tooling, GitHub helpers, code review, and Expo helpers.",
+	"description": "Bokendell's personal marketplace: SDLC workflow (dev), design taste (taste), a cross-cutting skills bundle (skills) covering framework references + motion/video stack (motion-stack, higgsfield-cli, plus the official remotion-best-practices), AI tooling, GitHub helpers, and Expo helpers. For Rive/Lottie/Framer Motion + 3D, additionally add the upstream `freshtechbro/claudedesignskills` marketplace — the `motion-stack` skill documents the integration.",
 	"plugins": [
 		{
 			"name": "dev",
