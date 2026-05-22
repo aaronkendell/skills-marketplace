@@ -1,7 +1,7 @@
 {
 	"$schema": "https://json.schemastore.org/claude-code-plugin",
 	"name": "mcp-pack",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"description": "Bundle of MCP servers that follow you across every repo and superset worktree. Infra: Neon (Postgres), Grafana (observability), Mapbox docs + DevKit, Proxyman. Motion: Higgsfield (AI cinematic video). Static assets: Recraft (vector SVG), Nano-Banana (Gemini Flash Image), Iconify (icon search), Unsplash (stock photo), Playwright (visual review). Enable at user scope so all sessions get them. Secrets read from shell env vars wrapped by Infisical — never committed.",
 	"author": {
 		"name": "bokendell"
@@ -71,7 +71,7 @@
 		"nano-banana": {
 			"type": "stdio",
 			"command": "npx",
-			"args": ["-y", "nanobanana-mcp"],
+			"args": ["-y", "nano-banana-2-mcp"],
 			"env": {
 				"GEMINI_API_KEY": "${GEMINI_API_KEY}"
 			}
@@ -85,7 +85,7 @@
 		"unsplash": {
 			"type": "stdio",
 			"command": "npx",
-			"args": ["-y", "@cevatkerim/unsplash-mcp"],
+			"args": ["-y", "unsplash-mcp"],
 			"env": {
 				"UNSPLASH_ACCESS_KEY": "${UNSPLASH_ACCESS_KEY}"
 			}
