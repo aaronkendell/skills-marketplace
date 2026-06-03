@@ -1,6 +1,6 @@
 ---
 name: review
-description: Review files against the project's pattern docs (DDD service/repo, Hono+tRPC API, Awilix DI, testing layers, frontend container/component split, mobile, design studio, CLI, barrels, container-images, AI/Mastra, remote tunnels, etc.) and fix violations so the code follows the patterns exactly. Use this skill whenever the user says "review", "check against patterns", "make this follow the patterns", "review this PR", "fix pattern violations", "audit this against our conventions", "is this DDD-compliant", "does this match the api.md pattern", "review my changes", or invokes a `/review` style command — even if they don't name a specific pattern doc. Trigger when the conversation mentions specific files to audit OR when the user describes a code-quality / convention-compliance pass with no specific framework named (the skill maps file globs → pattern docs automatically). Use this *instead* of the patterns-reviewer agent for fast, on-demand, interactive review (the agent is for batch/background review during the build phase).
+description: Review files against the project's pattern docs (DDD service/repo, Hono+tRPC API, Awilix DI, testing layers, frontend container/component split, mobile, design app, design studio annotations, CLI, barrels, container-images, AI/Mastra, remote tunnels, etc.) and fix violations so the code follows the patterns exactly. Use this skill whenever the user says "review", "check against patterns", "make this follow the patterns", "review this PR", "fix pattern violations", "audit this against our conventions", "is this DDD-compliant", "does this match the api.md pattern", "review my changes", or invokes a `/review` style command — even if they don't name a specific pattern doc. Trigger when the conversation mentions specific files to audit OR when the user describes a code-quality / convention-compliance pass with no specific framework named (the skill maps file globs → pattern docs automatically). Use this *instead* of the patterns-reviewer agent for fast, on-demand, interactive review (the agent is for batch/background review during the build phase).
 version: 1.0.0
 author: bokendell
 ---
@@ -62,8 +62,9 @@ The 18 canonical pattern files (each loads on demand — don't read them all upf
 | `frontend.md` | `apps/*/app/**`, `apps/*/admin/**` — Next.js patterns, container/component split |
 | `per-app-ui.md` | `apps/*/{app,admin,mobile,design}/**` — per-app UI package, token contract |
 | `mobile.md` | `apps/*/mobile/**` + `packages/mobile-ui/**` — Expo, RN, hooks/stores/containers |
-| `design-studio.md` | `apps/*/design/**` — Vite design studio framework |
-| `design-workflow.md` | Design files, mocks, annotations |
+| `design.md` | `apps/*/design/**` — Next.js design app architecture (lib/, packages/, surface groups, sketches, providers) |
+| `design-studio.md` | `apps/*/design/**` — element IDs + annotation system + comment workflow |
+| `design-workflow.md` | Design files, mocks, decisions.md, per-flow workflow conventions |
 | `di.md` | `composition/**`, `apps/*/workers/**` — Awilix patterns, cradle, transactions |
 | `testing.md` | `*.test.ts`, `*.test.tsx`, `*.integration.test.ts` — Vitest projects, Testcontainers, factories |
 | `cli.md` | `apps/cli/**` — trpc-cli patterns, swarm topic groups |

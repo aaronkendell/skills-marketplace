@@ -17,55 +17,47 @@ description: >
 
 You are operating inside the Tobacco / Warm-Black design system. The studio is the canvas where designs are explored; `@bokendell/golf-ui` is the canonical source for every styled component; the mobile app is the primary consumer.
 
-## Repo layout — DETECT BEFORE READING ANYTHING
+## Repo layout
 
-Golf code lives in **two possible repo shapes**. The skill's path references below default to **Shape A** (this is the workspace you're almost always in). If `apps/design/` exists at the cwd root, you're in Shape A; otherwise check Shape B.
+Golf is the standalone product repo. All paths below assume the cwd is the repo root (or a worktree under `~/.superset/worktrees/<uuid>/...`).
 
-| | Shape A · standalone `golf` repo (default) | Shape B · `core` meta-repo |
+| | Path | Notes |
 |---|---|---|
-| Design studio | `apps/design/` | `apps/golf/design/` |
-| Primitive lib | `packages/ui/` (pkg name: `@bokendell/golf-ui`) | `packages/golf/ui/` |
-| Mobile app | `apps/mobile/` | `apps/golf/mobile/` |
-| Admin app | `apps/admin/` | `apps/golf/admin/` |
-| Shared framework | `@bokendell/design` (from registry) | `packages/shared/design/` (source) |
-| Shared shadcn host | `@bokendell/ui` (from registry) | `packages/shared/ui/` (source) |
-| `swarm` flag | usually omit `--app` (auto-detected from `bokendell.config.json`); pass `--app golf` if it errors | always pass `--app golf` |
-| Repo root marker | `bokendell.config.json` with `"app": "golf"` | top-level `apps/` with multiple products |
+| Design studio | `apps/design/` | Next.js 15 App Router |
+| Primitive lib | `packages/ui/` | Published as `@bokendell/golf-ui` |
+| Mobile app | `apps/mobile/` | Expo + RN |
+| Admin app | `apps/admin/` | Next.js + Refine |
+| Shared framework | `@bokendell/design` (from registry) | Source in `aaronkendell/core` |
+| Shared shadcn host | `@bokendell/ui` (from registry) | Source in `aaronkendell/core` |
+| `swarm` flag | usually omit `--app` (auto-detected from `bokendell.config.json`); pass `--app golf` if it errors | — |
 
-**Detection one-liner** to run before reading docs:
-```bash
-test -d apps/design && echo "Shape A" || (test -d apps/golf/design && echo "Shape B" || echo "Unknown — ask user")
-```
-
-If the cwd is a swarm worktree (`~/.superset/worktrees/<uuid>/...`), it's the same shape as the underlying repo — the worktree path doesn't change package layout.
-
-**Throughout this doc, paths are written for Shape A.** When you're in Shape B, mentally prefix `apps/golf/` and `packages/golf/`. If you spot any other divergence between the skill and reality, log it (see *Skill-drift tracking* at the bottom).
+The design app's architecture is documented in [`references/patterns/design.md`](../../../references/patterns/design.md) — surface groups (mobile/admin/marketing/kits), domain packages with `containers/screens/hooks/stores` + `flows/<flow>/{meta,decisions,sections,sketches}`, sketches collocation + server-scan + route handler, providers chain, env validation. **Read that pattern before composing any new structure in the design app.**
 
 ## On invocation, ALWAYS do these in order
 
-1. **Detect the repo shape** (one-liner above). Pick the path set you'll use throughout the session.
-
-2. **Load the five base skills** via the Skill tool, in this order. These are not optional — even a "quick" design ask should load them so the variant defaults and anti-slop directives are active:
+1. **Load the five base skills** via the Skill tool, in this order. These are not optional — even a "quick" design ask should load them so the variant defaults and anti-slop directives are active:
    - `/dev:design` — orchestrator workflow (mock-first decisions, app/platform detection, persistent tunnels)
-   - `/impeccable:impeccable` — anti-AI-slop directives (auto-reads `packages/ui/.impeccable.md` in Shape A)
+   - `/impeccable:impeccable` — anti-AI-slop directives (auto-reads `packages/ui/.impeccable.md`)
    - `/taste:taste-skill` — high-agency frontend rules (typography bans, motion principles, layout diversification)
    - `/ui-ux-pro-max:ui-ux-pro-max` — palette/font/component recommendation (mainly at the *exploration* phase; not every iteration)
    - `/huashu-design` — HTML-native prototype + 5-dimension review + 20 design philosophies (use for hi-fi mocks, slide-style flows, motion stories)
 
    You can fire all five Skill calls in a single message — they're independent.
 
-3. **Read the system docs.** In this exact order (Shape A paths shown):
+2. **Read the system docs.** In this exact order:
    - `apps/design/README.md` — workflow + structure + sync model
+   - `apps/design/docs/SETUP-CHECKLIST.md` — local-dev bring-up
    - `packages/ui/HARD-RULES.md` — the 29 non-negotiables
    - `packages/ui/DESIGN-SYSTEM.md` — token spec, material tiers, motion
    - `packages/ui/SIZING.md` — typed prop cheat sheet for every primitive
    - `packages/ui/VOICE.md` — copy rules ("bookkeeper meets editorial"; the explicit banned-phrase list)
    - `packages/ui/.impeccable.md` — brand voice + design context
    - `packages/ui/SCAFFOLD-NOTES.md` — what's shipped, what's planned
+   - `references/patterns/design.md` — design app architecture (lib/, packages/, surface groups, sketches, providers)
 
-4. **Read at least one reference flow before composing JSX.** This is the step the agent gets wrong most often: respecting tokens but ignoring the signature compositions. The legacy `flows/round/` has been **split into `flows/in-round/`, `flows/pre-round/`, `flows/post-round/`** — open the one nearest to your task plus `flows/shell/main.tsx`. Skim how `<PageHeader italicTail>`, `<Card variant="solid">`, and ledger-hairline list rows are composed. Match that vocabulary — don't reinvent it.
+3. **Read at least one reference screen + flow before composing JSX.** This is the step the agent gets wrong most often: respecting tokens but ignoring the signature compositions. Open `apps/design/src/packages/mobile/round/screens/in-round-screen.tsx` plus `apps/design/src/packages/mobile/round/flows/in-round/sections/01-round.tsx`. Skim how `<PageHeader italicTail>`, `<Card variant="solid">`, ledger-hairline list rows, and `<DesignCanvas>/<DCSection>/<DCArtboard>` + `<Frame theme="light">` are composed. Match that vocabulary — don't reinvent it.
 
-5. **Acknowledge with one line.** "Studio loaded. v0.X — N primitives shipped. {rolling-flow-list}." Then wait for the user's actual ask. *Exception:* if the user already stated the ask in the same turn that invoked the skill, skip the wait and proceed to step 6 of *When the user invokes you with a vague ask* (multi-variant exploration).
+4. **Acknowledge with one line.** "Studio loaded. v0.X — N primitives shipped. {rolling-flow-list}." Then wait for the user's actual ask. *Exception:* if the user already stated the ask in the same turn that invoked the skill, skip the wait and proceed to step 6 of *When the user invokes you with a vague ask* (multi-variant exploration).
 
 ## Multi-variant exploration is the DEFAULT
 
@@ -147,20 +139,20 @@ Always check `packages/ui/SCAFFOLD-NOTES.md` for the live list. The shape:
 
 When you find yourself writing the same className combination twice in a flow, **stop and add it as a primitive.** That's the discipline that keeps the system honest.
 
-### The studio loop (Vite-native)
+### The studio loop (Next.js)
 
 ```
 1. Edit primitive in packages/ui/src/components/<Name>/<Name>.web.tsx
-2. Vite HMR pushes the change to the browser in <100ms (no rebuild step)
-3. Verify in any flow that uses it (the library kit auto-surfaces it)
+2. Next.js dev server (Turbopack) rebuilds the touched route in <2s
+3. Verify in the library kit (auto-surfaces every primitive via its sections/<Name>.tsx)
 4. Run pnpm --filter @bokendell/golf-ui studio:lint (must be 0 errors)
 5. When promoting a flow's artboard to a kit:
-   - Copy main.tsx contents to kits/<surface>/main.tsx
+   - Pull the JSX out of the flow's screen.tsx into kits/<kit>/screens/<kit>-screen.tsx
    - Identify any new className combos used >once → become new primitives
    - Implement those primitives in golf-ui first, refactor the kit after
 ```
 
-The studio is `Vite v8 + @vitejs/plugin-react + @tailwindcss/vite`. Each flow / kit is a multi-page Vite entry — `<folder>/index.html` references `<folder>/main.tsx`. Vite auto-discovers entries; the studio root auto-discovers `meta.json` files via `import.meta.glob`. **No config edit needed** when a new flow or kit lands.
+The studio is `Next.js 15 App Router + Tailwind v4` (see [`patterns/design.md`](../../../references/patterns/design.md) for the full architecture). Each flow has a route file at `src/app/(surface)/<surface>/<domain>/<flow>/page.tsx` that's 8 lines — imports the container + per-flow PageMeta, scans sketches, renders. The discovery root (`/`) is fed by `src/packages/site/discovery/registry.ts` which explicitly imports each domain's `meta.ts`. **Adding a flow** means: scaffold the flow folder under `packages/<surface>/<domain>/flows/<slug>/`, add it to the domain meta, write a route file. No glob magic.
 
 ### Mental model: flows are the workshop, kits are the showroom
 
@@ -168,49 +160,56 @@ The studio is `Vite v8 + @vitejs/plugin-react + @tailwindcss/vite`. Each flow / 
 |---|---|---|
 | Purpose | Exploration — many variants, accumulating history | Canonical truth — one version, edited in place |
 | className combinations not exposed by a primitive | Allowed (workshop) | **BANNED** (HARD-RULES rule 25) |
-| Required files | `index.html` · `main.tsx` · `meta.json` · `README.md` · `decisions.md` | `index.html` · `main.tsx` · `meta.json` |
+| Required files | `meta.ts` · `decisions.md` · `README.md` · `sections/` · `sketches/` (+ domain-level `containers/`, `screens/`) | `meta.ts` · `screens/<kit>-screen.tsx` · `containers/<kit>-container.tsx` |
 
 **Promotion** = picking a winning variant in a flow, adding any repeated className combo as a new primitive in `@bokendell/golf-ui`, then refactoring the kit to consume only primitives. The flow stays as institutional memory.
 
 ### Kit categories
 
 - `reference` — documentation of the system (`kits/tokens/`, `kits/library/`, `kits/comparison/`, `kits/motion/`).
-- `surface` — canonical "this is what the app looks like now" (future: `kits/mobile/`, `kits/admin/`, `kits/marketing/`).
+- `surface` — canonical "this is what the app looks like now" (future: surface kits as needed).
 
-### Current inventory (Shape A)
+### Current inventory
 
-The current `apps/design/flows/` set:
-
-```
-admin · auth · chat · friends · home · in-round · live-activity · marketing ·
-notifications · onboarding · post-round · pre-round · profile · search ·
-share-{invite,join-code,link-text,og-cards,receipt,wrapped} · shell · states ·
-stats · transitions · widgets · widgets-lock-screen
-```
-
-Kits:
+Surface groups under `apps/design/src/packages/`:
 
 ```
-apps/design/kits/
-├── tokens/          # reference — every token from @bokendell/golf-ui/tokens, runtime
-├── library/         # reference — every primitive · sections/<Name>.tsx (glob) · PreviewFrame mobile/web toggle
-├── comparison/      # reference — primitive vs. bundle preview iframe
-└── motion/          # reference — motion catalog
+mobile/   — round (4 flows) · home · auth (2) · social (2) · profile (2) ·
+            share (6) · paywalls · search · notifications · widgets (2) ·
+            states · transitions · shell · brand
+admin/    — admin
+marketing/— marketing
+kits/     — tokens · library · comparison · motion
+shared/   — games
 ```
 
-When the user asks for a "new flow," scaffold via:
-```bash
-pnpm swarm design new-flow --slug <slug> --app golf
-# scaffolds index.html · main.tsx · meta.json · README.md · decisions.md
+When the user asks for a "new flow":
+1. Pick a domain (existing or new under the right surface group).
+2. `mkdir -p apps/design/src/packages/<surface>/<domain>/flows/<slug>/{sections,sketches}`
+3. Write `flows/<slug>/meta.ts` using `defineFlow(...)` from `@lib/core`.
+4. Add the flow to the domain's `<domain>/meta.ts`.
+5. Add a domain-level `containers/<slug>-container.tsx` + `screens/<slug>-screen.tsx`.
+6. Add the route file at `src/app/(surface)/<surface>/<domain>/<slug>/page.tsx`.
+7. Append a row to `<domain>/index.ts`.
+
+### meta.ts — required for every flow
+
+```ts
+import { defineFlow } from "@lib/core";
+
+export const inRoundFlow = defineFlow({
+  slug: "in-round",
+  meta: { metadata: { title: "In-round", description: "..." } },
+  status: "shipped",
+  category: "rolling",
+  order: 100,
+  subtitle: "Live-round canvas — picked direction + edge states.",
+});
+
+export const inRoundPageMeta = inRoundFlow.meta;
 ```
 
-### meta.json — required for every flow + kit
-
-```json
-{ "title": "...", "subtitle": "...", "category": "reference|surface|rolling|decision", "order": N, "status": "shipped|in-flight|archived" }
-```
-
-Drives the studio root's listing. Without it, the page won't surface on `/`.
+Drives the discovery page's listing. Without registration in the domain meta + site registry, the flow won't surface on `/`.
 
 ### decisions.md — append-only log per flow
 
@@ -218,20 +217,19 @@ Newest entry on top, `## YYYY-MM-DD · short title` headers. The README captures
 
 ### URL state for shareable views
 
-`apps/design/lib/url-state.ts` (or `src/lib/`) exposes:
-- `useUrlTheme()` — `?theme=light|dark` (already wired into every studio entry)
-- `useUrlValue(key, default)` — single param
+`@bokendell/design/hooks` exposes:
+- `useUrlTheme()` — `[theme, setTheme]` reading `?theme=light|dark` — wired into the StudioHeader's ThemeToggle
 - `useArtboardState(namespace, key, default)` — namespaced (use when two artboards on one canvas need state)
 
 Pasting a URL = sharing the view. Zero backend; no localStorage (cofounder won't see edits made on your laptop).
 
-### Mounting + Vercel Toolbar
+### Mounting + providers
 
-Every entry calls `mountStudio(<App />)` from `lib/mount.tsx`. This auto-mounts the Vercel Toolbar (Figma-style commenting) on preview deploys and skips it everywhere else. Never call `createRoot` directly in studio entries.
+`src/app/layout.tsx` mounts `RootLayoutContainer` from `@packages/site`. That wraps the tree in `RootLayout → RootProviders (Query + swarm-api tRPC + Tooltip) → StudioShell (header + theme toggle)`. The Cmd+. annotation overlay is auto-mounted by `<DesignCanvas>`. Never call `createRoot` directly.
 
 ### Tokens + fonts come from the package, not the studio
 
-`apps/design/lib/studio.css` imports `@bokendell/golf-ui/tokens.css` and `@bokendell/golf-ui/fonts.css`. The `.ttf` files live in `packages/ui/src/tokens/fonts/`. The studio has **zero** brand assets of its own.
+`apps/design/src/lib/studio.css` imports `@bokendell/golf-ui/tokens.css` and `@bokendell/golf-ui/fonts.css`. The `.ttf` files live in `packages/ui/src/tokens/fonts/`. The studio has **zero** brand assets of its own.
 
 ### Sync with Claude Design
 
@@ -240,9 +238,8 @@ Every entry calls `mountStudio(<App />)` from `lib/mount.tsx`. This auto-mounts 
 pnpm swarm design unpack <bundle.tar.gz> --app golf --slug <slug>
 # → archives slim tarball, extracts to claude-design/latest/ (THROWAWAY — never reference from flows)
 
-# push a flow back to them:
-pnpm --filter @bokendell/golf-design pack             # vite singlefile build
-pnpm swarm design pack --flow <name> --app golf       # produces a tar.gz at apps/design/.out/
+# push a flow back to them: produces a tar.gz at apps/design/.out/
+pnpm swarm design pack --flow <name> --app golf
 ```
 
 `claude-design/latest/` gets overwritten on every unpack. If a flow needs material from a bundle, **copy** it into the flow folder at creation time (HARD-RULES rule 28).
@@ -304,58 +301,52 @@ Sketches can't import `<IOSDevice>` from `@bokendell/design`, so the phone shape
 }
 ```
 
-### The `00-sketch-index.tsx` artboard
+### Sketch index — `<SketchIndex>` artboard
 
-Every flow's `main.tsx` gets a "00 · Sketch index" DCSection with **one iPhone-shaped artboard per round** (`v1`, `v2`, …). Auto-discovery via Vite glob in main.tsx:
+Every flow with HTML sketches gets a "00 · Sketches" `<DCSection>` with one artboard rendering `<SketchIndex sketches={sketches} title="..." />`. The `sketches` array is server-scanned by the route file:
 
-```ts
-const mods = import.meta.glob("./sketch/*.html");
+```tsx
+// app/(surface)/mobile/round/in-round/page.tsx
+import { scanFlowSketches } from "@lib/core/sketches/server";
+
+const sketches = await scanFlowSketches("mobile", "round", "in-round");
+// → returns Array<{ href, label, group, file }> from disk
 ```
 
-The artboard component lives at `flows/<slug>/sections/00-sketch-index.tsx`. Paywalls and in-round both implement it. **Vite globs evaluate at build time** — adding a new sketch file requires a dev-server restart to appear in the index (HMR alone won't update the glob).
+The screen consumes the array:
 
-**Promotion candidate (drift entry):** the per-flow `<SketchIndex>` should be promoted to `@bokendell/design` as a framework chrome component so every flow gets it for free.
+```tsx
+// packages/mobile/round/screens/in-round-screen.tsx
+<DCSection id="00-sketches" title="Sketch index">
+  <DCArtboard id="sketches">
+    <Frame theme="light">
+      <SketchIndex sketches={sketches} title="In-round sketches" />
+    </Frame>
+  </DCArtboard>
+</DCSection>
+```
 
-## Known scaffolding issues (workarounds)
+Sketches are served raw by a single route handler at `src/app/sketches/[...path]/route.ts` — URL `/sketches/<surface>/<domain>/<flow>/<file>.html`. Adding a new sketch file is visible immediately (filesystem scan runs per request in dev; no glob to invalidate).
 
-These are CLI / framework bugs to know about. Don't get burned by them.
+Rich custom indexes (e.g. in-round's per-round `ROUND_META` decoration) live at `flows/<flow>/sections/sketch-index.tsx` and wrap or replace the default `<SketchIndex>`.
 
-### `swarm design new-flow --app golf` writes to wrong path in standalone repos
+## Known scaffolding gaps
 
-**Bug:** the CLI hardcodes `apps/<app>/design/flows/` even in this standalone repo where flows live at `apps/design/flows/`. Running `pnpm swarm design new-flow --slug paywalls --app golf` in Shape A creates an unwanted `apps/golf/` directory.
+### `swarm design new-flow --app golf` predates the new structure
+
+**State:** the existing CLI scaffolds the legacy Vite layout (`apps/<app>/design/flows/<slug>/{index.html,main.tsx,meta.json}`). It doesn't write the Next.js structure (`packages/<surface>/<domain>/flows/<slug>/`).
 
 **Workaround:** scaffold manually by copying from an existing flow:
 
 ```bash
-mkdir -p apps/design/flows/<slug>/{sections,sketch}
-cp apps/design/flows/onboarding/{meta.json,index.html,README.md,decisions.md} \
-   apps/design/flows/<slug>/
-cp apps/design/flows/onboarding/sketch/_shared.css \
-   apps/design/flows/<slug>/sketch/
-# then edit meta.json title / subtitle / order, and start main.tsx from in-round/main.tsx as a template
+DOMAIN=apps/design/src/packages/mobile/<domain>
+mkdir -p $DOMAIN/flows/<slug>/{sections,sketches}
+# copy README.md template, write a meta.ts using defineFlow(...), add it to $DOMAIN/meta.ts
+# add domain-level containers/<slug>-container.tsx + screens/<slug>-screen.tsx
+# add the route file at apps/design/src/app/(surface)/mobile/<domain>/<slug>/page.tsx
 ```
 
-### Date prefix on flow slugs is noisy
-
-The CLI auto-prepends `YYYY-MM-DD-` to scaffolded flow slugs. **The existing flows in the repo don't use it** (`onboarding`, `chat`, `in-round`, `pre-round`, etc.). After scaffolding, rename away the prefix:
-
-```bash
-mv apps/design/flows/2026-05-20-paywalls apps/design/flows/paywalls
-```
-
-(Or just don't use the CLI — manual scaffold above.)
-
-### Tailwind v4 `@source` globs in `apps/design/lib/studio.css` use Shape A paths
-
-Standalone repos (Shape A) need these paths:
-
-```css
-@source "../../../packages/ui/src/**/*.{ts,tsx}";
-@source "../../../node_modules/@bokendell/design/src/**/*.{ts,tsx}";
-@source "../../../node_modules/@bokendell/ui/src/**/*.{ts,tsx}";
-```
-
-The original CLI scaffold writes Shape B paths (`packages/golf/ui`, etc.) which silently break Tailwind class generation in standalone repos — chrome (StudioNav, UserMenu, DesignToolbar) renders unstyled and invisible. Verify these paths exist before assuming Tailwind is working.
+See [`patterns/design.md`](../../../references/patterns/design.md) for the full template.
 
 ## Asset stacks — when to reach for what
 
@@ -430,11 +421,11 @@ Renders as **Eyebrow** / **Display** *italic tail* sharing a line — Bricolage 
 
 For tappable list rows (courses, players, payment apps, recents) use a `<Card>` with `cursor-pointer hover:border-ink-soft transition-colors`. Selected state is `border-ink` or a trailing check, NOT a tinted background or a 2px accent border. The "boxy AI-dashboard selected state" (`border-2 border-accent bg-accent/[0.04]`) is a tell.
 
-For dense lists (recents-as-ledger, scoreboard, settle-up), drop the cards entirely and use `<button>` rows with `border-b border-rule last:border-b-0` — the paper-invoice metaphor. See the `LedgerRow` pattern in `apps/design/flows/pre-round/sections/` or `apps/design/flows/in-round/sections/`.
+For dense lists (recents-as-ledger, scoreboard, settle-up), drop the cards entirely and use `<button>` rows with `border-b border-rule last:border-b-0` — the paper-invoice metaphor. See the `LedgerRow` pattern in `apps/design/src/packages/mobile/round/flows/pre-round/sections/` or `apps/design/src/packages/mobile/round/flows/in-round/sections/`.
 
 ### 3. Shell → wrap full-frame screens in a Screen primitive
 
-`flows/shell/main.tsx` and `flows/in-round/sections/_shell.tsx` show the pattern. New per-app sub-flows (onboarding, auth, settings) should each have a sibling Screen primitive (`<OnboardingScreen header footer>`, etc.) rather than inlining a sticky CTA + gradient + safe-area in every screen. The Screen primitive owns the dynamic-island spacer + safe-area + chrome slot.
+`packages/mobile/shell/screens/shell-screen.tsx` and `packages/mobile/round/flows/in-round/sections/_shell.tsx` show the pattern. New per-app sub-flows (onboarding, auth, settings) should each have a sibling Screen primitive (`<OnboardingScreen header footer>`, etc.) rather than inlining a sticky CTA + gradient + safe-area in every screen. The Screen primitive owns the dynamic-island spacer + safe-area + chrome slot.
 
 ### 4. Auth / brand buttons → `<Button>` with monochrome glyphs
 
@@ -450,23 +441,23 @@ No `Let's get started!`, no `Awesome!`, no `Powered by AI`, no emoji, no exclama
 
 ### 7. Read a current flow before you write the kit
 
-`apps/design/flows/in-round/sections/*.tsx`, `pre-round/sections/*.tsx`, and `shell/main.tsx` are the canonical vocabulary references. If the JSX you're about to write doesn't look like that file, you're inventing — go re-read it.
+`apps/design/src/packages/mobile/round/flows/in-round/sections/*.tsx`, `pre-round/sections/*.tsx`, and `packages/mobile/shell/screens/shell-screen.tsx` are the canonical vocabulary references. If the JSX you're about to write doesn't look like that file, you're inventing — go re-read it.
 
-### 8. Use `sketch/` for pre-system exploration, not `main.tsx`
+### 8. Use `sketches/` for pre-system exploration, not the screen
 
-Every flow has a `sketch/` subfolder for **pure-HTML scratch work**: aesthetic vocabularies that don't have primitives yet, editorial moments, marketing-y artifacts, or unmodified Claude Design bundle drops. Sketches `@import` `_shared.css` which pulls in `@bokendell/golf-ui/tokens.css` + `fonts.css` + `utilities.css`, so the `.t-display-lg` / `.tone-up` / `.bg-bg-elev` classes resolve to real OKLch tokens and real brand fonts.
+Every flow has a `sketches/` subfolder under `flows/<flow>/sketches/` for **pure-HTML scratch work**: aesthetic vocabularies that don't have primitives yet, editorial moments, marketing-y artifacts, or unmodified Claude Design bundle drops. Sketches `@import` `_shared.css` which pulls in `@bokendell/golf-ui/tokens.css` + `fonts.css` + `utilities.css`, so the `.t-display-lg` / `.tone-up` / `.bg-bg-elev` classes resolve to real OKLch tokens and real brand fonts.
 
 ```bash
-cp sketch/_template.html sketch/01-my-idea.html
-# open at http://127.0.0.1:5173/flows/<flow>/sketch/01-my-idea.html
+cp packages/mobile/<domain>/flows/<flow>/sketches/_shared.css packages/mobile/<domain>/flows/<flow>/sketches/01-my-idea.html
+# open at http://127.0.0.1:5173/sketches/mobile/<domain>/<flow>/01-my-idea.html
 ```
 
 **Rules:**
-- Sketches are evidence, not source. They never promote to a kit directly — port to TSX in `main.tsx` if kept, then link the sketch from `decisions.md`.
+- Sketches are evidence, not source. They never promote to a kit directly — port to TSX section files in `sections/` if kept, then link the sketch from `decisions.md`.
 - HARD-RULES 18–24 still apply (no `border-left` stripes, no gradient text, no emoji, no `#000`/`#fff`).
 - Don't put a sketch's inline `<style>` block past ~30 lines without asking yourself: is this a missing primitive?
 
-**`main.tsx` (TSX canvas)** is for compositions of existing primitives — the path that promotes cleanly. **`sketch/` (HTML)** is for inventing the shapes the system doesn't have yet. Most flows live mostly in `main.tsx`; use sketches when you genuinely need freedom.
+**`sections/*.tsx`** is for compositions of existing primitives — the path that promotes cleanly. **`sketches/` (HTML)** is for inventing the shapes the system doesn't have yet. Most flows live mostly in TSX sections; use sketches when you genuinely need freedom.
 
 ## DCSection / DCArtboard rules — the things that bite
 
@@ -480,7 +471,7 @@ These cost an iteration loop each time they fire. Internalize them:
 Run all of these. Do not assume; verify.
 
 ```bash
-pnpm --filter @bokendell/golf-design build            # vite build — must succeed
+pnpm --filter @bokendell/golf-design build            # next build — must succeed
 pnpm swarm design lint --app golf                     # 0 errors required, warnings noted
 pnpm --filter @bokendell/golf-design check-types      # tsgo must pass
 pnpm --filter @bokendell/golf-ui check-types          # tsgo must pass
@@ -491,7 +482,7 @@ If you wrote a new primitive, also verify:
 - It has `Name.variants.ts` + `Name.web.tsx` + `Name.native.tsx` + `index.ts`
 - The component is exported from `src/index.ts`
 - A JSDoc with at least one `@example` is present
-- The primitive has its own section file at `apps/design/kits/library/sections/<Name>.tsx` (auto-discovered by the library kit — `meta` export + default component)
+- The primitive has its own section file at `apps/design/src/packages/kits/library/sections/<Name>.tsx` (auto-discovered by the library kit — `meta` export + default component)
 
 If you wrote in a kit, also verify:
 - No className combination is used >1 time without being a primitive variant. If you see one, extract a primitive FIRST, then land the kit edit (HARD-RULES rule 25).

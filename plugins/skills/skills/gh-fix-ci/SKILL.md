@@ -11,7 +11,7 @@ description: "Use when a user asks to debug or fix failing GitHub PR checks that
 Use gh to locate failing PR checks, fetch GitHub Actions logs for actionable failures, summarize the failure snippet, then propose a fix plan and implement after explicit approval.
 - Draft a concise plan inline and request approval before implementing.
 
-## Project conventions (bokendell/projects)
+## Project conventions (aaronkendell/core)
 - Linter/formatter: **Biome** (not ESLint/Prettier). Fix with `pnpm check:fix`.
 - Package manager: **pnpm**. Run tasks with `turbo <task> --filter=<workspace>`.
 - Tests: **Vitest** (`turbo test --filter=<workspace>`).

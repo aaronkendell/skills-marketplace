@@ -23,6 +23,10 @@ Located at `docs/context/patterns/` in the project root:
 | `testing.md` | Always — every feature needs tests |
 | `frontend.md` | Web frontend work (Next.js, React, Tailwind, shadcn) |
 | `mobile.md` | Mobile work (Expo, React Native, Zustand, RHF) |
+| `design.md` | Design app work (`apps/<app>/design/` Next.js studio — lib/, packages/, surface groups, sketches, providers) |
+| `design-studio.md` | Annotation system + element IDs in the design app |
+| `design-workflow.md` | Per-flow workflow: decisions.md, sketches, promotion to kit |
+| `per-app-ui.md` | Per-app UI package (`@bokendell/<app>-ui`) — token contract |
 
 ## Detection Rules
 
@@ -32,6 +36,8 @@ Determine which patterns to load based on files being touched:
 - `apps/*/api/` → `api.md` + `ddd.md` + `testing.md`
 - `apps/*/app/` or `apps/*/admin/` → `frontend.md` + `testing.md`
 - `apps/*/mobile/` → `mobile.md` + `testing.md`
+- `apps/*/design/` → `design.md` + `design-studio.md` + `design-workflow.md` + `frontend.md` + `per-app-ui.md` + `testing.md`
+- `packages/*/ui/` → `per-app-ui.md` (per-app UI package token contract)
 - `packages/*/db/` → `ddd.md` + `testing.md`
 - `packages/*/client/` → `api.md` + `testing.md`
 

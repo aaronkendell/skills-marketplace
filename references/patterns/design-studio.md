@@ -1,8 +1,14 @@
-# Design Studio + Annotation Pattern
+# Design Studio Annotation Pattern
 
-> Cross-app pattern for the per-app design surfaces (`apps/<app>/design/`). Owned by `@bokendell/design`. Applies identically to golf, portfolio, hive, and any future app.
+> The **annotation system + element IDs** for the per-app design surfaces.
+> The **app architecture** (lib/, packages/, surface groups, sketches) is in
+> [`design.md`](./design.md). The **per-flow workflow conventions** are in
+> [`design-workflow.md`](./design-workflow.md). This doc covers only how
+> annotations + element IDs work.
 
-> Studios consume `@bokendell/<app>-ui/tokens.css` for brand chrome. Per-app UI packages follow the contract in [`per-app-ui.md`](./per-app-ui.md) — colors/radii/typography reskin freely, but `--spacing-N` numerically is reserved for Tailwind's standard scale. Brand-bigger spacings use semantic names (`--spacing-xl/2xl/3xl/page/section`).
+> Cross-app pattern. Owned by `@bokendell/design`. Applies identically to golf, portfolio, hive, and any future app.
+
+> Studios consume `@bokendell/<app>-ui/tokens.css` for brand chrome. Per-app UI packages follow the contract in [`per-app-ui.md`](./per-app-ui.md).
 
 ## Why this exists
 
@@ -35,7 +41,7 @@ Both local dev and deployed previews write to the **same swarm-api annotations e
 
 ```
 ANY ENVIRONMENT (local dev, vercel preview, vercel production)
-  Studio mounted with `createStudioApp({ auth })`
+  Studio mounted with the providers chain (Query + swarm-api tRPC + Tooltip; see `design.md`)
   → Cmd+. (or chrome toolbar) → AnnotationOverlay
   → screenshot + strokes + note → POST /api/v1/annotations
   → swarm-api persists thread + replies
@@ -142,10 +148,10 @@ The CLAUDE.md `Design annotations` section directs Claude to read `apps/<app>/de
 - **No MCP server.** Read + Grep + Edit tools cover every annotation interaction. An MCP server adds setup cost with no capability gain.
 - **No auto-commit of annotations.** User stages with `git add` per project rule.
 - **No `UserPromptSubmit` hook by default.** Pull-on-demand via CLAUDE.md convention is the right default. Hook is optional later.
-- **No writing from the studio without auth.** Studios mounted via `createStudioApp({ auth })` are gated by `<StudioAuthGate>`. A studio mounted without auth runs in display-only mode — annotation actions are hidden.
+- **No writing from the studio without auth.** Studios wrap the tree in `DesignAuthProvider` (via `src/lib/auth/` + `src/lib/providers/`) and gate writes through `<StudioAuthGate>`. A studio mounted without auth runs in display-only mode — annotation actions are hidden.
 - **No abstraction over `@bokendell/<app>-ui` primitives.** Sections render primitives directly. Visual editors that wrap primitives lose typed variants and HARD-RULES discipline.
 - **No reinventing primitives in the framework.** `@bokendell/design` chrome is built on shadcn primitives from `@bokendell/ui` (`Button`, `Popover`, `Command`, `DropdownMenu`, `Tooltip`, `Avatar`, `ScrollArea`, …). Adding hand-rolled outside-click / Esc / focus management is a code-smell — use Radix.
-- **No hand-rolled fetch against swarm-api.** Every swarm-api call goes through `@bokendell/swarm-client` (tRPC) — `createStudioApp` wires the provider, components use `useTRPC()`. Types come from the same package, so DTOs aren't duplicated. See `context/packages/swarm-client.md`.
+- **No hand-rolled fetch against swarm-api.** Every swarm-api call goes through `@bokendell/swarm-client` (tRPC) — `RootProviders` wires `TRPCProvider`, components use `useTRPC()`. Types come from the same package, so DTOs aren't duplicated. See `context/packages/swarm-client.md`.
 
 ## Open questions
 

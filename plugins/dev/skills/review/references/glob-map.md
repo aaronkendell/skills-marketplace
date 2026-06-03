@@ -14,8 +14,15 @@ Mapping rules. Match in order from top to bottom; a single file can match multip
 | `**/apps/*/app/**/*.{ts,tsx}` | `frontend.md`, `per-app-ui.md` | Next.js patterns, container/component split, token use |
 | `**/apps/*/admin/**/*.{ts,tsx}` | `frontend.md`, `per-app-ui.md` | Refine admin patterns |
 | `**/apps/*/mobile/**/*.{ts,tsx}` | `mobile.md`, `per-app-ui.md` | Expo + RN, hooks/stores/containers |
-| `**/apps/*/design/**/*.{ts,tsx}` | `design-studio.md`, `design-workflow.md`, `per-app-ui.md` | Vite design studio framework |
-| `**/apps/*/design/flows/**/.annotations/**` | `design-workflow.md` | Annotation pull/sync flow |
+| `**/apps/*/design/**/*.{ts,tsx}` | `design.md`, `design-studio.md`, `design-workflow.md`, `frontend.md`, `per-app-ui.md` | Next.js design app architecture (lib/, packages/, surface groups, sketches, providers) + annotation system + workflow + container/screen rules |
+| `**/apps/*/design/src/app/**/*.{ts,tsx}` | `design.md`, `frontend.md` | Route files (must be thin, server-component data fetching) |
+| `**/apps/*/design/src/packages/site/**/*.{ts,tsx}` | `design.md`, `frontend.md` | Site shell, discovery, layouts |
+| `**/apps/*/design/src/packages/{mobile,admin,marketing}/**/*.{ts,tsx}` | `design.md`, `frontend.md` | Domain packages (containers, screens, flows) |
+| `**/apps/*/design/src/lib/**/*.{ts,tsx}` | `design.md` | App-only shared lib (providers, env, studio.css) |
+| `**/apps/*/design/src/app/sketches/**/route.ts` | `design.md` | Sketches route handler |
+| `**/apps/*/design/**/flows/**/.annotations/**` | `design-workflow.md` | Annotation pull/sync flow |
+| `**/apps/*/design/**/flows/**/decisions.md` | `design-workflow.md` | Per-flow decision logs |
+| `**/apps/*/design/**/flows/**/sketches/**` | `design.md`, `design-workflow.md` | Raw HTML sketch collocation |
 | `**/apps/*/inngest/**/*.ts` | `di.md` (services from cradle), `ai-evals.md` (if AI), `ai.md` (if Mastra) | Inngest function patterns + service wiring |
 | `**/inngest/**/*.ts` | `di.md` | Same as above, generic |
 | `**/apps/*/workers/**/*.ts` | `di.md` | Worker process Awilix patterns |
