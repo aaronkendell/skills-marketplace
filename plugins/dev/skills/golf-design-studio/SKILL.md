@@ -71,12 +71,41 @@ This is the meta-rule that overrides "ask first." It's also why the five base sk
 2. **Use the real Tobacco tokens** in every variant — never a generic preview. Inline `tokens.css` values as CSS custom properties at the top of the HTML; load fonts via the package's `fonts.css` or Google Fonts CDN (Bricolage Grotesque, Geist, Geist Mono, Source Serif 4).
 3. **Realistic content** — actual hole numbers, player names ("Dev", "Tom", "Aaron"), real money values, courses you've actually played. Never "User A / Player 1 / $X.XX".
 4. **Annotate each variant** with a 2-line Pro/Con block so the user can pick in <30s.
-5. **Save numbered files** under `apps/design/flows/<flow-slug>/sketch/NN-<question>.html` (for sketches) or `mocks/NN-<question>.html` if the flow doesn't exist yet — never overwrite a past iteration; the numbered history IS the decision log.
+5. **Save numbered files** under the flow's sketches dir — `apps/design/src/packages/<surface>/<domain>/flows/<flow>/sketches/NN-<question>.html` — and register each board in the flow's `sketches.ts` manifest (`defineSketches`), then run `pnpm --filter @bokendell/golf-design check-types`. Never overwrite a past iteration; the numbered history IS the decision log. (For an initiative with no flow yet: `docs/planning/<initiative>/mocks/NN-<question>.html`.)
 6. **One persistent tunnel per initiative.** First mock: `cp NN-foo.html current.html` and start the tunnel on `current.html`. Every later iteration: write the new numbered file, `cp` it onto `current.html`, tell the user to refresh the same URL. Tear down with `stop.sh` at end of decision session.
 7. **Before sharing**, ask how to review: open locally / tunnel / both / skip — never silently `open` or tunnel.
 8. **For TSX-canvas decisions** (composing existing primitives), put the variants directly in `main.tsx` as side-by-side `<DCArtboard>` children inside one `<DCSection>` titled with the decision question, then refine in place.
 
 **Two exceptions** where plain text is fine: tone-of-voice / naming / priority-ordering questions, and yes/no confirms after you've already shown variants. For anything visual or structural, show, don't ask.
+
+## Ground truth + the Exploration Program (2026-06 upgrade — what produced the quality jump)
+
+Session-proven (chat sketches 13–19): these four practices outweigh everything else in this file.
+The full generic protocol lives in `/design` (Ground Truth Protocol · Exploration Program ·
+Studio sketch conventions · Drift protocol) — it loads as base skill #1; this section is the
+golf-specific wiring.
+
+1. **Shipped screenshots are ground truth.** Read the newest set from `docs/design/app-screens/`
+   (convention: GOLF-462). Missing/stale/doesn't cover the surface → ASK the user for 3–5
+   current shots before composing. The live app outranks every older mock or Figma export.
+   Fidelity anchors to declare up front: **PairPill** (merged glass chrome, no dividers),
+   **hole-hero card**, **score chips with par sublabels**, **Resume Slip** (dashed rules +
+   zigzag tear + stamp), serif-italic flavor lines, the **capped ball** (faceless, one per
+   surface).
+2. **decisions.md is law.** Before composing, read the relevant flow's decisions file:
+   chat/Caddy → `…/mobile/social/flows/chat/decisions.md` (locked rounds: shell, markdown set,
+   event cast, slip…); brand/character → `…/mobile/brand/flows/brand-directions/decisions.md`;
+   in-round → `…/mobile/round/flows/in-round/decisions.md`. AI-surface data model:
+   `docs/decisions/0009-round-events.md` + `docs/planning/chat-events/design.md`
+   (pushed = event, replied = chat; speech is typography, record is artifacts;
+   dotted = awaiting writing, solid = ruled record; pencil → ink).
+3. **Big surfaces run the Exploration Program**, not one-shot screens: dependency-ordered
+   rounds → 3–4 genuinely different directions (light + dark, interactive where the decision
+   is behavioral) → user picks/mixes → append the lock to decisions.md → next round designs
+   inside the locks. Go piece-by-piece when a round is still too big.
+4. **Self-verify every board before delivering**: Playwright-screenshot it at ~400px width,
+   look at it, fix what's broken. The end-of-flow `/design-review` pass does NOT replace this
+   per-board check.
 
 ## Self-improvement: skill-drift tracking
 
@@ -101,11 +130,18 @@ This skill will go out of date. Repo shapes shift, primitives ship, commands ren
 - **Suggested fix:** <one-line edit to the skill>
 ```
 
+**Structural drift gets fixed at the source immediately** (2026-06-10 upgrade): if the drift
+is paths / commands / tokens / registration mechanics — not a matter of taste — don't wait for
+end-of-session. Log the entry, then edit the source skill at
+`~/repos/bokendell/skills-marketplace/plugins/dev/skills/...` in the same session (leave the
+marketplace repo changes uncommitted for the user's review; the plugin cache regenerates next
+reload). Only taste/judgment drift waits for the user.
+
 **At end of session**, if `.skill-drift.md` has any new entries this turn:
 
 1. Surface them in the wrap-up message as a "Skill drift" subsection.
-2. Offer: *"Want me to update the skill at `~/repos/bokendell/skills-marketplace/plugins/dev/skills/golf-design-studio/SKILL.md` to incorporate these? (Y/n)"*
-3. If yes: edit the source SKILL.md, mention that the plugin cache regenerates next reload.
+2. For anything not already fixed at the source, offer: *"Want me to update the skill at `~/repos/bokendell/skills-marketplace/plugins/dev/skills/golf-design-studio/SKILL.md` to incorporate these? (Y/n)"*
+3. If yes: edit the source SKILL.md.
 4. If the user says "no" or "later", leave the entries; the next session will see them and re-prompt.
 
 This keeps the skill an accurate map of the territory instead of an aging artifact. Treat it like updating tests after a refactor — same discipline.

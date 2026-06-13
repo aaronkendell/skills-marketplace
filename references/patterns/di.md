@@ -439,6 +439,7 @@ Composition uses fallback for production. Tests use NoOp. This separation preven
 - **CLI tools** (`apps/cli/`) — no runtime composition needed; module imports are fine.
 - **One-off scripts** that import a single service from composition — use the back-compat barrel (golf + portfolio) or import the container directly (hive).
 - **Inngest function bodies themselves** (`packages/{app}/domains/.../infrastructure/inngest/*.function.ts`) — these take their service deps as factory args; composition wires them up. Inside the function body, use the deps directly. No cradle access.
+- **Error conversion** — `AppError` → `ORPCError` (or `TRPCError`) bridging is NOT Awilix's concern. The container registers services and lets them throw `AppError` subclasses freely. Error conversion happens in **procedure middleware** (golf: `appErrorBridgeFn` in `procedures/base.ts`; hive/portfolio: tRPC's global `errorHandling` middleware). Never add error-shape logic to an `asFunction` resolver.
 
 ---
 

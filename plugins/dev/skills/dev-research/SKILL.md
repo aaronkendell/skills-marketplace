@@ -28,13 +28,13 @@ Can also start from:
 ### 1. Load App Context
 
 1. Read `.claude/planner.local.md` for app config (team key, work path)
-2. Read `docs/context/apps/<app>.md` for condensed app context
-3. Read relevant pattern docs from `docs/context/patterns/`:
+2. Read `docs/MAP.md` (retrieval contract) and the app overview it points at (`docs/architecture/overview.md`) for condensed app context
+3. Read relevant pattern docs from the marketplace (resolve via the context-patterns skill: `${CLAUDE_PLUGIN_ROOT}/../../references/patterns/`):
    - Always: `testing.md`
    - If backend: `ddd.md`, `api.md`
    - If frontend: `frontend.md`
    - If mobile: `mobile.md`
-4. Read existing planning docs at `docs/apps/<app>/planning/` to understand what's already planned
+4. Read existing planning docs at `docs/planning/` to understand what's already planned
 
 ### 2. Architecture Scan
 
@@ -60,7 +60,7 @@ Provide all context gathered in steps 1-2. The brainstorming skill will:
 
 When the brainstorming skill is about to ask the user to pick between options, **build a visual comparison instead of asking a text question** whenever possible:
 
-- **UI/layout/component choices** → HTML mock showcase with options side-by-side, styled with the real app tokens, realistic scenario data, Pro/Con annotations. Save to `docs/apps/<app>/planning/<initiative>/mocks/NN-<question-slug>.html`.
+- **UI/layout/component choices** → HTML mock showcase with options side-by-side, styled with the real app tokens, realistic scenario data, Pro/Con annotations. Save to `docs/planning/<initiative>/mocks/NN-<question-slug>.html`.
 - **Backend / data-flow / schema / architecture choices** → Mermaid diagram (flowchart, sequence, ERD, or state diagram). Inline in the message or in a Mermaid-rendering HTML file. Show the options visually — which tables differ, which arrows flip, which nodes appear in A but not B.
 - **Decision-tree / branching options** → comparison table matrix, not a prose list.
 - **Only fall back to plain text questions when the decision is truly abstract** (tone, naming, yes/no confirms, priority ordering). Never for layout, color, component, data flow, schema, or flow ordering.
@@ -86,7 +86,7 @@ After brainstorming approval, create the design document. The document should in
 
 ### 5. Save Design Document
 
-Save to: `docs/apps/<app>/planning/<initiative>/design.md`
+Save to: `docs/planning/<initiative>/design.md`
 
 Where `<initiative>` is derived from the feature name (kebab-case, e.g., `round-join-codes`, `ai-caddy-intelligence`).
 
@@ -96,13 +96,13 @@ If the initiative directory doesn't exist, create it.
 
 If the feature has visual/UI components, generate an HTML mock showcase and save it:
 - `/tmp/design-mock-<initiative>.html` — for immediate browser preview
-- `docs/apps/<app>/planning/<initiative>/design-showcase.html` — permanent record with the design doc
+- `docs/planning/<initiative>/design-showcase.html` — permanent record with the design doc
 
 This file captures what was decided visually. It lives alongside design.md so future sessions have full context on both the written spec and the visual direction.
 
 **After saving, ask the user how they want to review the mock — do NOT default to any option:**
 
-> "Mock saved to `docs/apps/<app>/planning/<initiative>/design-showcase.html`. How do you want to review it?
+> "Mock saved to `docs/planning/<initiative>/design-showcase.html`. How do you want to review it?
 > 1. **Open locally** in your desktop browser (`open <path>`) — fastest
 > 2. **Host on a tunnel** so you can tap through it on your phone — uses `remote-preview` skill's `host.sh`, takes ~5 seconds to spin up, gives you a `*.trycloudflare.com` URL
 > 3. **Both**

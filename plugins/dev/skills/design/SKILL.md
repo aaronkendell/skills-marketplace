@@ -68,6 +68,74 @@ Detect platform:
 | `apps/*/mobile/`, `.tsx` in mobile paths, "mobile", "native", "expo" | **mobile** (React Native) |
 | `apps/*/app/`, `apps/*/admin/`, "web", "admin", "dashboard", "next" | **web** (Next.js) |
 
+**If the app is ambiguous** (shared packages, no path signal, new surface): ASK which app before composing — the apps share one workflow but different tokens, and guessing the wrong pack poisons everything downstream. Each app's pack lives at `references/apps/<app>.md`; the pack also names where that app's **living design law** (flow `decisions.md` files) and **fidelity anchors** live.
+
+## Ground Truth Protocol (do this before composing ANY visual)
+
+Skills carry principles; the project's achieved taste lives in its **shipped screens** and its
+**accumulated decision law**. Both are mandatory inputs:
+
+1. **Shipped-app screenshots.** Read the newest set from the app's screenshot folder (golf:
+   `docs/design/app-screens/`, see the app pack; tracked in GOLF-462). If the folder is
+   missing, stale (>2 weeks or the user says the UI changed), or doesn't cover the surface
+   you're designing — ASK the user for 3–5 current screenshots before producing anything.
+   Never compose from memory of older mocks; the live app outranks every prior design artifact.
+2. **The decision law.** Read the relevant flow's `decisions.md` (append-only, newest-first)
+   before composing. Locked rounds are LAW — design inside them, never re-litigate silently.
+3. **Fidelity anchors.** Open your work by declaring which shipped artifacts you're matching
+   ("anchoring on: Resume Slip, score chips, hole-hero card"). When a brief is vague, ask
+   *"which existing screen should this feel like?"* — a named artifact beats any adjective.
+4. **Self-verify before delivering.** After building any sketch/board, screenshot it yourself
+   with Playwright at phone width (~400px) against the local studio or `file://`, LOOK at it,
+   and fix what's broken (floating elements, missing assets, contrast) before the user sees it.
+   For web surfaces, prefer driving the running dev server; if the workspace isn't up, ask the
+   user to start it rather than skipping verification.
+5. **Correction protocol.** When the user says output looks "basic / generic / AI-slop":
+   do not iterate adjectives. Ask for (or propose) a concrete in-app artifact as the new
+   anchor, then rebuild around that metaphor.
+
+## The Exploration Program (multi-round method for big surfaces)
+
+For any surface bigger than one component (a chat system, a new tab, a redesign), do NOT
+one-shot full screens. Run the program:
+
+1. **Order the decisions by dependency** — shell/container first, then the typography/turn
+   system, then component families, then composites, then states, then satellite surfaces.
+   Publish the order as a board so the user sees what locks when.
+2. **Per round: 3–4 GENUINELY different directions** — vary register/material/density, not
+   shades of one idea. Same content rendered in every direction so comparison is honest.
+   Light AND dark for every variant. Flag your pick with one-line reasoning; honest cons on
+   every option (including the pick).
+3. **The user picks or mixes; picks become law** — append the lock to the flow's
+   `decisions.md` immediately, then design the next round *inside* the locked constraints.
+   Constraints compound; that's where the taste comes from.
+4. **Go piece by piece** — when a round is still too big (a header, a composer), explode it
+   into pieces and explore each piece's variants separately.
+5. **Artifacts, not spec-cards.** Records/data render as crafted artifacts native to the
+   brand's material world; conversational text stays plain typography. Never default to
+   uniform rounded-rect "AI dashboard" cards.
+
+## Studio sketch conventions (the deliverable format)
+
+- Boards are **self-contained HTML** in the flow's `sketches/` dir, importing the studio's
+  `shared.css` for real tokens. Register every board in the flow's `sketches.ts` manifest
+  and run the design app's `check-types` after.
+- Boards must be **interactive where the decision is about behavior**: scroll demos, replay
+  buttons, working inputs, tappable state machines. Motion IS spec — show it, don't describe it.
+- Every variant in **light + dark**. Respect `prefers-reduced-motion` in every animation.
+- Version per decision: new numbered file per iteration, never overwrite history; the flow's
+  `decisions.md` records what each round locked.
+
+## Drift protocol (when this skill disagrees with reality)
+
+When repo reality contradicts this skill or an app pack (paths, commands, tokens, components):
+1. **Log it** the moment you notice: append to the app's drift file (golf:
+   `apps/design/.skill-drift.md`) with date + what's wrong + what reality is.
+2. **Fix the source when structural**: if the drift is paths/commands/tokens (not taste),
+   update the source skill at `~/repos/bokendell/skills-marketplace` in the same session
+   (leave changes uncommitted for review) — or explicitly offer if mid-task.
+3. **Never silently work around drift** — that's how the next session inherits the bug.
+
 ## Mock-First Decisions (THE META-RULE)
 
 **When you need the user to decide between options, build a visual comparison instead of asking a text question.** This applies to this skill and to any skill that delegates decisions through it (`dev-research`, `dev-plan`, `superpowers:brainstorming`, the built-in brainstorming flow inside this skill, etc.).
@@ -95,7 +163,7 @@ The rule, in order of preference:
 
 **File naming — version-per-decision, stored as history:**
 
-- Every decision point gets a numbered file: `docs/apps/<app>/planning/<initiative>/mocks/NN-<question-slug>.html`
+- Every decision point gets a numbered file: `docs/planning/<initiative>/mocks/NN-<question-slug>.html`
 - Every **iteration on the same decision** (user gives feedback, you refine) gets its own numbered file too: `NN-<question-slug>-v2.html`, `NN-<question-slug>-v3.html`, or just increments the NN prefix if the iteration is substantial enough to feel like a new decision. Never silently overwrite a previous iteration — the file history IS the decision log.
 - Example real history:
   - `mocks/01-compact-state.html` — first comparison, 3 variants
@@ -113,7 +181,7 @@ The user only ever looks at one mock at a time. Don't spin up a new tunnel for e
 2. Start ONE tunnel serving `current.html`:
    ```bash
    bash .claude/skills/remote-preview/scripts/host.sh \
-     docs/apps/<app>/planning/<initiative>/mocks/current.html \
+     docs/planning/<initiative>/mocks/current.html \
      <initiative-slug>-mock
    ```
 3. Hand the user the single stable URL: `https://<random-words>.trycloudflare.com/current.html`. This URL stays the same for the whole initiative.
@@ -151,16 +219,16 @@ Invoke these skills via the Skill tool:
 - `taste-skill` — high-agency anti-slop directives (typography bans, color calibration, layout diversification, perpetual micro-interactions). Loads the baseline variance/motion/density knobs and the AI-tells blacklist. Load this FIRST — it establishes the taste floor everything else builds on.
 - `ui-ux-pro-max` — for palette exploration, font pairing, style direction
 - `impeccable` — for bold aesthetic choices and polish sub-commands (animate, polish, bolder, distill, etc.)
-- Reference `docs/context/design-systems/` for inspiration from real sites (Linear, Stripe, Apple, etc.)
+- Reference `docs/design/references/` for inspiration from real sites (Linear, Stripe, Apple, etc.)
 
 ### For Component Building
 Invoke:
 - `shadcn` — when building web components (reads components.json, knows your setup)
 - `expo-app-design:building-native-ui` — when building mobile components
-Read: `docs/apps/<app>/design/component-catalog.md` if it exists
+Read: `docs/design/component-catalog.md` if it exists
 
 ### For Screen Building
-Read: `docs/apps/<app>/design/screen-patterns.md` if it exists
+Read: `docs/design/screen-patterns.md` if it exists
 Follow the Container → Screen → Component pattern (detailed in app tokens reference)
 
 ### For Design Review
@@ -292,7 +360,7 @@ When the user says "create the design system for [app]", "refine the golf design
 
 Before exploring any visuals, deeply understand what the app IS:
 
-1. **Read existing docs**: `docs/apps/<app>/prd.md`, `docs/apps/<app>/architecture.md`, `docs/context/apps/<app>.md`
+1. **Read existing docs**: start with `docs/MAP.md` (retrieval contract), then `docs/product/prd.md`, `docs/architecture/overview.md`
 2. **Scan the codebase**: What screens exist? What components? What's the current visual state?
 3. **Read the current reference file**: [references/apps/<app>.md](references/apps/) — what's already defined?
 4. **Interview the user** — ask ONE question at a time (superpowers:brainstorming style):
@@ -304,7 +372,7 @@ Before exploring any visuals, deeply understand what the app IS:
 
 ### Step 2: Explore Reference Design Systems
 
-Read 2-3 reference design systems from `docs/context/design-systems/` based on what fits the app:
+Read 2-3 reference design systems from `docs/design/references/` based on what fits the app:
 
 | App Direction | Read These References |
 |---------------|---------------------|
@@ -332,7 +400,7 @@ This is the key step — generate an **HTML showcase page** that the user can re
 
 Create a standalone HTML file. Save to BOTH locations:
 - `/tmp/design-showcase-<app>.html` — for immediate browser preview
-- `docs/apps/<app>/design/showcase.html` — permanent record in the repo
+- `docs/design/showcase.html` — permanent record in the repo
 
 The showcase must be fully self-contained (inline CSS, inline fonts via Google Fonts CDN, no external JS deps) so it renders correctly from either location.
 
@@ -370,7 +438,7 @@ The showcase should include:
 
 **Ask the user how they want to review the showcase — do NOT default to any option:**
 
-> "Showcase saved to `/tmp/design-showcase-<app>.html` and `docs/apps/<app>/design/showcase.html`. How do you want to review it?
+> "Showcase saved to `/tmp/design-showcase-<app>.html` and `docs/design/showcase.html`. How do you want to review it?
 > 1. **Open locally** in your desktop browser (`open /tmp/design-showcase-<app>.html`) — fastest
 > 2. **Host on a tunnel** so you can review from your phone — uses `remote-preview` skill's `host.sh`, takes ~5 seconds, gives you a `*.trycloudflare.com` URL
 > 3. **Both**
@@ -395,14 +463,14 @@ Based on feedback:
 
 Once approved, save three things:
 
-**1. App design doc** at `docs/apps/<app>/design/design-system.md`:
+**1. App design doc** at `docs/design/design-system.md`:
 - Complete token reference (every color, every font size, every spacing value)
 - Both dark and light theme values
 - Component style rules
 - Motion/animation parameters
 - Accessibility requirements
 
-**2. Design showcase** at `docs/apps/<app>/design/showcase.html`:
+**2. Design showcase** at `docs/design/showcase.html`:
 - The final approved HTML showcase (self-contained, openable in any browser)
 - This is the visual record of what was decided — always kept in sync with design-system.md
 - When tokens change, regenerate this file
@@ -418,7 +486,7 @@ Once approved, save three things:
 After running this workflow, every app should have:
 
 ```
-docs/apps/<app>/design/
+docs/design/
 ├── design-system.md           # Complete token reference (source of truth)
 ├── showcase.html              # Visual showcase (browser-viewable, self-contained)
 ├── component-catalog.md       # Component specs, tiers, props, variants (if app has components)
@@ -440,15 +508,15 @@ If the app already has code:
 
 When the user wants to update an app's design tokens:
 
-1. Read the current token file: `docs/apps/<app>/design/design-system.md`
+1. Read the current token file: `docs/design/design-system.md`
 2. Make changes following the existing format
 3. Update the implementation files (CSS variables, theme.ts, etc.)
 4. Verify both themes work (dark AND light)
 5. Run the anti-pattern checklist on affected components
 
-For **inspiration from real sites**, read files in `docs/context/design-systems/`:
+For **inspiration from real sites**, read files in `docs/design/references/`:
 ```
-docs/context/design-systems/
+docs/design/references/
 ├── linear.app/   — Clean, minimal, professional (good for hive)
 ├── stripe/       — Data-rich, polished (good for portfolio)
 ├── apple/        — Premium, spacious (good for golf)
@@ -474,4 +542,4 @@ App-specific tokens and design docs:
 - [Hive](references/apps/hive.md) — Data-dense agent dashboard, Linear-inspired
 
 External design system references for inspiration:
-- `docs/context/design-systems/` — 15 real-world design systems from awesome-design-md
+- `docs/design/references/` — 15 real-world design systems from awesome-design-md

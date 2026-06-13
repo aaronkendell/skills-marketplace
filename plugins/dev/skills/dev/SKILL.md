@@ -46,7 +46,7 @@ If the user just says `/dev` with a Linear issue ID (e.g., `/dev GOLF-123`), def
 
 ## Context Loading
 
-Every phase MUST load the relevant context patterns before starting work. Read `docs/context/patterns/` files based on what's being worked on:
+Every phase MUST load the relevant context patterns before starting work. Read the marketplace pattern docs (resolve via the context-patterns skill: `${CLAUDE_PLUGIN_ROOT}/../../references/patterns/`) based on what's being worked on:
 - Backend: `ddd.md`, `testing.md`, `api.md`
 - Frontend/Web: `frontend.md`, `testing.md`
 - Mobile: `mobile.md`, `testing.md`
@@ -60,11 +60,11 @@ Read `.claude/planner.local.md` for per-app Linear team keys and paths. The YAML
 apps:
   golf:
     teamKey: GOLF
-    workPath: docs/apps/golf/planning
+    workPath: docs/planning
   portfolio:
     teamKey: PORT
-    workPath: docs/apps/portfolio/planning
+    workPath: docs/planning
   hive:
     teamKey: AGENTS
-    workPath: docs/apps/hive/planning
+    workPath: docs/planning
 ```

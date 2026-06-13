@@ -8,7 +8,7 @@
 			"name": "dev",
 			"source": "./dev",
 			"description": "Full SDLC: research, plan, build, ship. Unified design system, Linear integration, TDD, automated testing, code review. Works for golf, portfolio, and hive apps.",
-			"version": "1.0.0"
+			"version": "1.1.0"
 		},
 		{
 			"name": "taste",

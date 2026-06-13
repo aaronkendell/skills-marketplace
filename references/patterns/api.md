@@ -226,9 +226,85 @@ export function create{Domain}Router(service: {Domain}Service) {
 
 ## Error handling
 
-### AppError → TRPCError mapping
+### oRPC error architecture (golf)
 
-Domain services throw `AppError` subclasses. The tRPC error middleware catches them and maps to tRPC codes:
+Golf uses oRPC. The error stack has three layers:
+
+**1. App-tier AppError bridge (required per app)**
+
+Every procedure base gets a `try/catch` middleware that converts `AppError` subclasses thrown by domain services into typed `ORPCError`:
+
+```typescript
+// apps/api/src/packages/api/procedures/base.ts
+import { mapStatusToOrpcCode } from "@bokendell/api/orpc";
+
+function appErrorBridgeFn(cause: unknown, joinedPath: string): never {
+    if (cause instanceof AppError || isAppErrorLike(cause)) {
+        throw new ORPCError(mapStatusToOrpcCode(cause.statusCode), {
+            status: cause.statusCode,
+            message: cause.message,
+            data: { errorCode: cause.errorCode, details: cause.details ?? null, zodError: null, path: joinedPath },
+        });
+    }
+    throw cause;
+}
+
+export const publicBase = _bases.publicBase.use(async ({ next, path }) => {
+    try { return await next(); }
+    catch (cause) { appErrorBridgeFn(cause, path.join(".")); }
+});
+// protectedBase and internalBase get the same wrapper
+```
+
+`mapStatusToOrpcCode` is exported from `@bokendell/api/orpc`. The bridge belongs at the app tier — NOT in the domain, not in Awilix, not in core. See `ddd.md` for the decision tree.
+
+**2. Typed procedure errors via `.errors()`**
+
+Procedures with their own typed failure modes declare them via `.errors()`. Clients guard with `isDefinedError()` and discriminate by `.code`:
+
+```typescript
+// Declare on the procedure builder
+export const aiSessionProcedure = protectedProcedure.errors({
+    INSUFFICIENT_CREDITS: { status: 402, data: insufficientCreditsSchema },
+    GUARDRAIL_BLOCKED:    { status: 400, data: z.object({ reason: z.string() }) },
+});
+
+// Throw in the handler
+if (!hasCredits) {
+    throw new ORPCError("INSUFFICIENT_CREDITS", { data: { creditsGranted: 100, creditsAvailable: 0, periodEnd: "..." } });
+}
+
+// Client-side discrimination
+if (isDefinedError(err)) {
+    if (err.code === "INSUFFICIENT_CREDITS") { /* typed data */ }
+    if (err.code === "GUARDRAIL_BLOCKED")    { /* typed data */ }
+}
+```
+
+No string maps, no registration side effects. Adding a new error: declare it in `.errors()`, add the bridge throw, add a client branch.
+
+**3. INPUT_VALIDATION_FAILED (standard Zod validation code)**
+
+oRPC's default Zod validation failure is `BAD_REQUEST` (400). Core's `createBaseOrpc` intercepts it and re-emits as `INPUT_VALIDATION_FAILED` (422) with flattened field errors:
+
+```json
+{
+  "code": "INPUT_VALIDATION_FAILED",
+  "status": 422,
+  "data": {
+    "formErrors": [],
+    "fieldErrors": { "email": ["Invalid email"] }
+  }
+}
+```
+
+This is declared in `BASE_ERRORS` on every procedure via `createBaseOrpc`. Clients check `err.code === "INPUT_VALIDATION_FAILED"` and read `err.data.fieldErrors` for per-field detail.
+
+---
+
+### AppError → TRPCError mapping (hive / portfolio / swarm)
+
+Apps still using tRPC catch `AppError` in a global middleware:
 
 ```typescript
 // packages/api/trpc.ts
@@ -247,7 +323,6 @@ const errorHandling = t.middleware(async ({ next }) => {
     });
   }
 
-  // Report 5xx to Sentry
   if (error.code === "INTERNAL_SERVER_ERROR") {
     Sentry.captureException(error.cause ?? error);
   }
@@ -284,7 +359,7 @@ function mapStatusToTRPCCode(statusCode: number): TRPC_ERROR_CODE_KEY {
 }
 ```
 
-### In tRPC routes
+### In tRPC routes (hive / portfolio / swarm)
 
 ```typescript
 // Throw TRPCError directly in routes when needed

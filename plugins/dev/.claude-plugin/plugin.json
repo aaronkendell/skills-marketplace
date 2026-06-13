@@ -1,6 +1,6 @@
 {
 	"name": "dev",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Full SDLC: research, plan, build, ship. Linear integration, TDD, automated testing, code review. Works for golf, portfolio, and hive apps.",
 	"author": {
 		"name": "bokendell"

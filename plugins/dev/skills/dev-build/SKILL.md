@@ -17,7 +17,7 @@ Full implementation lifecycle for a single Linear issue: branch, implement with 
 
 Parse `$ARGUMENTS`:
 - A **Linear issue ID** (e.g., `GOLF-123`, `PORT-42`, `AGENTS-15`) — starts with letters, dash, numbers
-- OR a **local file path** to an issue spec (e.g., `docs/apps/golf/planning/.../issues/GOLF-123.md`)
+- OR a **local file path** to an issue spec (e.g., `docs/planning/.../issues/GOLF-123.md`)
 
 ## Steps
 
@@ -25,10 +25,10 @@ Parse `$ARGUMENTS`:
 
 1. **Derive the app** from the issue ID prefix (GOLF → golf, PORT → portfolio, AGENTS → hive)
 2. **Fetch the Linear issue** using Linear MCP tools (`get_issue`)
-3. **Find local issue file**: search `docs/apps/<app>/planning/` for a file with `linear_id: <ID>` in frontmatter
+3. **Find local issue file**: search `docs/planning/` for a file with `linear_id: <ID>` in frontmatter
 4. **Find existing plan**: look for `<ID>-plan.md` alongside the issue file
 5. **Read the parent project README** (navigate up from `issues/` directory)
-6. **Load ALL context patterns** from `docs/context/patterns/`:
+6. **Load ALL context patterns** from the marketplace pattern docs (resolve via the context-patterns skill: `${CLAUDE_PLUGIN_ROOT}/../../references/patterns/`):
    - `ddd.md` — DDD service/repository patterns (ALWAYS for backend)
    - `testing.md` — test types, Testcontainers, factories (ALWAYS)
    - `api.md` — Hono, tRPC, OpenAPI patterns (if API changes)
@@ -76,7 +76,7 @@ If no plan exists (`<ID>-plan.md`):
 
 2. **Invoke `superpowers:writing-plans`** with all context from Step 0 and exploration findings.
 
-3. **Save plan** to `docs/apps/<app>/planning/.../<ID>-plan.md`
+3. **Save plan** to `docs/planning/.../<ID>-plan.md`
 
 4. **Confirm plan with user** before proceeding.
 
@@ -104,8 +104,8 @@ Each subagent MUST receive in its prompt:
 **Rules for subagents:**
 - Only `git add` files. NEVER `git commit`.
 - Load context patterns before writing any code.
-- Follow DDD patterns from `docs/context/patterns/ddd.md` for all backend code.
-- Follow mobile patterns from `docs/context/patterns/mobile.md` for all mobile code.
+- Follow DDD patterns from the marketplace `ddd.md` (resolve via the context-patterns skill) for all backend code.
+- Follow mobile patterns from the marketplace `mobile.md` (resolve via the context-patterns skill) for all mobile code.
 
 ### Step 4: Testing
 

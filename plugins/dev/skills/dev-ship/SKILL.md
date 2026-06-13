@@ -38,6 +38,16 @@ git branch --show-current
 
 Fetch the issue from Linear to get the title and project.
 
+### Step 2.5: Docs check (contract repos — skip if no docs/MAP.md)
+
+1. **Freshness:** compare the staged diff against `docs/MAP.md`'s ownership table. Any
+   matched glob whose owning doc isn't in the diff → update the doc now (and bump its
+   `verified:` date) or state in the PR body why no doc change is needed.
+2. **Distill (only when this PR completes a planning project):** run the distill-on-ship
+   checklist from the dev:docs skill — as-built `product/features/<x>.md`, 0–2 `decisions/`
+   entries, MAP.md registry/ownership update, `git mv docs/planning/<project>
+   docs/archive/<year>/<project>`. Include these moves in this commit.
+
 ### Step 3: Commit
 
 Create a conventional commit message. Format: `<linear-id> — <short description>`
@@ -143,3 +153,4 @@ After merge (if applicable):
 - NEVER force push.
 - NEVER merge without user confirmation.
 - If GitHub Actions fail, report the failure and stop — don't retry blindly.
+- In contract repos (docs/MAP.md exists), NEVER ship a project-completing PR without the distill step.

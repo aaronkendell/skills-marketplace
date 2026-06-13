@@ -503,27 +503,41 @@ Used across multiple domains?
 ### Hierarchy
 
 ```typescript
-// packages/shared/core/src/errors/
-export abstract class AppError extends Error {
-  abstract readonly statusCode: number;
-  abstract readonly code: string;
-  constructor(message: string, public readonly context?: Record<string, unknown>) {
+// packages/shared/core/src/errors.ts
+export class AppError<TDetails = unknown> extends Error {
+  constructor(
+    message: string,
+    readonly statusCode: AppErrorStatusCode,
+    readonly errorCode: string,
+    readonly details?: TDetails,
+  ) {
     super(message);
     this.name = this.constructor.name;
   }
 }
 
 export class NotFoundError extends AppError {
-  readonly statusCode = 404;
-  readonly code = "NOT_FOUND";
   constructor(resource: string, id: string) {
-    super(`${resource} with id '${id}' not found`, { resource, id });
+    super(`${resource} with id '${id}' not found`, 404, ERROR_CODES.NOT_FOUND, { resource, id });
   }
 }
-export class ValidationError extends AppError { readonly statusCode = 400; readonly code = "VALIDATION_ERROR"; }
-export class ForbiddenError extends AppError { readonly statusCode = 403; readonly code = "FORBIDDEN"; }
-export class UnauthorizedError extends AppError { readonly statusCode = 401; readonly code = "UNAUTHORIZED"; }
-export class ConflictError extends AppError { readonly statusCode = 409; readonly code = "CONFLICT"; }
+export class ValidationError extends AppError { /* statusCode: 400 */ }
+export class ForbiddenError  extends AppError { /* statusCode: 403 */ }
+export class UnauthorizedError extends AppError { /* statusCode: 401 */ }
+export class ConflictError   extends AppError { /* statusCode: 409 */ }
+export class DatabaseError   extends AppError { /* statusCode: 500 */ }
+
+/**
+ * External API integration failure. The bridge maps:
+ *   upstream 4xx → statusCode 422 (UNPROCESSABLE_CONTENT)
+ *   upstream 5xx → statusCode 502 (BAD_GATEWAY / INTERNAL_SERVER_ERROR)
+ */
+export class ExternalApiError extends AppError<{ provider: string; upstreamStatus: number }> {
+  constructor(provider: string, upstreamStatus: number, message?: string) {
+    const statusCode = upstreamStatus >= 500 ? 502 : 422;
+    super(message ?? `${provider} returned ${upstreamStatus}`, statusCode, ERROR_CODES.EXTERNAL_API_ERROR, { provider, upstreamStatus });
+  }
+}
 ```
 
 ### Domain-specific errors
@@ -531,9 +545,9 @@ export class ConflictError extends AppError { readonly statusCode = 409; readonl
 ```typescript
 // domains/skills/domain/errors/duplicate-skill.error.ts
 export class DuplicateSkillError extends ConflictError {
-  override readonly code = "DUPLICATE_SKILL";
+  override readonly errorCode = "DUPLICATE_SKILL";
   constructor(name: string, eventId: string) {
-    super(`Skill '${name}' already exists for this event`, { name, eventId });
+    super(`Skill '${name}' already exists for this event`, 409, "DUPLICATE_SKILL", { name, eventId });
   }
 }
 ```
@@ -544,7 +558,7 @@ export class DuplicateSkillError extends ConflictError {
 |-------|---------|
 | Repository | Return `null` for "not found". Throw `Error` for unexpected DB failures. |
 | Service | Throw `NotFoundError` when resource must exist. Throw domain errors for business rules. Let other errors bubble. |
-| API route | Global error handler catches `AppError` → maps `statusCode` + `code`. Logs unexpected errors → 500. |
+| API route | Global error handler (oRPC bridge or tRPC middleware) catches `AppError` → maps `statusCode` + `errorCode`. Logs unexpected errors → 500. |
 
 ### Decision tree
 
@@ -553,8 +567,43 @@ Resource not found? → throw new NotFoundError('Resource', id)
 Business rule violated (domain-specific)? → throw new DuplicateSkillError(...)
 Business rule violated (generic)? → throw new ValidationError('message')
 Permission issue? → throw new ForbiddenError('message')
+Third-party API failed? → throw new ExternalApiError(provider, upstreamStatus, message)
 Unexpected failure? → let it throw (don't catch)
 ```
+
+### oRPC bridge procedure pattern (golf)
+
+Domain services throw `AppError` subclasses. The API tier converts them to typed `ORPCError` via an **app-tier bridge middleware** — not in the service, not in Awilix, not in the domain. The bridge lives in `apps/api/src/packages/api/procedures/base.ts` and is applied to every procedure base:
+
+```typescript
+// apps/api/src/packages/api/procedures/base.ts
+import { mapStatusToOrpcCode } from "@bokendell/api/orpc";
+import { AppError, isAppErrorLike } from "@bokendell/core";
+import { ORPCError } from "@orpc/server";
+
+function appErrorBridgeFn(cause: unknown, joinedPath: string): never {
+    if (cause instanceof AppError || isAppErrorLike(cause)) {
+        throw new ORPCError(mapStatusToOrpcCode(cause.statusCode), {
+            status: cause.statusCode,
+            message: cause.message,
+            data: { errorCode: cause.errorCode, details: cause.details ?? null, zodError: null, path: joinedPath },
+        });
+    }
+    throw cause;
+}
+
+export const publicBase = _bases.publicBase.use(async ({ next, path }) => {
+    try { return await next(); }
+    catch (cause) { appErrorBridgeFn(cause, path.join(".")); }
+});
+// protectedBase and internalBase get the same wrapper
+```
+
+**Rules:**
+- The bridge runs in procedure middleware, not in services or repositories.
+- Typed procedure errors (declared via `.errors()`) are thrown as `ORPCError` before the bridge runs — they pass through unchanged.
+- `AppError` subclasses from domain services bubble up to the bridge; the bridge converts them once at the API tier boundary.
+- `ExternalApiError` follows the same path — it's an `AppError` subclass with typed `details` (`provider`, `upstreamStatus`).
 
 ---
 
