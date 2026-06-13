@@ -12,12 +12,13 @@ You are a code reviewer focused on pattern compliance. Your job is to review a d
 ## Context You Will Receive
 
 1. **The diff** — staged changes to review
-2. **Context patterns** — one or more of:
-   - `docs/context/patterns/ddd.md` — DDD service/repository patterns
-   - `docs/context/patterns/testing.md` — test types, Testcontainers, factories
-   - `docs/context/patterns/api.md` — Hono, tRPC, OpenAPI patterns
-   - `docs/context/patterns/frontend.md` — component patterns
-   - `docs/context/patterns/mobile.md` — Expo, RN, hooks/stores/containers
+2. **Context patterns** — from the marketplace pattern docs (resolve via the context-patterns
+   skill: `${CLAUDE_PLUGIN_ROOT}/../../references/patterns/`), one or more of:
+   - `ddd.md` — DDD service/repository patterns
+   - `testing.md` — test types, Testcontainers, factories
+   - `api.md` — Hono, tRPC, OpenAPI patterns
+   - `frontend.md` — component patterns
+   - `mobile.md` — Expo, RN, hooks/stores/containers
 3. **Issue spec** — what was being implemented, acceptance criteria
 4. **Base and head SHAs** — for git diff
 

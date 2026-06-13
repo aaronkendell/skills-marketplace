@@ -7,9 +7,9 @@
 ## Full Design Docs
 
 For complete specifications, read these files from the codebase:
-- `docs/apps/portfolio/design/design-system.md` — Complete token reference (colors, typography, spacing, shadows, motion)
-- `docs/apps/portfolio/design/showcase-*.html` — Seven visual mockups (homepage, project-detail, projects-list, experience, blog, playground, global-overlays)
-- `docs/apps/portfolio/design/token-parity-audit.md` — Mockup vs. shipped parity report
+- `docs/design/design-system.md` — Complete token reference (colors, typography, spacing, shadows, motion)
+- `docs/design/showcase-*.html` — Seven visual mockups (homepage, project-detail, projects-list, experience, blog, playground, global-overlays)
+- `docs/design/token-parity-audit.md` — Mockup vs. shipped parity report
 
 ## Token Implementation Files
 

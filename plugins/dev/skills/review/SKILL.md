@@ -49,7 +49,7 @@ ${CLAUDE_PLUGIN_ROOT}/../../references/patterns/      # plugin lives at marketpl
 
 If `CLAUDE_PLUGIN_ROOT` isn't set (running ad-hoc, not as installed plugin), search upward from cwd for a directory containing `references/patterns/` AND `.claude-plugin/marketplace.json`. The bokendell marketplace repo always has both.
 
-If you still can't find the docs, fall back to `<current-repo>/docs/context/patterns/` (where the docs live in consumer repos as `docs/context/patterns/*.md`) and tell the user you used the local fallback.
+If you still can't find the docs, fall back to `~/repos/bokendell/skills-marketplace/references/patterns/` and tell the user you used the fallback.
 
 The 18 canonical pattern files (each loads on demand — don't read them all upfront):
 

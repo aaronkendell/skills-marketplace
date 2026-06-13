@@ -1,10 +1,10 @@
 ---
 name: context-patterns
 description: >
-  Auto-loads the correct docs/context/patterns/ files based on what's being worked on.
-  Triggers when working on golf, portfolio, or hive apps — during planning, development,
-  testing, or code review. Ensures DDD, API, frontend, mobile, and testing patterns are
-  always in context. Use proactively whenever implementing, reviewing, or planning features.
+  Auto-loads the correct pattern docs based on what's being worked on. Triggers when working
+  on golf, portfolio, or hive apps — during planning, development, testing, or code review.
+  Ensures DDD, API, frontend, mobile, and testing patterns are always in context. Use
+  proactively whenever implementing, reviewing, or planning features.
 user-invocable: false
 ---
 
@@ -12,46 +12,34 @@ user-invocable: false
 
 Automatically determines which pattern docs to load based on the work being done.
 
-## Pattern Files
+## Where pattern docs live
 
-Located at `docs/context/patterns/` in the project root:
+Pattern docs are part of the skills-marketplace, NOT the consumer repo:
 
-| File | Load When |
-|------|-----------|
-| `ddd.md` | Any backend domain work (services, repositories, entities, mappers) |
-| `api.md` | Any API endpoint work (tRPC routes, Hono routes, OpenAPI) |
-| `testing.md` | Always — every feature needs tests |
-| `frontend.md` | Web frontend work (Next.js, React, Tailwind, shadcn) |
-| `mobile.md` | Mobile work (Expo, React Native, Zustand, RHF) |
-| `design.md` | Design app work (`apps/<app>/design/` Next.js studio — lib/, packages/, surface groups, sketches, providers) |
-| `design-studio.md` | Annotation system + element IDs in the design app |
-| `design-workflow.md` | Per-flow workflow: decisions.md, sketches, promotion to kit |
-| `per-app-ui.md` | Per-app UI package (`@bokendell/<app>-ui`) — token contract |
+1. Preferred: `${CLAUDE_PLUGIN_ROOT}/../../references/patterns/` (plugin lives at `marketplace/plugins/dev`)
+2. If `CLAUDE_PLUGIN_ROOT` is unset: search upward from cwd for a directory containing both
+   `references/patterns/` and `.claude-plugin/marketplace.json` (the marketplace repo has both)
+3. Last resort: `~/repos/bokendell/skills-marketplace/references/patterns/`
 
-## Detection Rules
+## App context
 
-Determine which patterns to load based on files being touched:
+Before patterns, read the repo's `docs/MAP.md` (if present) — it's the retrieval contract and
+points at the app overview (`docs/architecture/overview.md`). Load only what MAP.md's task
+table names for the current task.
 
-- `packages/*/domains/` → `ddd.md` + `testing.md`
-- `apps/*/api/` → `api.md` + `ddd.md` + `testing.md`
-- `apps/*/app/` or `apps/*/admin/` → `frontend.md` + `testing.md`
-- `apps/*/mobile/` → `mobile.md` + `testing.md`
-- `apps/*/design/` → `design.md` + `design-studio.md` + `design-workflow.md` + `frontend.md` + `per-app-ui.md` + `testing.md`
-- `packages/*/ui/` → `per-app-ui.md` (per-app UI package token contract)
-- `packages/*/db/` → `ddd.md` + `testing.md`
-- `packages/*/client/` → `api.md` + `testing.md`
+## Detection rules (files touched → pattern docs)
 
-When in doubt, load all patterns. The cost of having extra context is much lower than the cost of missing a pattern violation.
+- `packages/*/domains/**` or `packages/*-domains/**` → `ddd.md` + `testing.md`
+- `apps/*/api/**` or `apps/api/**` → `api.md` + `ddd.md` + `testing.md`
+- `apps/*/app/**` or `apps/*/admin/**` or `apps/admin/**` → `frontend.md` + `testing.md`
+- `apps/*/mobile/**` or `apps/mobile/**` → `mobile.md` + `testing.md`
+- `packages/*/db/**` or `packages/db/**` → `ddd.md` + `testing.md`
+- `apps/design/**` or `packages/*-ui/**` → `per-app-ui.md` + `design-studio.md`
 
-## How to Load
+When in doubt, load `ddd.md`, `api.md`, `testing.md` — extra context is cheaper than a missed
+pattern violation.
 
-Read each relevant pattern file with the Read tool. Pass the content to subagents, code reviewers, and implementation agents as part of their prompt context.
+## How to load
 
-## App-Specific Context
-
-In addition to patterns, load the condensed app context:
-- `docs/context/apps/golf.md` — Golf app overview
-- `docs/context/apps/portfolio.md` — Portfolio app overview
-- `docs/context/apps/hive.md` — Hive app overview
-
-These provide quick orientation on architecture, tech stack, and domain structure for each app.
+Read each relevant pattern file with the Read tool. Pass the content to subagents, code
+reviewers, and implementation agents as part of their prompt context.

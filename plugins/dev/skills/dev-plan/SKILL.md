@@ -16,9 +16,9 @@ Break a design document into Linear projects and implementable issues. Favor few
 
 Parse `$ARGUMENTS`:
 - First word: **app name** (golf, portfolio, hive)
-- Optional second arg: **initiative path** (e.g., `docs/apps/golf/planning/round-join-codes`)
+- Optional second arg: **initiative path** (e.g., `docs/planning/round-join-codes`)
 
-If no initiative path given, list available initiatives at `docs/apps/<app>/planning/` and ask.
+If no initiative path given, list available initiatives at `docs/planning/` (active projects only — never `docs/archive/`) and ask.
 
 ## Steps
 
@@ -26,7 +26,7 @@ If no initiative path given, list available initiatives at `docs/apps/<app>/plan
 
 1. Read `.claude/planner.local.md` for app config
 2. Read the design document at `<initiative-path>/design.md`
-3. Read `docs/context/patterns/ddd.md` and `docs/context/patterns/testing.md` — the issue breakdown must align with DDD domain boundaries
+3. Read `ddd.md` and `testing.md` from the marketplace pattern docs (resolve via the context-patterns skill: `${CLAUDE_PLUGIN_ROOT}/../../references/patterns/`) — the issue breakdown must align with DDD domain boundaries
 4. Check existing Linear projects for this app to avoid duplicates
 
 ### 2. Break Into Projects
@@ -81,7 +81,7 @@ For each issue, define:
 Create the directory structure:
 
 ```
-docs/apps/<app>/planning/<initiative>/
+docs/planning/<initiative>/
 ├── design.md                    # Already exists from research phase
 ├── <project-name>/
 │   ├── README.md                # Project overview, goals, dependencies
@@ -129,6 +129,11 @@ For each project:
 1. Check if a Linear project with this name already exists for the team
 2. If exists: update description, priority
 3. If not: create new project under the app's Linear initiative
+4. Cross-link (docs contract): set the FIRST line of the Linear project description to the
+   GitHub link of the planning folder
+   (`https://github.com/<org>/<repo>/tree/main/docs/planning/<initiative>`), and write the
+   Linear project URL into `docs/planning/<initiative>/README.md` frontmatter as `linear:`.
+   Scaffold the README from the dev:docs skill's `templates/planning-readme.md` if missing.
 
 For each issue:
 1. Check if a Linear issue with matching `linear_id` exists

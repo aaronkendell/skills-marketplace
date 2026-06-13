@@ -7,8 +7,8 @@
 ## Full Design Docs
 
 For complete specifications, read these files from the codebase:
-- `docs/apps/hive/design/design-system.md` — Complete token reference (colors, typography, spacing, shadows, components)
-- `docs/apps/hive/design/showcase.html` — Visual showcase (browser-viewable)
+- `docs/design/design-system.md` — Complete token reference (colors, typography, spacing, shadows, components)
+- `docs/design/showcase.html` — Visual showcase (browser-viewable)
 
 ## Token Implementation Files
 

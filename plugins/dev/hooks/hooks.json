@@ -10,6 +10,16 @@
 					}
 				]
 			}
+		],
+		"Stop": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "pnpm exec tsx \"${CLAUDE_PLUGIN_ROOT}/hooks/docs-freshness.ts\""
+					}
+				]
+			}
 		]
 	}
 }

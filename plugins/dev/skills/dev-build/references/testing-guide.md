@@ -1,6 +1,6 @@
 # Testing Guide
 
-Quick reference for testing patterns during the build phase. For full details, read `docs/context/patterns/testing.md`.
+Quick reference for testing patterns during the build phase. For full details, read the marketplace `testing.md` (resolve via the context-patterns skill: `${CLAUDE_PLUGIN_ROOT}/../../references/patterns/`).
 
 ## API Testing with curl
 
