@@ -23,6 +23,7 @@
 - [ ] BLOCKING: No `vi.mock` with empty implementation (tests must actually assert behavior)
 - [ ] IMPORTANT: Repository tests use `ctx.reset()` in `beforeEach` to isolate state
 - [ ] IMPORTANT: Service unit tests mock the repository (`vi.fn()`) and verify the mock is called correctly
+- [ ] IMPORTANT (golf authz v2): Service tests assert the `Principal` reaches the policy/service (caller carries `scopes`); admin-tier oRPC router tests register `accessPolicy` (`new AccessPolicy()`) in the test scope or the gate throws "Could not resolve 'accessPolicy'". See `testing.md` → *Golf oRPC router tests*.
 - [ ] ADVISORY: Integration tests wrapped in `describe.skipIf(skipIfNoTestDb)(...)` so they skip without Docker
 
 ## Factories

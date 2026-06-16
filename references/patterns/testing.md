@@ -427,6 +427,50 @@ describe("courses.getHoleMaps", () => {
 
 **Every tRPC route must have tests.** Test both happy paths and error cases.
 
+### Golf oRPC router tests
+
+Golf routers are oRPC. Invoke handlers with `call()` from `@orpc/server`; the
+context is a **`ScopedContext`** — `GolfApiContext` plus the runtime-injected
+Awilix `scope` (a test container where you register mocked services, since
+handlers resolve via `getCradle(context)`):
+
+```typescript
+import { call } from "@orpc/server";
+import { asValue, createContainer } from "awilix";
+import { AccessPolicy } from "@bokendell/golf-domains/authz";
+import type { ScopedContext } from "../api/orpc";
+
+function makeCtx(overrides: Partial<ScopedContext> = {}): ScopedContext {
+  const scope = createContainer({ injectionMode: "PROXY" });
+  scope.register({
+    goalService: asValue(mockGoalService),
+    // Admin/area tiers gate via AccessPolicy resolved from the cradle —
+    // register the real (no-dep) policy or those procedures throw
+    // "Could not resolve 'accessPolicy'".
+    accessPolicy: asValue(new AccessPolicy()),
+  });
+  return { user: null, session: null, requestId: "t", headers: new Headers(),
+           scope: scope as never, ...overrides } as ScopedContext;
+}
+
+it("rejects non-admin", async () => {
+  const ping = adminProcedure.handler(() => "pong");
+  await expect(
+    call(ping, undefined, { context: makeCtx({ user: { id: "u", role: "user" } as never }) }),
+  ).rejects.toThrow(/admin/i);
+});
+```
+
+Golf-specific gotchas (and review flags):
+- **Register `accessPolicy`** in the test scope for any `adminProcedure` /
+  `adminAreaProcedure` test — the audited gate resolves it from the cradle.
+- Services receive a **`Principal`** as the caller arg — assert on it
+  (`expect(svc.fn).toHaveBeenCalledWith(expect.objectContaining({ kind: "admin" }), input)`),
+  and remember the caller now carries `scopes`, so exact-match assertions on the
+  caller object must include it.
+- `security` in generated OpenAPI is an **OR-list** (order non-semantic); assert
+  membership, not array order.
+
 ---
 
 ## Inngest function tests

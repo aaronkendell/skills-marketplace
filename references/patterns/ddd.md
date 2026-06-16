@@ -151,6 +151,57 @@ export type SkillService = ReturnType<typeof createSkillService>;
 
 ---
 
+## Authorization — services gate with a Policy (golf authz v2)
+
+A scope check at the route ("may write goals in general") does **not** authorize
+the specific object ("…and this goal is theirs"). In golf, the object-level
+decision lives **in the service**, expressed as an injected **Policy**. (Full
+model — Principals, scopes, the policy catalogue — in `auth-and-scopes.md`.)
+
+```typescript
+// application/goal.service.ts
+import type { Principal } from "../../../lib/context/principal";
+
+export function createGoalService(deps: GoalServiceDeps) {
+  const { goalRepository, ownershipPolicy } = deps;   // policy is a DI dependency
+
+  return {
+    // mutations take `caller: Principal` — never a bare userId for an authz decision
+    async updateGoal(goalId: string, caller: Principal, input: UpdateGoalInput): Promise<Goal> {
+      const goal = await goalRepository.findByIdOrThrow(goalId);
+      ownershipPolicy.assertSelf(caller, goal.userId, {
+        action: "goal.update",          // TYPED AuthzAction — controlled audit dimension
+        resourceType: "goal",
+        resourceId: goalId,
+        error: () => new GoalNotFoundError(goalId),  // anti-enumeration: hide from non-owners
+      });
+      return goalRepository.update(goalId, input);
+    },
+  };
+}
+```
+
+**Rules:**
+- A service method that **mutates** on behalf of a caller takes `caller: Principal`
+  and calls a policy (`OwnershipPolicy.assertSelf`, a membership/admin policy, or
+  `EntitlementPolicy.assertEntitled` for paid features). Policies are **injected**
+  (mockable), never reach into infrastructure.
+- Policies extend **`AuthzPolicy`** and route through core's `Policy` choke point,
+  so every denial is **audited** (`authz_audit`, via the global sink wired in
+  composition). Use the **typed** `AuthzAction`/`AuthzResourceType` vocabulary.
+- `system` callers pass ownership/entitlement gates — per-user background jobs use
+  `systemActingAs(reason, userId)` so the subject is still the user.
+- Throw `NotFound` instead of `Forbidden` (`opts.error`) when existence itself is
+  sensitive.
+- The swarm rule **`service-mutation-requires-policy`** (`pnpm swarm check arch`)
+  flags any mutation missing a gate — **including** caller-less ones that act on a
+  foreign id/email. It must sit at **zero**; don't `arch-allow` it, convert to a
+  real gate (caller + policy, or `AccessPolicy.assertSystem` for genuinely
+  system-internal methods). **Review flag:** a new service mutation with no policy
+  assertion.
+
+---
+
 ## Repository pattern
 
 ```typescript

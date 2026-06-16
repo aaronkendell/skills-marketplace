@@ -129,6 +129,47 @@ createContext: (c) => ({
 })
 ```
 
+### In oRPC context (golf) — `GolfApiContext` + `getCradle`
+
+Golf runs oRPC. The request context is the **concrete** `GolfApiContext`
+declared once in `apps/api/src/packages/api/procedures/base.ts` and threaded,
+typed, into every handler via `os.$context<GolfApiContext>()`:
+
+```ts
+export interface GolfApiContext {
+  user: BetterAuthSession["user"] | null;
+  session: BetterAuthSession["session"] | null;
+  apiKey?: { id?: string; [key: string]: unknown } | null;
+  oauthToken?: { clientId: string; scope: string; sub?: string; exp?: number } | null;
+  requestId: string;
+  headers: Headers;
+}
+```
+
+**The per-request Awilix `scope` is deliberately NOT on this type.** The adapter
+(`createGolfApp`'s `extendContext`) injects it at runtime, but handlers reach the
+resolved service graph through one accessor — never `context.scope` directly:
+
+```ts
+// the ONLY way handlers get services — resolves per-request from the cradle
+const { roundService } = getCradle(context);
+```
+
+`getCradle`/`bindScope` accept a `ScopedContext` (`GolfApiContext & { scope? }`)
+— the single seam type, used by ~3 functions; handlers only ever name
+`GolfApiContext`.
+
+> **Why scope is off the public context (a real constraint, not style).** The
+> oRPC router type is published as `@bokendell/golf-client`'s `AppRouter`
+> (`apps/api/dist/orpc.d.ts`). If `scope: AwilixContainer<AppCradle>` were on the
+> context, that type would drag `awilix` **and** the whole `golf-composition` DI
+> graph into the client's `.d.ts` — neither is a client dependency — and the
+> tsdown dts bundler would have to inline composition's `typeof resolvers` cradle
+> (rolldown-plugin-dts#219). Scope is request infrastructure, not API contract,
+> so it stays off the type and rides the runtime object only. **Review flag:** a
+> handler reading `context.scope` directly, or `scope` re-added to
+> `GolfApiContext`, is wrong — use `getCradle(context)`.
+
 ---
 
 ## Procedure types
@@ -165,6 +206,16 @@ export function scopedProcedure(requiredScopes: HiveScope | HiveScope[]) { /* ca
 | `machineProcedure` | API key or OAuth 2.1 access token | Service-to-service calls (Discord, CLI, MCP) |
 | `callerProcedure` | Admin session, API key, or OAuth token | Any authenticated caller |
 | `scopedProcedure(scopes)` | `callerProcedure` + `requireAnyScope()` | Domain routes with fine-grained authorization |
+
+**Golf (oRPC)** has its own tier set in `apps/api/src/packages/api/procedures/`:
+`publicProcedure`, `protectedProcedure`, `sessionProcedure([scopes])` (session
+only), `apiProcedure([scopes])` (any credential), `adminProcedure` (role gate via
+the audited `AccessPolicy`), and `adminAreaProcedure(area)` (role + `admin:<area>`
+/ `admin:all`). The scope tiers **stamp `{ scopes, authTier }` onto route meta**
+— the single source the OpenAPI generator reads for per-operation `security`, and
+the derivation point for `visibility:"internal"`. A scope gate at the route is
+only half the check — enforce the object-level rule in the service with a
+**Policy**. See **`auth-and-scopes.md`** for the full Principal/scope/policy model.
 
 ---
 

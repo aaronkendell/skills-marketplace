@@ -165,22 +165,37 @@ Procedures call `getCradle(ctx).serviceName` (or destructure). The `any` param d
 
 ## Consuming services in routers
 
-Inside each procedure, destructure services from `ctx.scope.cradle`:
+Inside each procedure, destructure services from the cradle:
 
 ```typescript
-// Golf / portfolio pattern
-.mutation(async ({ input, ctx }) => {
-  const { roundService, sideBetService } = ctx.scope.cradle;
-  await assertRoundMember(roundService, input.roundId, ctx.user.id);
-  return await sideBetService.createSideBet(input);
+// Golf (oRPC) — getCradle(context) is the ONLY accessor; never context.scope
+.handler(({ input, context }) => {
+  const { roundService, sideBetService } = getCradle(context);
+  return sideBetService.createSideBet(context.caller, input);
 })
 
-// Hive pattern (uses helper)
+// Portfolio (tRPC) — ctx.scope.cradle
+.mutation(async ({ input, ctx }) => {
+  const { roundService } = ctx.scope.cradle;
+  return roundService.create(input);
+})
+
+// Hive (tRPC) — getCradle(ctx) helper
 .mutation(async ({ input, ctx }) => {
   const { contactService } = getCradle(ctx);
-  return await contactService.create(input);
+  return contactService.create(input);
 })
 ```
+
+> **Golf: `scope` is OFF the typed context.** `getCradle(context)` reads a
+> runtime-injected `scope` that is intentionally absent from `GolfApiContext`,
+> because that type is published as `@bokendell/golf-client`'s `AppRouter` — a
+> typed `scope: AwilixContainer<AppCradle>` would leak `awilix` + the
+> `golf-composition` DI graph into the client `.d.ts` and trip the dts bundler
+> (rolldown-plugin-dts#219). `getCradle`/`bindScope` take a `ScopedContext`
+> (`GolfApiContext & { scope? }`) seam; handlers only name `GolfApiContext`.
+> **Review flag:** a handler reading `context.scope`, or `scope` re-added to the
+> context type. See `api.md` → *In oRPC context (golf)*.
 
 ### Helpers that close over services
 

@@ -29,6 +29,13 @@
 - [ ] BLOCKING: `ValidationError` mapped to 400
 - [ ] IMPORTANT: No raw error messages leaked in responses (check for stack traces, internal paths)
 
+## Golf oRPC procedures + context — see `api.md` / `auth-and-scopes.md`
+
+- [ ] BLOCKING: Handlers resolve services via `getCradle(context)` — never read `context.scope` directly, and never re-add `scope` to `GolfApiContext` (it would leak `awilix`/`golf-composition` into the published `AppRouter` type)
+- [ ] BLOCKING: Routes pick the tightest tier (`sessionProcedure`/`apiProcedure([scopes])`, `adminProcedure`, `adminAreaProcedure(area)`); the route scope gate is paired with an in-service Policy for object-level authz
+- [ ] IMPORTANT: Scope/auth-tier come from the procedure tier's stamped meta — no second hand-maintained OpenAPI `security` list; `context.caller` is read, not rebuilt
+- [ ] IMPORTANT: New admin route appears only in the admin spec (`visibility:"internal"` derived from an all-admin scope set), not the public `openapi.json`
+
 ## oRPC error bridge (golf only)
 
 - [ ] BLOCKING: `publicBase`, `protectedBase`, `internalBase` each have an `appErrorBridgeFn` wrapper — domain `AppError` must never escape to the oRPC normalizer as an untyped throw

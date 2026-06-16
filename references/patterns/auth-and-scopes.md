@@ -1,290 +1,288 @@
-# Auth, Scopes, and Caller Context
+# Auth, Principals, Scopes, and Policies (Authz v2)
 
-Every backend app (golf, portfolio, hive) gates tRPC procedures through the same set of building blocks. This doc shows how to pick the right procedure builder, define scopes, and pass a `CallerContext` into services. Examples are golf-flavored; the pattern is identical in hive and portfolio.
+How golf decides **who is calling** and **what they may do**. The model is two
+distinct layers that are never merged:
 
----
+- **Scope = a GRANT** — a coarse capability the credential carries (`rounds:write`,
+  `admin:billing`). Lives on the `Principal`, checked at the **route** boundary.
+- **Action = an OPERATION on an object** — "update *this* goal", "read *that*
+  round". Enforced inside the **service** by a **Policy** against the actual
+  object's owner/membership, and **audited**.
 
-## The shared foundation
+A scope says "this caller is allowed to write goals in general." A policy says
+"…and this goal is theirs." You need both; one is not a substitute for the other.
 
-The generic types and helpers live in `@bokendell/api`:
-
-- `@bokendell/api/trpc` — `createBaseTrpc()` returns the base procedure builders (`publicProcedure`, `protectedProcedure`, `adminProcedure`, `internalProcedure`).
-- `@bokendell/api/caller` — generic `CallerContext<TScope>` plus helpers (`getCallerIdentifier`, `getCallerUserId`, `requireCallerUserId`, `hasAnyScope`, `requireAnyScope`).
-
-Each app builds two thin layers on top:
-
-1. **Domain context** (`packages/{app}/domains/src/lib/context/`)
-   - `scopes.ts` — `Scopes` registry + `AppScope` union + `ALL_SCOPES`/`USER_SCOPES`/`ADMIN_SCOPES`/`SYSTEM_SCOPES` presets.
-   - `caller-context.ts` — re-exports `CallerContext` parameterized on `AppScope` plus `createXCallerContext(...)` factories.
-2. **API procedure layer** (`apps/{app}/api/src/packages/api/trpc.ts`)
-   - Adds `scopeBinding` (per-request Awilix scope into AsyncLocalStorage), `machineProcedure`, `callerProcedure`, `scopedProcedure(scopes)`.
-   - `apps/{app}/api/src/lib/auth/caller-context.ts` — `createCallerFromContext(ctx)` parses the request's auth signals (session / API key / OAuth token) into a `CallerContext`.
+> **App scope.** This is golf's current standard (authz v2). Hive and portfolio
+> still run the older `CallerContext` + `scopedProcedure` model documented in
+> their own trees; the shape below is where they're headed. When you touch
+> golf, use this. When you touch hive/portfolio, match what's there.
 
 ---
 
-## Procedure builders — when to use which
+## The `Principal` — who is calling
 
-| Builder | Auth required | Use for |
-|---|---|---|
-| `publicProcedure` | None | Health checks, anonymous reads, share pages |
-| `protectedProcedure` | Session OR API key | Standard authenticated user actions |
-| `adminProcedure` | Session with `role: "admin"` | Admin dashboard endpoints, dev-tools, ops |
-| `callerProcedure` | Session OR API key OR OAuth token | Endpoints that accept any caller type and switch on `CallerContext` downstream |
-| `machineProcedure` | API key OR OAuth token (no session) | Webhooks, service-to-service, automation |
-| `scopedProcedure([Scopes.X, ...])` | Caller must hold ≥1 listed scope | Capability gating — admin auto-grants all, API keys carry their granted subset |
-| `sessionScopedProcedure([Scopes.X, ...])` | Browser session AND ≥1 listed scope | Interactive-only capability gates — password change, account deletion, anything that should reject API keys |
-| `internalProcedure` | Shared `Authorization: Bearer <secret>` | App-to-app calls inside the cluster |
-
-Rule of thumb:
-
-- **CRUD that operates on "my X"** → `scopedProcedure([Scopes.x.read])` / `[Scopes.x.write]`. Inside, call `createCallerFromContext(ctx)` and pass into the service.
-- **Strictly admin** → `scopedProcedure([Scopes.admin.all])` (preferred over raw `adminProcedure` — same gate today, ready for finer-grained admin scopes later).
-- **Public** → `publicProcedure`, no caller, no scopes.
-- **Webhook from Inngest, Vault, Linear, etc.** → `internalProcedure` (shared secret) OR a Hono REST route + signature verification.
-
----
-
-## Examples (golf)
-
-> Every authenticated procedure auto-attaches `ctx.caller: CallerContext` via
-> the `withCaller` middleware in `trpc.ts`. Routers read it directly — no
-> `createCallerFromContext(ctx)` boilerplate.
-
-### A scoped read endpoint
-```ts
-// apps/golf/api/src/packages/rounds/rounds.trpc.router.ts
-import { Scopes } from "@bokendell/golf-domains/context";
-import { router, scopedProcedure } from "../api/trpc";
-
-export const roundsRouter = router({
-  listMyRounds: scopedProcedure([Scopes.rounds.read])
-    .input(z.object({ limit: z.number().int().positive().max(100).default(20) }))
-    .query(({ ctx, input }) =>
-      ctx.scope.cradle.roundService.listForCaller(ctx.caller, input),
-    ),
-});
-```
-
-### A scoped write endpoint
-```ts
-createRound: scopedProcedure([Scopes.rounds.write])
-  .input(createRoundInputSchema)
-  .mutation(({ ctx, input }) =>
-    ctx.scope.cradle.roundService.create(ctx.caller, input),
-  ),
-```
-
-### Admin-only endpoint
-```ts
-resetSeedData: adminProcedure
-  .input(z.void())
-  .mutation(({ ctx }) =>
-    // ctx.caller.type === "admin", ctx.caller.scopes === ALL_SCOPES
-    ctx.scope.cradle.seedService.resetSeedData(ctx.caller),
-  ),
-```
-
-### Public endpoint (no caller)
-```ts
-checkAvailability: publicProcedure
-  .input(z.object({ courseId: z.string() }))
-  .query(({ ctx, input }) =>
-    ctx.scope.cradle.courseService.checkPublicAvailability(input.courseId),
-  ),
-```
-
-### Background job / Inngest function (no HTTP context)
-```ts
-// packages/golf/domains/src/packages/seed/infrastructure/inngest/seed-dev-data.function.ts
-import { createSystemCallerContext } from "../../../../lib/context/caller-context";
-
-inngest.createFunction(
-  { id: FUNCTION_IDS.SEED_DEV_DATA },
-  { event: EVENT_NAMES.GOLF.SEED_DEV_DATA },
-  async ({ event, step }) => {
-    const caller = createSystemCallerContext("seed-dev-data");
-    await step.run("run-dev-seed", () => seedService.runSeed(caller));
-  },
-);
-```
-
----
-
-## Building a CallerContext
-
-You almost never construct `CallerContext` by hand. Use what's already there:
-
-| Where you are | How |
-|---|---|
-| Inside a tRPC procedure | **`ctx.caller` is already attached** by `withCaller` middleware on every authenticated builder. Just read it. |
-| Inside an Inngest function or cron | `createSystemCallerContext("descriptive-reason")` |
-| Inside a CLI command running an admin action | `createSystemCallerContext("bk-<command-name>")` (system caller has all scopes) |
-| Inside a script seeding data | Same — `createSystemCallerContext("seed-<purpose>")` |
-| Inside a `publicProcedure` that needs to know the caller when present | Manual `createCallerFromContext(ctx)` from `apps/golf/api/src/lib/auth/caller-context.ts` after a null check on `ctx.user`/`ctx.apiKey`/`ctx.oauthToken` (public routes don't auto-attach because there's no auth signal guaranteed) |
-
-The factory you pick determines the variant (`user` / `admin` / `apiKey` / `oauthClient` / `system`) and the granted scopes:
-
-| Caller variant | How produced | Scopes granted |
-|---|---|---|
-| `user` | Session, role !== "admin" | `USER_SCOPES` (read/write own data) |
-| `admin` | Session, role === "admin" | `ALL_SCOPES` |
-| `apiKey` | Better Auth API key (referenceId / userId) | Whatever the key was provisioned with |
-| `oauthClient` | OAuth 2.1 access token | Parsed from token's `scope` claim |
-| `system` | `createSystemCallerContext(reason)` | `ALL_SCOPES` (trusted internal) |
-
----
-
-## Inside a service
-
-Services that act on behalf of a caller take `caller: CallerContext` as the first argument:
+Every authenticated entry point resolves a **`Principal`** (from
+`@bokendell/core`) and threads it explicitly into services. It is a flat
+OAuth/OIDC projection — never a hand-built literal.
 
 ```ts
-// packages/golf/domains/src/packages/rounds/application/round.service.ts
-import type { CallerContext } from "../../../lib/context/caller-context";
-import { requireCallerUserId, requireAnyScope } from "../../../lib/context/caller-context";
-import { Scopes } from "../../../lib/context/scopes";
-
-export function createRoundService(deps: ...) {
-  return {
-    async listForCaller(caller: CallerContext, input: ListRoundsInput) {
-      // Defense in depth — the procedure already gated on Scopes.rounds.read,
-      // but services that are also called from Inngest / CLI revalidate.
-      requireAnyScope(caller, [Scopes.rounds.read]);
-      const userId = requireCallerUserId(caller);  // throws if system / oauthClient w/o sub
-      return deps.roundRepository.listByOwner(userId, input);
-    },
-  };
+interface Principal {
+  subject: { id: string; type: "human" | "machine" };  // WHO the action is for
+  kind: "user" | "admin" | "system" | "apiKey" | "oauth" | "service" | "agent";
+  actor?: { subject; kind; scopes };  // present on DELEGATION (RFC 8693)
+  scopes: readonly GolfScope[];        // the GRANTS this caller holds
+  amr?: string[];                      // auth method: ["session"] | ["apikey"] | ["oauth"]
+  claims: Record<string, unknown>;     // role, reason, keyId, comp, actingAs…
 }
 ```
 
-Two small helpers do most of the work:
+Build it with a factory from `packages/domains/src/lib/context/principal.ts` —
+never by hand (a literal drifts from the variant shape and drops `scopes`):
 
-- **`requireCallerUserId(caller)`** — returns the user id, throws `ForbiddenError` if there's no associated user (system callers, OAuth without `actingForUserId`).
-- **`requireAnyScope(caller, [...])`** — throws `ForbiddenError` unless the caller holds at least one of the listed scopes.
+| Factory | `kind` | subject | scopes | Use for |
+|---|---|---|---|---|
+| `userPrincipal(userId, extraScopes?)` | `user` | the user | `USER_SCOPES` + opt-in extras | regular session |
+| `adminPrincipal(userId, grantedAdminScopes?)` | `admin` | the user | `USER_SCOPES` + `admin:<area>`(s); `admin:all` ⇒ every scope | admin session |
+| `apiKeyPrincipal(keyId, ownerUserId, scopes)` | `apiKey` | the owner | the key's provisioned subset | Better Auth API key |
+| `oauthClientPrincipal(clientId, scopes, {actingForUserId?})` | `oauth` | user (delegated) or client | token's `scope` claim | OAuth 2.1 client |
+| `systemPrincipal(reason)` | `system` | `system:<reason>` | `SYSTEM_SCOPES` (all) | **aggregate** background jobs (no single user) |
+| `systemActingAs(reason, userId)` | `system` | **the user**, `actor` = system | `SYSTEM_SCOPES` | **per-user** background jobs (delegation) |
 
-Both are typed and import-shape-identical across golf / hive / portfolio.
+### `systemPrincipal` vs `systemActingAs` — the important one
 
----
+Background work (Inngest / cron / worker) must thread a `Principal` through the
+**same** service path as a request — never a back door that takes a bare
+`userId`.
 
-## Hono REST routes — same pattern, different builder
+- **Per-user job** (recompute user X's handicap, refresh their snapshot) →
+  `systemActingAs(reason, userId)`. The `subject` **is** the user, so
+  `requireSubjectId` and `OwnershipPolicy.assertSelf` resolve to them; the
+  `actor` records the platform drove it. Audit rows show `subject=user,
+  actor=system:<reason>`.
+- **Aggregate / cross-user job** (community benchmarks, pricing sync, digests) →
+  `systemPrincipal(reason)`. There's no single subject to act as.
 
-Hono routes get a parallel middleware bundle via `createHonoAuth()` from
-`@bokendell/api/hono-auth`. Each app instantiates one bundle in
-`apps/<app>/api/src/lib/middleware/hono-auth.ts`:
-
-```ts
-import { createHonoAuth } from "@bokendell/api/hono-auth";
-import { type GolfScope, requireAnyScope } from "@bokendell/golf-domains/context";
-import { createCallerFromContext } from "../auth/caller-context";
-
-export const honoAuth = createHonoAuth<CallerContext, GolfScope>({
-  buildCaller: (vars) => createCallerFromContext(vars),
-  requireAnyScope,
-});
-```
-
-Routers consume the bundle. Authenticated middlewares attach
-`c.var.caller: CallerContext` — the same convention `withCaller` uses on
-the tRPC side.
-
-```ts
-import { honoAuth } from "@/lib/middleware/hono-auth";
-
-// Public — no auth
-publicRouter.get("/", (c) => c.text("hello"));
-
-// Protected — requires session, attaches c.var.caller
-authedRouter.use("*", ...honoAuth.protectedHono);
-
-// Admin
-adminRouter.use("*", ...honoAuth.adminHono);
-
-// Per-route scope gate
-router.post(
-  "/rounds",
-  ...honoAuth.scopedHono([Scopes.rounds.write]),
-  async (c) => {
-    return container.cradle.roundService.create(c.var.caller, await c.req.json());
-  },
-);
-
-// Session-only (rejects API keys) — interactive routes
-router.delete(
-  "/account",
-  ...honoAuth.sessionScopedHono([Scopes.users.write]),
-  async (c) => container.cradle.userService.delete(c.var.caller),
-);
-
-// Webhook / service-to-service — Authorization: Bearer <internalSecret>
-webhookRouter.use("*", ...honoAuth.internalHono);
-```
-
-| tRPC | Hono equivalent | Auth signal |
-|---|---|---|
-| `publicProcedure` | `...honoAuth.publicHono` | none |
-| `protectedProcedure` | `...honoAuth.protectedHono` | session |
-| `adminProcedure` | `...honoAuth.adminHono` | session + admin role |
-| `callerProcedure` | `...honoAuth.callerHono` | session OR machine cred |
-| `machineProcedure` | `...honoAuth.machineHono` | machine cred (rejects session) |
-| `scopedProcedure([X])` | `...honoAuth.scopedHono([X])` | any auth + scope check |
-| `sessionScopedProcedure([X])` | `...honoAuth.sessionScopedHono([X])` | session + scope check |
-| `internalProcedure` | `...honoAuth.internalHono` | shared secret |
-
-All authenticated bundles set `c.var.caller`. Don't call
-`createCallerFromContext` inline in a Hono handler — the middleware did it
-already. (Public routes don't get a caller for the same reason as on the
-tRPC side: no auth signal guaranteed.)
+`reason` is constrained to the **`GOLF_SYSTEM_CALLERS`** registry
+(`lib/context/system-callers.ts`) — a typo is a compile error, and every system
+caller is therefore observable in one place. Add the entry before the call site;
+name it `<runtime>:<domain>:<action>` (e.g. `inngest:stats:update-snapshot`).
 
 ---
 
-## Where do scopes come from?
+## Scopes — the GRANT dimension
 
-Scopes attach to the **caller**, not the user record. The caller is constructed per request from whatever auth signal succeeded:
+The registry is `packages/domains/src/lib/context/scopes.ts`. One flat
+`ALL_SCOPES` tuple is the source of truth; the grouped `Scopes` object is the
+ergonomic accessor (`Scopes.rounds.write`). Always use the constant, never a
+string literal.
 
-| Caller variant | Scope source |
+```ts
+Scopes.rounds.read        // "rounds:read"     — domain capability
+Scopes.admin.billing      // "admin:billing"   — granular admin AREA scope
+Scopes.admin.all          // "admin:all"       — super-admin wildcard
+```
+
+### Admin = a role boundary + area scopes (not one bit)
+
+`kind: "admin"` is the coarse **"is staff"** boundary. The admin's actual
+**powers** are the granular `admin:<area>` scopes (`admin:users`,
+`admin:billing`, `admin:ai`, `admin:content`, `admin:infra`, `admin:devTools`),
+grantable/revocable per-admin from the admin site.
+
+- `admin:all` is the **wildcard** super-admin and **expands to every scope** in
+  `adminPrincipal`, so a super-admin satisfies both per-area gates and any
+  domain scope gate.
+- Every per-area gate accepts `admin:all` **OR** its specific area, via
+  `adminAreaGate(area) === [admin:all, area]`.
+- New admins default to `admin:all` (no behaviour change) until per-admin grants
+  are assigned.
+
+### Presets
+
+| Preset | Contents |
 |---|---|
-| `user` (browser session, role !== "admin") | `USER_SCOPES` preset from `scopes.ts` |
-| `admin` (browser session, role === "admin") | `ALL_SCOPES` preset (admin gets everything) |
-| `apiKey` (Better Auth API key) | Stored in the API key's `metadata.scopes` field — set when the key was minted |
-| `oauthClient` (OAuth 2.1 access token) | Parsed from the token's `scope` claim |
-| `system` (Inngest, cron, CLI) | `SYSTEM_SCOPES` preset (full access — internal callers are trusted) |
+| `USER_SCOPES` | read-everything-you-own + write-your-own; **no** admin/dev/comp scopes |
+| `ADMIN_SCOPES` / `SYSTEM_SCOPES` | `ALL_SCOPES` |
 
-**Important**: this is fixed-presets-by-role today. There's no "this user has extra scopes X, Y" granted via DB. To add per-user customization later you'd:
-1. Add a `scopes` (or `extra_scopes`) column to the user table
-2. Read it in `apps/<app>/api/src/lib/auth/caller-context.ts`'s `createCallerFromContext` and merge with the role preset
-3. Same scope check at the procedure boundary continues to work
+### Entitlement ≠ scope
 
-For now the dimensions are clean: **role grants a preset; API keys/OAuth carry a subset**. If you find yourself wanting to per-user-override, lift to the DB before adding ad-hoc logic.
+A subscription/paid feature is **not** a scope. **Every** user gets
+`USER_SCOPES` at signup and **never** churns them on subscribe/unsubscribe —
+scopes describe *capability shape*, not *billing state*. Paid access is a
+separate gate (`EntitlementPolicy`, below). The one bridge is
+`billing:comp` — a complimentary grant carried as an opt-in `extraScope`,
+surfaced as `claims.comp`, which satisfies an entitlement gate without a
+subscription row.
+
+### Adding a scope
+
+1. Add the literal to `ALL_SCOPES` **and** the grouped `Scopes` registry
+   (`satisfies` enforces they agree).
+2. Decide membership: `USER_SCOPES` (auto-granted) vs admin-only.
+3. Gate routes with it (`apiProcedure`/`sessionProcedure([Scopes.x.y])`).
+4. Enforce the object-level rule inside the service with a **Policy** (below).
 
 ---
 
-## Adding a new scope
+## Procedure tiers — the route boundary (oRPC)
 
-1. Add the literal to `Scopes` in `packages/golf/domains/src/lib/context/scopes.ts`.
-2. Decide if it belongs in `USER_SCOPES` (auto-granted to any user session) or only `ADMIN_SCOPES`.
-3. Use it via `scopedProcedure([Scopes.<group>.<action>])` at the router boundary.
-4. Optionally `requireAnyScope(caller, [...])` inside the service for defense in depth.
+Golf serves oRPC (`apps/api/src/packages/api/procedures/`). Pick the tightest
+tier; all are built on the typed `GolfApiContext` (see `api.md`).
 
-That's the whole loop — no separate "permissions DB" or runtime registration.
+| Tier | Auth required | Notes |
+|---|---|---|
+| `publicProcedure` | none | health, anonymous reads |
+| `protectedProcedure` | any logged-in user | `context.user` narrowed non-null |
+| `sessionProcedure([scopes])` | **session only** + scope | rejects API keys/OAuth — interactive-only (password change, account deletion) |
+| `apiProcedure([scopes])` | session **or** API key **or** OAuth + scope | the workhorse; machine-friendly |
+| `adminProcedure` | role `admin` | gated via the audited `AccessPolicy.assertAdmin`, attaches `context.caller` |
+| `adminAreaProcedure(area)` | role `admin` + (`admin:all` or `admin:<area>`) | `adminProcedure` + `AccessPolicy.assertAdminArea` |
+
+The scope tiers **stamp `{ scopes, authTier }` onto route meta** — that is the
+**single source** the OpenAPI generator reads to emit per-operation `security`
+(cookie/apiKey OR `oauth2`+scopes). There is no second hand-maintained security
+list, and `visibility:"internal"` (excluded from the public spec) is **derived**
+from an all-admin scope set so it can't drift from the gate.
+
+```ts
+// apps/api/src/packages/billing/billing.admin.orpc.router.ts
+import { adminAreaProcedure, getCradle } from "../api/orpc";
+import { Scopes } from "@bokendell/golf-domains/context";
+
+export const billingAdminRouter = {
+  upsertFixedCost: adminAreaProcedure(Scopes.admin.billing)
+    .input(upsertFixedCostInput)
+    .handler(({ context, input }) => {
+      // role + area gate already passed + audited; caller is on context
+      const { billingService } = getCradle(context);
+      return billingService.upsertFixedCost(context.caller, input);
+    }),
+};
+```
+
+```ts
+// a normal user write — scope at the route, ownership in the service
+createGoal: sessionProcedure([Scopes.goals.write])
+  .input(createGoalInput)
+  .handler(({ context, input }) =>
+    getCradle(context).goalService.createGoal(context.caller, input),
+  ),
+```
+
+Routers resolve services **per-request** via `getCradle(context)` inside the
+handler — never at module load (tests swap services on a child scope). `caller`
+is attached by the scope/admin tiers; read `context.caller`, don't rebuild it.
+
+---
+
+## Policies — the OPERATION dimension (object-level, audited)
+
+A scope gate at the route is not enough: a caller with `goals:write` must still
+only edit **their own** goals. That object-level check lives in the **service**,
+expressed as a **Policy**.
+
+All policies extend **`AuthzPolicy`** (`packages/domains/src/packages/authz`),
+which wraps core's `Policy.assert` with golf's **typed** vocabulary
+(`AuthzAction` / `AuthzResourceType`) so every audit dimension is a controlled
+value, not a free string. The base routes every check through the
+`assertPermission` choke point, and a global **audit sink** records denials.
+
+| Policy | Question it answers |
+|---|---|
+| `OwnershipPolicy.assertSelf(caller, ownerId, …)` | is the caller the owning user? (`system` always passes) |
+| `RoundParticipationPolicy` | is the caller a player in this round? (membership, not single-owner) |
+| `AccessPolicy.assertAdmin / assertAdminArea / assertSystem` | role / area / system-internal gate (used by the procedure tiers) |
+| `EntitlementPolicy.assertEntitled(caller, [...])` | does the **account** hold the paid feature? (402, audited) |
+| domain-specific (`FriendshipPolicy`, `UserAdminPolicy`, `SettlementPolicy`…) | cross-user authority for that aggregate |
+
+```ts
+// packages/domains/src/packages/goals/application/goal.service.ts
+async updateGoal(goalId: string, caller: Principal, input: UpdateGoalInput) {
+  const goal = await goalRepository.findByIdOrThrow(goalId);
+  ownershipPolicy.assertSelf(caller, goal.userId, {
+    action: "goal.update",
+    resourceType: "goal",
+    resourceId: goalId,
+    // anti-enumeration: hide existence from non-owners
+    error: () => new GoalNotFoundError(goalId),
+  });
+  return goalRepository.update(goalId, input);
+}
+```
+
+Key rules:
+- **Services take `caller: Principal`** (usually first arg) and call a policy —
+  they never receive a bare `userId` for an authorization decision.
+- **Denials are audited**: the `Policy` base feeds a global sink wired in
+  composition (`setAuthzAuditSink(...)` → `authzAuditService.record`, table
+  `authz_audit`). "A non-admin tried an admin route" / "tried a pro feature, not
+  entitled" used to be invisible; now every denial is a row.
+- **`system` callers pass** ownership/entitlement gates (they act for the
+  platform) — which is exactly why per-user jobs use `systemActingAs` so the
+  *subject* is still the user where self-checks matter.
+- Use `opts.error` to throw `NotFound` instead of `Forbidden` for
+  anti-enumeration (don't leak that a resource exists).
+
+### The arch rule that enforces this
+
+The swarm rule **`service-mutation-requires-policy`** (ts-morph) flags any
+service mutation that lacks a policy assertion — including the **caller-less
+blind spot** (a mutation that takes a foreign id/email or reads auth/headers but
+never asserts). It recognizes guard helpers (`validate*` / `ensure*` /
+`getOwned(…caller…)` / `requireSubjectId(caller)`). Run
+`pnpm swarm check arch`; the rule must sit at **zero** — don't suppress with
+`arch-allow`, convert to a real gate (caller + policy, or `assertSystem` for
+genuinely system-internal methods).
+
+---
+
+## Entitlement (paid features) — a separate gate
+
+Authorization asks "may this caller touch this object"; **entitlement** asks
+"does this account hold the paid feature". Same choke point + audit, different
+question.
+
+- The **decision** is the single PDP `entitlementService.isEntitled(...)` (comp
+  fast-path + subscription lookup, keyed by the caller's subject).
+- The **enforcement point** is `EntitlementPolicy.assertEntitled(caller, [...])`,
+  called **inside the domain service** (not at the transport) so the gate moves
+  with the capability. Throws `EntitlementRequiredError` (402); the denial is
+  audited.
+- `comp` is **account state**, resolved from the DB per call — correct for both
+  interactive and background callers. See
+  `docs/decisions/0009-entitlement-service-enforcement.md`.
 
 ---
 
 ## Common mistakes
 
-- **Building a `CallerContext` literal by hand.** Use the factories. The literal can drift from the variant shape and miss the `scopes` field.
-- **Calling `createCallerFromContext(ctx)` inside a router.** The `withCaller` middleware already did it — read `ctx.caller`. (The check-architecture rule `auth-procedure-uses-caller` flags this.)
-- **Calling a service that needs a caller from an Inngest function without one.** Use `createSystemCallerContext("inngest:<function-id>")`.
-- **Using `protectedProcedure` when you mean `scopedProcedure([Scopes.x])`.** `protectedProcedure` only checks "is there a user." If you want capability gating, name the scope.
-- **Reaching into the cradle at module load.** Routers should resolve services per-request: `const { roundService } = ctx.scope.cradle;` inside the handler, not at the top of the file. Tests substitute services on a child scope; module-level reads make that fragile. (The check-architecture rule `no-module-level-cradle-read` flags this.)
-- **Skipping `ctx.caller` and passing `ctx.user.id` to a service that takes `CallerContext`.** Type-check usually catches this; if it doesn't, the service loses access to scopes / variant info.
+- **Treating a scope as the whole check.** A scope gate at the route does not
+  authorize the specific object — add the `OwnershipPolicy`/membership policy in
+  the service. (The `service-mutation-requires-policy` rule catches the gap.)
+- **Passing a bare `userId` to a service for an authz decision.** Pass the
+  `Principal`; the service derives the id via `requireSubjectId(caller)` and the
+  policy audits.
+- **Background job that takes a `userId` directly.** Use
+  `systemActingAs(reason, userId)` (per-user) or `systemPrincipal(reason)`
+  (aggregate) so it threads the same gated path. Register the `reason` first.
+- **Building a `Principal` literal by hand.** Use the factories.
+- **Suppressing the arch rule with `arch-allow`.** Convert to a real gate
+  (caller + policy / `assertSystem`).
+- **Putting a subscription behind a scope.** Entitlement ≠ scope — every user
+  keeps `USER_SCOPES`; gate paid features with `EntitlementPolicy`.
+- **Granting `admin:all` when you mean an area.** Use `adminAreaProcedure(area)`
+  + the specific `admin:<area>` so the grant is least-privilege and auditable.
+- **Rebuilding `caller` inside a handler.** The tier already attached
+  `context.caller`.
 
 ---
 
-## Cross-app consistency
+## Cross-app note
 
-Hive and portfolio look almost identical — same procedure builders, same caller-context factories, same scope-check helpers. The only differences:
-
-- **Hive** has `requireScope(caller, scope)` (single-scope gate) in addition to `requireAnyScope`.
-- **Portfolio** has `featureFlagProcedure(flag)` + `mvpFeatureProcedure` for feature-flag gating layered on top.
-
-When you copy a pattern between apps, the imports change but the shape doesn't.
+Hive and portfolio still use the earlier `CallerContext` + `scopedProcedure`
+tRPC model (factories `createXCallerContext`, helpers `requireAnyScope` /
+`requireCallerUserId`). The conceptual move is the same — caller threaded
+explicitly, scopes at the route, capability checks in the service — but golf is
+the first app on the `Principal` + audited-`Policy` shape above. Don't
+retrofit golf's vocabulary onto an app that hasn't migrated; match the tree
+you're in.

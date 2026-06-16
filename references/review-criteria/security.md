@@ -9,6 +9,17 @@ Read this for every PR regardless of what changed.
 - [ ] BLOCKING: Ownership validated in service (`area.userId !== userId → throw ForbiddenError`)
 - [ ] BLOCKING: No endpoints that bypass auth with a secret parameter or query string
 
+### Golf authz v2 (Principal + scopes + policies) — see `auth-and-scopes.md`
+
+- [ ] BLOCKING: A service mutation on behalf of a caller takes `caller: Principal` and calls a Policy (`OwnershipPolicy.assertSelf` / membership / admin / `EntitlementPolicy`) — a route scope gate is NOT sufficient on its own
+- [ ] BLOCKING: No service mutation takes a bare `userId` for an authorization decision (pass the `Principal`; derive via `requireSubjectId`)
+- [ ] BLOCKING: `pnpm swarm check arch` (`service-mutation-requires-policy`) is at zero — no new `arch-allow` suppressions; caller-less mutations on a foreign id/email are gated too
+- [ ] BLOCKING: Background/Inngest work threads a `Principal` (`systemActingAs(reason, userId)` per-user, `systemPrincipal(reason)` aggregate) — never a back door taking a bare `userId`; `reason` is registered in `GOLF_SYSTEM_CALLERS`
+- [ ] BLOCKING: `Principal` is built with a factory (`userPrincipal`/`adminPrincipal`/`systemPrincipal`/…) — never a hand-built literal
+- [ ] IMPORTANT: Admin routes use `adminAreaProcedure(area)` with the least-privilege `admin:<area>` — not blanket `admin:all` — where an area fits
+- [ ] IMPORTANT: Paid features gated by `EntitlementPolicy.assertEntitled` in the service — entitlement is NOT a scope; users keep `USER_SCOPES` on subscribe/unsubscribe
+- [ ] IMPORTANT: Policy denials are audited (policy extends `AuthzPolicy`, typed `AuthzAction`/`AuthzResourceType`); anti-enumeration uses `opts.error → NotFound`
+
 ## Input validation
 
 - [ ] BLOCKING: All user input validated with Zod at the API boundary before reaching service layer

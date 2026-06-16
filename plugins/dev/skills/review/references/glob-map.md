@@ -4,7 +4,8 @@ Mapping rules. Match in order from top to bottom; a single file can match multip
 
 | Glob | Pattern doc(s) to load | Why |
 |---|---|---|
-| `**/packages/*/domains/src/**/*.ts` | `ddd.md`, `auth-and-scopes.md` (when `scopes`/`requireScope` appears) | Service/repository structure, mapper layer, error model, scope enforcement |
+| `**/packages/*/domains/src/**/*.ts` | `ddd.md`, `auth-and-scopes.md` (when `Principal`/`caller`/`Policy`/`assertSelf`/`scopes`/`requireScope`/`systemPrincipal`/`Entitlement` appears) | Service/repository structure, mapper layer, error model, authz policies + scope enforcement |
+| `**/packages/*/domains/src/packages/authz/**/*.ts` | `auth-and-scopes.md`, `ddd.md` | Policy base, AccessPolicy/OwnershipPolicy, audit sink |
 | `**/packages/*/composition/**/*.ts` | `di.md` | Awilix cradle, registration order, transactions |
 | `**/packages/*/api/**/*.ts` | `api.md`, `hono-api-anatomy.md` | Shared API package (`@bokendell/api`) — boot perf + router build |
 | `**/packages/*/db/**/*.ts` | `ddd.md` | ORM schema + repository layer |

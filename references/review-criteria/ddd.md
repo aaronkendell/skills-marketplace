@@ -9,6 +9,7 @@
 - [ ] BLOCKING: Service throws `NotFoundError` when entity not found (never returns null)
 - [ ] BLOCKING: Service throws `ForbiddenError` for ownership violations
 - [ ] BLOCKING: Service never calls other repositories directly — only its own repository + injected services for cross-domain
+- [ ] BLOCKING (golf authz v2): A mutation on behalf of a caller takes `caller: Principal` and calls an injected Policy (`ownershipPolicy.assertSelf` / membership / `entitlementPolicy`) — not a bare `userId`; the `service-mutation-requires-policy` arch rule must stay at zero. See `auth-and-scopes.md`.
 - [ ] IMPORTANT: Private helper functions defined inside the factory (not exported)
 - [ ] IMPORTANT: All public methods have explicit return type annotations
 
