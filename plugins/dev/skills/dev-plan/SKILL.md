@@ -5,7 +5,7 @@ description: >
   projects and issues. Triggers on `/dev plan <app> [initiative-path]` or when the user says
   "break this down", "create issues", "plan this project", "sync to Linear". Reads the design
   doc, decomposes into projects and issues, writes local markdown files, and syncs to Linear.
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Phase 2: Plan

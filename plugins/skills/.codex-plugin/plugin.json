@@ -1,0 +1,30 @@
+{
+	"name": "skills",
+	"version": "1.1.0",
+	"description": "Cross-cutting skill bundle for framework references, AI tooling, GitHub helpers, code/docs review, Expo helpers, and motion/video.",
+	"author": {
+		"name": "bokendell"
+	},
+	"license": "UNLICENSED",
+	"keywords": [
+		"mastra",
+		"shadcn",
+		"neon",
+		"inngest",
+		"remotion",
+		"github",
+		"docs",
+		"review",
+		"ai"
+	],
+	"skills": "./skills/",
+	"interface": {
+		"displayName": "Skills",
+		"shortDescription": "Cross-cutting helper skills",
+		"longDescription": "Reusable framework, AI, GitHub, docs, motion, Expo, and infrastructure skills used across bokendell repositories.",
+		"developerName": "bokendell",
+		"category": "Developer Tools",
+		"capabilities": ["Interactive", "Write"],
+		"defaultPrompt": ["Use the relevant bokendell helper skill for this task"]
+	}
+}

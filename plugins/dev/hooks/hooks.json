@@ -6,7 +6,7 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "pnpm exec tsx \"${CLAUDE_PLUGIN_ROOT}/hooks/workspace-context.ts\""
+						"command": "PLUGIN_ROOT=\"${CLAUDE_PLUGIN_ROOT:-$CODEX_PLUGIN_ROOT}\"; pnpm exec tsx \"$PLUGIN_ROOT/hooks/workspace-context.ts\""
 					}
 				]
 			}
@@ -16,7 +16,7 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "pnpm exec tsx \"${CLAUDE_PLUGIN_ROOT}/hooks/docs-freshness.ts\""
+						"command": "PLUGIN_ROOT=\"${CLAUDE_PLUGIN_ROOT:-$CODEX_PLUGIN_ROOT}\"; pnpm exec tsx \"$PLUGIN_ROOT/hooks/docs-freshness.ts\""
 					}
 				]
 			}

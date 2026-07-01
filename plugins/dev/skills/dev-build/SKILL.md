@@ -6,7 +6,7 @@ description: >
   `/dev build <LINEAR-ID>` or `/dev build <issue-path>` or when the user says "build this",
   "implement this issue", "start coding GOLF-123". Full lifecycle: branch, worktree, context
   loading, TDD, API/web testing, 2 code review rounds, lefthook checks, stage files.
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Phase 3: Build

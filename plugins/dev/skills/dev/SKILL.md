@@ -5,7 +5,7 @@ description: >
   is one of research, plan, build, or ship. Also triggers when the user says "start development",
   "implement this feature", "ship it", "create a plan", or describes wanting to go through
   the full SDLC. Routes to the correct phase skill.
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Dev — SDLC Router

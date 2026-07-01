@@ -4,7 +4,7 @@ description: >
   Use when the user asks for the dev ship workflow to commit, push, create a PR, update Linear,
   and optionally merge. Triggers on `/dev ship` or when the user says "ship it", "commit and push",
   "create a PR", "we're done". Handles the full git + Linear + GitHub flow.
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Phase 4: Ship

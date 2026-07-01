@@ -6,7 +6,7 @@ description: >
   `/dev research <app> <idea>` or when the user says "research this", "design this feature",
   "create a PRD", "brainstorm this idea". Combines codebase scanning, brainstorming dialogue,
   and design document generation into one phase.
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Phase 1: Research

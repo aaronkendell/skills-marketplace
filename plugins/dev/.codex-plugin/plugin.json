@@ -1,0 +1,29 @@
+{
+	"name": "dev",
+	"version": "1.1.0",
+	"description": "Full SDLC workflows for research, planning, build, ship, review, workspace setup, and cross-app design studio routing.",
+	"author": {
+		"name": "bokendell"
+	},
+	"license": "UNLICENSED",
+	"keywords": [
+		"sdlc",
+		"linear",
+		"tdd",
+		"testing",
+		"planning",
+		"code-review",
+		"implementation",
+		"design"
+	],
+	"skills": "./skills/",
+	"interface": {
+		"displayName": "Dev",
+		"shortDescription": "Research, plan, build, review, and ship",
+		"longDescription": "Bokendell development workflow skills for Linear-backed planning, TDD implementation, pattern review, app design, workspace setup, and shipping.",
+		"developerName": "bokendell",
+		"category": "Developer Tools",
+		"capabilities": ["Interactive", "Write"],
+		"defaultPrompt": ["Use the bokendell dev workflow for this repository"]
+	}
+}
