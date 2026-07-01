@@ -6,6 +6,8 @@ Mapping rules. Match in order from top to bottom; a single file can match multip
 |---|---|---|
 | `**/packages/*/domains/src/**/*.ts` | `ddd.md`, `auth-and-scopes.md` (when `Principal`/`caller`/`Policy`/`assertSelf`/`scopes`/`requireScope`/`systemPrincipal`/`Entitlement` appears) | Service/repository structure, mapper layer, error model, authz policies + scope enforcement |
 | `**/packages/*/domains/src/packages/authz/**/*.ts` | `auth-and-scopes.md`, `ddd.md` | Policy base, AccessPolicy/OwnershipPolicy, audit sink |
+| `**/packages/*/domains/src/**/infrastructure/inngest/**/*.ts` | `inngest.md`, `ddd.md` | Inngest functions: thin orchestration, service-method-only (no repos/business logic), flat DTOs + narrow deps at the step serialization boundary, v4 triggers/flow-control |
+| `**/packages/*/composition/src/functions.ts` | `inngest.md`, `di.md` | Inngest function wiring from the cradle |
 | `**/packages/*/composition/**/*.ts` | `di.md` | Awilix cradle, registration order, transactions |
 | `**/packages/*/api/**/*.ts` | `api.md`, `hono-api-anatomy.md` | Shared API package (`@bokendell/api`) — boot perf + router build |
 | `**/packages/*/db/**/*.ts` | `ddd.md` | ORM schema + repository layer |
