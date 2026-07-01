@@ -1,0 +1,29 @@
+{
+	"name": "skill-watch",
+	"version": "0.1.0",
+	"description": "Skill telemetry, drift detection, and self-improvement loop for bokendell Codex workflows.",
+	"author": {
+		"name": "bokendell"
+	},
+	"license": "UNLICENSED",
+	"keywords": [
+		"skills",
+		"hooks",
+		"self-improvement",
+		"review",
+		"codex",
+		"claude-code"
+	],
+	"skills": "./skills/",
+	"interface": {
+		"displayName": "Skill Watch",
+		"shortDescription": "Improves local agent skills from real deviations",
+		"longDescription": "Records expected skills, missed standards, validation gaps, and recurring drift, then proposes or applies reviewable skill updates in the local skills-marketplace checkout.",
+		"developerName": "bokendell",
+		"category": "Developer Tools",
+		"capabilities": ["Interactive", "Write"],
+		"defaultPrompt": [
+			"Review recent skill-watch deviations and promote recurring fixes into the skills marketplace"
+		]
+	}
+}

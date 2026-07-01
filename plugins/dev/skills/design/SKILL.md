@@ -6,14 +6,16 @@ description: >
   tokens, exploring color palettes or typography, implementing animations/motion, or doing any
   visual/frontend work. Also use when the user mentions "design system", "make it look better",
   "fix the UI", "design review", "polish this", "update the theme", or references any app's
-  visual style. Triggers proactively on ANY frontend/mobile file changes to ensure design
-  compliance. This skill replaces golf-ui, so use it even for golf-specific design work.
+  visual style. Also use when the user says design studio, golf design studio, studio sketch,
+  flow sketch, primitive library, or app-specific design studio. Triggers proactively on ANY
+  frontend/mobile file changes to ensure design compliance. This skill replaces golf-ui and is
+  the primary studio router for every app, including golf.
 disable-model-invocation: false
 ---
 
 # Design Orchestrator
 
-You manage all design work across three apps: **golf** (Fairway), **portfolio**, and **hive**. Instead of the user needing to know which of 5+ design skills to invoke, you detect context and pull in the right references automatically.
+You manage all design work across three apps: **golf** (Fairway), **portfolio**, and **hive**. Instead of the user needing to know which of 5+ design skills to invoke, you detect context and pull in the right references automatically. This is also the cross-app replacement for the old direct `golf-design-studio` entrypoint.
 
 ## How This Skill Works
 
@@ -35,7 +37,7 @@ This orchestrator delegates the actual taste/finishing/heuristics/HTML-prototypi
 
 | Skill | Install command |
 |---|---|
-| `/taste-skill` | `/plugin install taste@bokendell-skills` (Leonxlnx/taste-skill, sourced live) |
+| `/taste:design-taste-frontend` (v2; v1 fallback `/taste:design-taste-frontend-v1`) | `/plugin install taste@bokendell-skills` (Leonxlnx/taste-skill, sourced live). NOTE the invocable name is the SKILL.md `name:` (`design-taste-frontend`), NOT the folder `taste-skill`. The marketplace `skills` array must list each skill DIRECTORY — pointing at the bare `./skills` container registers zero skills. |
 | `/impeccable:impeccable` | `/plugin marketplace add pbakaus/impeccable` + `/plugin install impeccable@impeccable` |
 | `/ui-ux-pro-max` | `/plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill` + `/plugin install ui-ux-pro-max@ui-ux-pro-max-skill` |
 | `/huashu-design` | `git clone https://github.com/alchaincyf/huashu-design ~/.claude/skills/huashu-design` *(upstream isn't a plugin — installs as user-scope skill; `git pull` to update)* |
@@ -69,6 +71,23 @@ Detect platform:
 | `apps/*/app/`, `apps/*/admin/`, "web", "admin", "dashboard", "next" | **web** (Next.js) |
 
 **If the app is ambiguous** (shared packages, no path signal, new surface): ASK which app before composing — the apps share one workflow but different tokens, and guessing the wrong pack poisons everything downstream. Each app's pack lives at `references/apps/<app>.md`; the pack also names where that app's **living design law** (flow `decisions.md` files) and **fidelity anchors** live.
+
+## Studio Router
+
+When the prompt mentions "design studio", "studio sketch", "flow", "primitive", "kit", or
+`swarm design`, stay in this `design` skill and load the detected app's studio pack:
+
+| App | Studio pack |
+|---|---|
+| golf | `plugins/dev/skills/golf-design-studio/SKILL.md` as the golf app pack |
+| portfolio | `references/apps/portfolio.md` plus app-local `apps/design` docs if present |
+| hive | `references/apps/hive.md` plus app-local `apps/design` docs if present |
+
+`golf-design-studio` remains available as a compatibility alias because people remember that name,
+but it should delegate here. New app-specific studio behavior belongs either in this router or in an
+app pack, not in a new per-app top-level skill.
+
+If the app cannot be inferred from path or product words, ask one short question before composing.
 
 ## Ground Truth Protocol (do this before composing ANY visual)
 
@@ -131,8 +150,8 @@ one-shot full screens. Run the program:
 When repo reality contradicts this skill or an app pack (paths, commands, tokens, components):
 1. **Log it** the moment you notice: append to the app's drift file (golf:
    `apps/design/.skill-drift.md`) with date + what's wrong + what reality is.
-2. **Fix the source when structural**: if the drift is paths/commands/tokens (not taste),
-   update the source skill at `~/repos/bokendell/skills-marketplace` in the same session
+2. **Feed Skill Watch**: also let `skill-watch` record the deviation. If it is structural
+   drift, update the source skill at `~/repos/bokendell/skills-marketplace` in the same session
    (leave changes uncommitted for review) — or explicitly offer if mid-task.
 3. **Never silently work around drift** — that's how the next session inherits the bug.
 
@@ -216,7 +235,7 @@ Rules:
 
 ### For Design Exploration / Research Phase
 Invoke these skills via the Skill tool:
-- `taste-skill` — high-agency anti-slop directives (typography bans, color calibration, layout diversification, perpetual micro-interactions). Loads the baseline variance/motion/density knobs and the AI-tells blacklist. Load this FIRST — it establishes the taste floor everything else builds on.
+- `taste:design-taste-frontend` — high-agency anti-slop directives (typography bans, color calibration, layout diversification, perpetual micro-interactions). Loads the baseline variance/motion/density knobs and the AI-tells blacklist. Load this FIRST — it establishes the taste floor everything else builds on. (v2 is scoped to landing/portfolio/redesign; for multi-step product/app UI use `taste:design-taste-frontend-v1`.)
 - `ui-ux-pro-max` — for palette exploration, font pairing, style direction
 - `impeccable` — for bold aesthetic choices and polish sub-commands (animate, polish, bolder, distill, etc.)
 - Reference `docs/design/references/` for inspiration from real sites (Linear, Stripe, Apple, etc.)

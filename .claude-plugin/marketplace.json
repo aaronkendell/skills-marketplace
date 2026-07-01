@@ -13,13 +13,41 @@
 			"description": "Full SDLC: research → plan → build → ship. Linear integration, TDD, automated testing, code review. Includes the workspace + design skills."
 		},
 		{
+			"name": "skill-watch",
+			"source": "./plugins/skill-watch",
+			"description": "Claude Code + Codex hook loop for skill activation, standards drift, swarm/arch-check review signals, and reviewable auto-rewrites into this marketplace working tree."
+		},
+		{
+			"name": "ponytail",
+			"source": {
+				"source": "github",
+				"repo": "DietrichGebert/ponytail"
+			},
+			"description": "External overengineering/debt pressure skill. Use as a signal for skill-watch and review; bokendell DDD/API/mobile/design standards remain owned by the local dev and skill-watch plugins.",
+			"strict": false
+		},
+		{
 			"name": "taste",
 			"source": {
 				"source": "github",
 				"repo": "Leonxlnx/taste-skill"
 			},
-			"description": "Premium frontend design taste — sourced live from Leonxlnx/taste-skill. Includes taste-skill (main), redesign, soft, minimalist, brutalist, stitch, output, plus image-to-code, imagegen-frontend-{web,mobile}, brandkit, gpt-tasteskill.",
-			"skills": ["./skills"],
+			"description": "Premium frontend design taste — sourced live from Leonxlnx/taste-skill. taste-skill (v2 main, name: design-taste-frontend) + taste-skill-v1 fallback, plus redesign, soft, minimalist, brutalist, stitch, output, image-to-code, imagegen-frontend-{web,mobile}, brandkit, gpt-tasteskill. NOTE: `skills` must list each skill DIRECTORY (one containing a SKILL.md); pointing at the bare `./skills` container registers ZERO skills.",
+			"skills": [
+				"./skills/taste-skill",
+				"./skills/taste-skill-v1",
+				"./skills/redesign-skill",
+				"./skills/soft-skill",
+				"./skills/minimalist-skill",
+				"./skills/brutalist-skill",
+				"./skills/stitch-skill",
+				"./skills/output-skill",
+				"./skills/image-to-code-skill",
+				"./skills/imagegen-frontend-web",
+				"./skills/imagegen-frontend-mobile",
+				"./skills/brandkit",
+				"./skills/gpt-tasteskill"
+			],
 			"strict": false
 		},
 		{

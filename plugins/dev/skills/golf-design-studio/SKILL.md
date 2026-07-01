@@ -1,19 +1,17 @@
 ---
 name: golf-design-studio
 description: >
-  Use this skill for ANY design work in the golf product — design studio
-  (`apps/design/`), the primitive library (`packages/ui/` = `@bokendell/golf-ui`),
-  or the mobile / admin / marketing app frontends. It bundles `/design`,
-  `/impeccable`, `/taste-skill`, `/ui-ux-pro-max:ui-ux-pro-max`, and
-  `/huashu-design`, then layers in the Tobacco / Warm-Black brand context,
-  the current primitive catalog, the studio workflow, and the hard rules.
-  Triggers when the user mentions: design app, design studio, primitives,
-  mocks, flows, kits, "redesign a screen", "build a primitive",
-  "migrate to golf-ui", or invokes `swarm design *` commands. Use it
-  INSTEAD of the generic /design skill whenever the work is in a golf repo.
+  Legacy compatibility alias for golf-specific design studio work. Prefer dev:design as the
+  primary cross-app design/studio router. When this skill triggers, load dev:design first, then use
+  this file as the golf app pack for Tobacco / Warm-Black brand context, current primitive catalog,
+  studio workflow, and hard rules.
 ---
 
-# Golf Design Studio — Skill
+# Golf Design Studio — Golf App Pack
+
+This file is no longer the primary design orchestrator. `dev:design` owns cross-app routing and
+should be loaded first. Use this file as the **golf app pack** whenever `dev:design` detects golf,
+Fairway, `apps/design`, `packages/ui`, `apps/mobile`, or `swarm design` work inside the golf repo.
 
 You are operating inside the Tobacco / Warm-Black design system. The studio is the canvas where designs are explored; `@bokendell/golf-ui` is the canonical source for every styled component; the mobile app is the primary consumer.
 
@@ -35,10 +33,10 @@ The design app's architecture is documented in [`references/patterns/design.md`]
 
 ## On invocation, ALWAYS do these in order
 
-1. **Load the five base skills** via the Skill tool, in this order. These are not optional — even a "quick" design ask should load them so the variant defaults and anti-slop directives are active:
+1. **Load `dev:design` first**, then load the five base skills via the Skill tool, in this order. These are not optional — even a "quick" design ask should load them so the variant defaults and anti-slop directives are active:
    - `/dev:design` — orchestrator workflow (mock-first decisions, app/platform detection, persistent tunnels)
    - `/impeccable:impeccable` — anti-AI-slop directives (auto-reads `packages/ui/.impeccable.md`)
-   - `/taste:taste-skill` — high-agency frontend rules (typography bans, motion principles, layout diversification)
+   - `/taste:design-taste-frontend` — high-agency frontend rules (typography bans, motion principles, layout diversification). This is the v2 taste-skill (plugin `taste`, SKILL.md `name: design-taste-frontend` — NOT `taste-skill`). For broad product/app UI (multi-step flows, dashboards) v2 scopes itself out, so prefer `/taste:design-taste-frontend-v1` there; either way load it for the anti-slop directives.
    - `/ui-ux-pro-max:ui-ux-pro-max` — palette/font/component recommendation (mainly at the *exploration* phase; not every iteration)
    - `/huashu-design` — HTML-native prototype + 5-dimension review + 20 design philosophies (use for hi-fi mocks, slide-style flows, motion stories)
 

@@ -36,6 +36,11 @@ Parse `$ARGUMENTS`:
    - `mobile.md` — Expo, RN, hooks/stores/containers (if mobile changes)
 7. **Update Linear status** to "In Progress"
 
+8. **Let skill-watch observe the workflow.** If the prompt, plan, or changed files imply a skill
+   should have fired but did not, treat that as drift and let the `skill-watch` hooks record it.
+   When you discover a recurring standard gap, decide whether it belongs in the skill text, a
+   pattern doc, or a static `swarm check arch` rule.
+
 ### Step 1: Branch and Worktree
 
 1. **Create a branch** following Linear naming convention:
@@ -87,6 +92,20 @@ If a plan already exists, present it and ask: "Use this plan, or create a new on
 ### Step 3: TDD Implementation
 
 **Invoke `superpowers:subagent-driven-development`** (recommended) or `superpowers:executing-plans`.
+
+### Step 3.5: Architecture and Standards Checks
+
+For bokendell repos with the swarm CLI available, include architecture checks as part of review,
+not only at the very end:
+
+```bash
+pnpm swarm check arch
+```
+
+If `check arch` finds a violation that represents a durable standard, prefer adding or tightening
+the architecture rule instead of relying on comments or memory. If it is a review-only convention,
+update `dev:review` or the relevant `references/patterns/*.md` file and let `skill-watch` record
+the improvement.
 
 Each subagent MUST receive in its prompt:
 - The relevant context patterns (ddd.md, testing.md, etc.)

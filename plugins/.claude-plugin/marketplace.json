@@ -11,6 +11,22 @@
 			"version": "1.1.0"
 		},
 		{
+			"name": "skill-watch",
+			"source": "./skill-watch",
+			"description": "Claude Code + Codex hook loop for skill activation, standards drift, swarm/arch-check review signals, and reviewable auto-rewrites into this marketplace working tree.",
+			"version": "0.1.0"
+		},
+		{
+			"name": "ponytail",
+			"source": {
+				"source": "github",
+				"repo": "DietrichGebert/ponytail"
+			},
+			"description": "External overengineering/debt pressure skill used as review signal, not as the owner of bokendell standards.",
+			"version": "1.0.0",
+			"strict": false
+		},
+		{
 			"name": "taste",
 			"source": "./taste",
 			"description": "Premium frontend design taste from github.com/Leonxlnx/taste-skill. Overrides LLM design biases with strict rules for typography, color, layout, motion, materiality. Includes taste, redesign, soft, minimalist, brutalist, stitch, output sub-skills.",

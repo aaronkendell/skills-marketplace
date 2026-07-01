@@ -1,0 +1,17 @@
+{
+	"$schema": "https://json.schemastore.org/claude-code-plugin",
+	"name": "skill-watch",
+	"version": "0.1.0",
+	"description": "Skill telemetry, drift detection, and self-improvement loop for bokendell Claude Code workflows.",
+	"author": {
+		"name": "bokendell"
+	},
+	"keywords": [
+		"skills",
+		"hooks",
+		"self-improvement",
+		"review",
+		"codex",
+		"claude-code"
+	]
+}

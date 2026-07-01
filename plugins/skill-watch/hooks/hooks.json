@@ -1,0 +1,41 @@
+{
+	"hooks": {
+		"UserPromptSubmit": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "PLUGIN_ROOT=\"${CLAUDE_PLUGIN_ROOT:-$CODEX_PLUGIN_ROOT}\"; pnpm exec tsx \"$PLUGIN_ROOT/hooks/skill-watch.ts\" prompt 2>/dev/null || pnpm dlx tsx \"$PLUGIN_ROOT/hooks/skill-watch.ts\" prompt",
+						"timeout": 15,
+						"statusMessage": "Checking skill fit"
+					}
+				]
+			}
+		],
+		"PostToolUse": [
+			{
+				"matcher": "Bash|apply_patch|Edit|Write|MultiEdit",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "PLUGIN_ROOT=\"${CLAUDE_PLUGIN_ROOT:-$CODEX_PLUGIN_ROOT}\"; pnpm exec tsx \"$PLUGIN_ROOT/hooks/skill-watch.ts\" post-tool 2>/dev/null || pnpm dlx tsx \"$PLUGIN_ROOT/hooks/skill-watch.ts\" post-tool",
+						"timeout": 15,
+						"statusMessage": "Recording skill signal"
+					}
+				]
+			}
+		],
+		"Stop": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "PLUGIN_ROOT=\"${CLAUDE_PLUGIN_ROOT:-$CODEX_PLUGIN_ROOT}\"; pnpm exec tsx \"$PLUGIN_ROOT/hooks/skill-watch.ts\" stop 2>/dev/null || pnpm dlx tsx \"$PLUGIN_ROOT/hooks/skill-watch.ts\" stop",
+						"timeout": 20,
+						"statusMessage": "Checking skill drift"
+					}
+				]
+			}
+		]
+	}
+}

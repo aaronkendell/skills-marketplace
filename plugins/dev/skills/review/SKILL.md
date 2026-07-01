@@ -11,6 +11,14 @@ Audit code against the project's pattern documentation and fix violations. The p
 
 This skill is the **lightweight, on-demand** half of the review system. The `patterns-reviewer` agent in this plugin handles batch review during automated build phases — use this skill when the user is at the keyboard asking for a quick pass.
 
+`skill-watch` runs in the background and should learn from this skill. When review finds a repeated
+standard violation that should have been caught earlier, prefer one of:
+
+- Add a static architecture rule to the repo's `swarm check arch` configuration.
+- Add or tighten a glob in `references/glob-map.md`.
+- Update the owning pattern doc in `references/patterns/`.
+- Let `skill-watch` promote recurring review misses into this skill after threshold.
+
 ## When this skill fires vs. when the agent runs
 
 | Surface | Triggered by | Mode |
