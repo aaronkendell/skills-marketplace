@@ -32,6 +32,31 @@ Reference for what standards are enforced, how, and what tooling gaps remain.
 - Local: `planner:implement` Phase 4 (reviewer) and Phase 5 (verification)
 - Lefthook: pre-push hook runs `pnpm check:architecture --changed` before every push
 
+### `swarm check arch` (swarm base rules + golf `review-architecture-rules.mjs`)
+
+**Script:** `scripts/review-architecture-rules.mjs` (TS-AST walker), merged with swarm's base arch result by `scripts/swarm-check-arch-wrapper.mjs`
+**Run:** `swarm check arch` (all files, untracked included) · `swarm check arch --affected` (git diff + untracked) · `swarm check arch --json`
+**Also:** `pnpm check:architecture` → `./swarm check arch`; `pnpm check:architecture:changed` → `--affected`
+
+| Rule id | Catches | Severity |
+|---------|---------|----------|
+| `review-container-not-orchestrator` | `containers/` file that only does presentational work (local state / form hook / `forwardRef`, no data/store/identity/domain hook) — a dumb component relocated to dodge purity | error |
+| `review-component-not-dumb` | `components/`/`screens/` file importing a data/query/mutation/identity or store hook (local UI hooks allowed) | error |
+| `review-no-inline-types` | Inline `interface`/`type` (recurses into function/component bodies) | error |
+| `review-no-inline-constants` / `review-no-inline-utils` | Meaningful inline config/data / reusable helpers | error |
+| `review-one-component-per-file` | >1 top-level component in a `.tsx` | error |
+| `review-domain-layer-boundary` / `review-domain-no-cross-domain-internals` | DDD layer direction + cross-domain reach-through (domains `infrastructure/` now in scope) | error |
+| `review-client-no-repository-or-db` / `review-router-no-direct-repository-or-db` / `review-composition-no-domain-internals` | Client/router/composition reaching past facades into repo/db/domain internals | error |
+| `ui-no-classname-prop-on-golf-component` / `ui-no-style-prop-on-golf-component` | `className`/`style` on a golf-ui component (inside `packages/ui`), no exceptions — props for layout; spacing between elements via parent `Stack gap`/Box wrapper; brand one-offs moved into the leaf. className is legal only on the raw `div`/`View` inside a leaf primitive | error |
+| `ui-no-direct-*` (`expo-haptics`, `react-native-reanimated`, gesture, worklets, safe-area, `expo-*`, RN `Pressable`) | golf-ui components importing platform libs directly instead of the shared adapters | error |
+
+**Integrated into:**
+- Lefthook: pre-push runs `swarm check arch --affected`
+- The `review` skill runs it as a static pre-pass before hand-review
+- The scan includes **untracked files** so mid-refactor / newly-added files aren't silently skipped
+
+The folder-role rules encode the `frontend.md` contract (Container = orchestrator, Screen = pure presentation, Components = dumb) so a file's folder is a real contract, not a place to hide.
+
 ### Biome
 
 **Run:** `pnpm check` (lint + format), `pnpm check:fix`

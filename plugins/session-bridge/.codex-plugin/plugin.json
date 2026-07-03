@@ -1,0 +1,29 @@
+{
+	"name": "session-bridge",
+	"version": "0.1.0",
+	"description": "Inspect, resume, and hand off agent sessions across Codex CLI and Claude Code.",
+	"author": {
+		"name": "bokendell"
+	},
+	"license": "UNLICENSED",
+	"keywords": [
+		"sessions",
+		"resume",
+		"handoff",
+		"codex",
+		"claude-code",
+		"context"
+	],
+	"skills": "./skills/",
+	"interface": {
+		"displayName": "Session Bridge",
+		"shortDescription": "Resume and hand off sessions across Codex and Claude Code",
+		"longDescription": "Reads Codex rollouts and Claude Code transcripts so you can switch off one tool and pick up in the other with full context: list recent sessions, summarize where one left off, and emit a handoff brief for the other tool.",
+		"developerName": "bokendell",
+		"category": "Developer Tools",
+		"capabilities": ["Interactive", "Read"],
+		"defaultPrompt": [
+			"List my recent sessions in this repo and summarize where the last one left off"
+		]
+	}
+}

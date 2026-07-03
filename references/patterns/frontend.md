@@ -7,7 +7,7 @@ Web frontend follows the **exact same architecture as mobile** — containers, s
 ## What's the same
 
 - Package structure per domain (`containers/`, `screens/`, `hooks/`, `stores/`, `schemas/`, `utils/`, `types.ts`, `constants.ts`)
-- Container = orchestrator. Screen = pure presentation. Components = dumb.
+- Container = orchestrator. Screen = pure presentation. Components = dumb. **Statically enforced** by `swarm check arch`: `review-container-not-orchestrator` flags a `containers/` file that only does presentational work (local state / form hook, no data/store/identity/domain hook — i.e. a dumb component relocated to dodge a purity rule), and `review-component-not-dumb` flags a `components/`/`screens/` file that imports a data/query/mutation/identity or store hook. Local UI hooks (animation, layout, disclosure) are allowed in components; the folder is a real contract.
 - Domain hook composes store + queries + mutations
 - Form hooks in `hooks/forms/` — never call mutations
 - Zustand stores: non-persisted by default, persist preferences via `localStorage`

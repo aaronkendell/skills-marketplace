@@ -1,0 +1,481 @@
+#!/usr/bin/env python3
+"""session-bridge — inspect, resume, and hand off agent sessions across tools.
+
+Reads both OpenAI Codex CLI rollouts and Claude Code transcripts so you can
+switch off one tool and pick up in the other with full context.
+
+Session stores
+--------------
+- Codex:  ~/.codex/sessions/YYYY/MM/DD/rollout-<ts>-<uuid>.jsonl
+          records: {type: session_meta|response_item|event_msg|compacted|turn_context}
+          messages carry payload.role and payload.content[].text (input_text/output_text)
+- Claude: ~/.claude/projects/<slug-cwd>/<uuid>.jsonl
+          records: {type: user|assistant|system|...} each with a `message` dict
+          (content is a str for user, a list of blocks for assistant), plus
+          cwd / sessionId / gitBranch / timestamp at the top level.
+
+Usage
+-----
+  session-bridge list   [--tool codex|claude|both] [--cwd PATH|.] [--limit N] [--json]
+  session-bridge read   <id|path> [--transcript] [--json]
+  session-bridge handoff <id|path> [--to codex|claude]
+
+`<id>` matches on session id, uuid, or a unique filename fragment across both
+stores. `--cwd .` restricts listing to sessions whose working dir contains the
+current directory (handy inside a worktree).
+"""
+from __future__ import annotations
+
+import argparse
+import glob
+import json
+import os
+import sys
+from datetime import datetime, timezone
+
+HOME = os.path.expanduser("~")
+CODEX_ROOT = os.path.join(HOME, ".codex", "sessions")
+CLAUDE_ROOT = os.path.join(HOME, ".claude", "projects")
+
+# ---------------------------------------------------------------------------
+# low-level parsing
+# ---------------------------------------------------------------------------
+
+
+def _iter_json(path):
+    try:
+        with open(path, "r", errors="replace") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    yield json.loads(line)
+                except Exception:
+                    continue
+    except OSError:
+        return
+
+
+def _text_from_content(content):
+    """Codex/Claude content -> plain text. Accepts str or list-of-blocks."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        out = []
+        for b in content:
+            if isinstance(b, dict):
+                if b.get("type") in ("input_text", "output_text", "text"):
+                    out.append(b.get("text", ""))
+                elif b.get("type") == "input_text" and b.get("text"):
+                    out.append(b["text"])
+        return "\n".join(t for t in out if t)
+    return ""
+
+
+def _is_noise(text):
+    t = text.lstrip()
+    return (
+        t.startswith("<")
+        or t.startswith("# AGENTS.md")
+        or "<INSTRUCTIONS>" in t[:200]
+        or "<environment_context>" in t[:200]
+        or "<system-reminder>" in t[:60]
+    )
+
+
+# ---------------------------------------------------------------------------
+# session model
+# ---------------------------------------------------------------------------
+
+
+class Session:
+    def __init__(self, tool, path):
+        self.tool = tool  # "codex" | "claude"
+        self.path = path
+        self.id = ""
+        self.cwd = ""
+        self.branch = ""
+        self.started = ""
+        self.mtime = os.path.getmtime(path) if os.path.exists(path) else 0
+        self.user_msgs = []
+        self.assistant_msgs = []
+        self.files = []
+        self.commands = []
+        self._parsed = False
+
+    # ------- summaries used by `list` (cheap: meta only) -------
+    def parse_meta(self):
+        if self.tool == "codex":
+            for o in _iter_json(self.path):
+                if o.get("type") == "session_meta":
+                    pl = o.get("payload") or {}
+                    self.id = pl.get("id", "")
+                    self.cwd = pl.get("cwd", "")
+                    git = pl.get("git") or {}
+                    self.branch = git.get("branch", "")
+                    self.started = pl.get("timestamp", "")
+                    return
+        else:  # claude — read first line for header fields
+            for o in _iter_json(self.path):
+                self.id = o.get("sessionId", "") or os.path.splitext(os.path.basename(self.path))[0]
+                self.cwd = o.get("cwd", "")
+                self.branch = o.get("gitBranch", "")
+                self.started = o.get("timestamp", "")
+                if self.cwd:
+                    return
+
+    # ------- full parse used by `read` / `handoff` -------
+    def parse_full(self):
+        if self._parsed:
+            return
+        self.parse_meta()
+        if self.tool == "codex":
+            self._parse_codex()
+        else:
+            self._parse_claude()
+        self._parsed = True
+
+    def _parse_codex(self):
+        for o in _iter_json(self.path):
+            pl = o.get("payload") or o
+            t = o.get("type")
+            if t == "response_item" and isinstance(pl, dict):
+                role = pl.get("role")
+                if role == "user":
+                    txt = _text_from_content(pl.get("content"))
+                    if txt.strip() and not _is_noise(txt):
+                        self.user_msgs.append(txt.strip())
+                elif role == "assistant":
+                    txt = _text_from_content(pl.get("content"))
+                    if txt.strip():
+                        self.assistant_msgs.append(txt.strip())
+                elif pl.get("type") == "function_call":
+                    self._record_codex_call(pl)
+
+    def _record_codex_call(self, pl):
+        name = pl.get("name", "")
+        args = pl.get("arguments", "")
+        try:
+            a = json.loads(args) if isinstance(args, str) else (args or {})
+        except Exception:
+            a = {}
+        if name == "shell":
+            cmd = a.get("command")
+            if isinstance(cmd, list):
+                cmd = " ".join(cmd)
+            if cmd:
+                self.commands.append(cmd)
+        elif any(k in name.lower() for k in ("write", "edit", "patch", "apply")):
+            p = a.get("path") or a.get("file_path") or a.get("input", "")
+            if p:
+                self.files.append(f"{name}: {p}")
+
+    def _parse_claude(self):
+        for o in _iter_json(self.path):
+            t = o.get("type")
+            msg = o.get("message")
+            if not isinstance(msg, dict):
+                continue
+            if t == "user":
+                txt = _text_from_content(msg.get("content"))
+                if txt.strip() and not _is_noise(txt):
+                    self.user_msgs.append(txt.strip())
+            elif t == "assistant":
+                content = msg.get("content")
+                if isinstance(content, list):
+                    for b in content:
+                        if not isinstance(b, dict):
+                            continue
+                        if b.get("type") == "text" and b.get("text", "").strip():
+                            self.assistant_msgs.append(b["text"].strip())
+                        elif b.get("type") == "tool_use":
+                            self._record_claude_tool(b)
+                elif isinstance(content, str) and content.strip():
+                    self.assistant_msgs.append(content.strip())
+
+    def _record_claude_tool(self, b):
+        name = b.get("name", "")
+        inp = b.get("input") or {}
+        if name == "Bash":
+            cmd = inp.get("command")
+            if cmd:
+                self.commands.append(cmd)
+        elif name in ("Write", "Edit", "MultiEdit", "NotebookEdit"):
+            p = inp.get("file_path") or inp.get("notebook_path", "")
+            if p:
+                self.files.append(f"{name}: {p}")
+
+    # ------- rendering -------
+    @property
+    def first_prompt(self):
+        for m in self.user_msgs:
+            return m
+        return ""
+
+    @property
+    def last_prompt(self):
+        return self.user_msgs[-1] if self.user_msgs else ""
+
+    @property
+    def last_reply(self):
+        return self.assistant_msgs[-1] if self.assistant_msgs else ""
+
+    def as_dict(self, full=False):
+        d = {
+            "tool": self.tool,
+            "id": self.id,
+            "cwd": self.cwd,
+            "branch": self.branch,
+            "started": self.started,
+            "mtime": self.mtime,
+            "path": self.path,
+        }
+        if full:
+            d.update(
+                {
+                    "user_msgs": self.user_msgs,
+                    "assistant_msgs": self.assistant_msgs,
+                    "files": _dedupe(self.files),
+                    "commands": self.commands,
+                    "first_prompt": self.first_prompt,
+                    "last_prompt": self.last_prompt,
+                    "last_reply": self.last_reply,
+                }
+            )
+        return d
+
+
+def _dedupe(seq):
+    seen, out = set(), []
+    for x in seq:
+        if x not in seen:
+            seen.add(x)
+            out.append(x)
+    return out
+
+
+# ---------------------------------------------------------------------------
+# discovery
+# ---------------------------------------------------------------------------
+
+
+def discover(tool):
+    out = []
+    if tool in ("codex", "both"):
+        for p in glob.glob(os.path.join(CODEX_ROOT, "**", "rollout-*.jsonl"), recursive=True):
+            out.append(Session("codex", p))
+    if tool in ("claude", "both"):
+        for p in glob.glob(os.path.join(CLAUDE_ROOT, "*", "*.jsonl")):
+            out.append(Session("claude", p))
+    out.sort(key=lambda s: s.mtime, reverse=True)
+    return out
+
+
+def find_one(token):
+    """Resolve a session by id / uuid / filename fragment / exact path."""
+    if os.path.isfile(token):
+        tool = "codex" if "/.codex/" in token else "claude"
+        s = Session(tool, token)
+        s.parse_meta()
+        return s
+    tok = token.lower()
+    for s in discover("both"):
+        base = os.path.basename(s.path).lower()
+        if tok in base:
+            s.parse_meta()
+            return s
+        s.parse_meta()
+        if s.id and tok in s.id.lower():
+            return s
+    return None
+
+
+# ---------------------------------------------------------------------------
+# formatting helpers
+# ---------------------------------------------------------------------------
+
+
+def _rel_time(mtime):
+    try:
+        return datetime.fromtimestamp(mtime, tz=timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M")
+    except Exception:
+        return "?"
+
+
+def _short(text, n=100):
+    text = " ".join(text.split())
+    return text[: n - 1] + "…" if len(text) > n else text
+
+
+# ---------------------------------------------------------------------------
+# commands
+# ---------------------------------------------------------------------------
+
+
+def cmd_list(args):
+    sessions = discover(args.tool)
+    cwd_filter = None
+    if args.cwd:
+        cwd_filter = os.path.abspath(os.getcwd() if args.cwd == "." else args.cwd)
+    rows = []
+    for s in sessions:
+        s.parse_meta()
+        if cwd_filter and not (s.cwd and (cwd_filter in s.cwd or s.cwd in cwd_filter)):
+            continue
+        rows.append(s)
+        if len(rows) >= args.limit:
+            break
+    if args.json:
+        print(json.dumps([s.as_dict() for s in rows], indent=2))
+        return
+    if not rows:
+        print("No sessions found.")
+        return
+    print(f"{'TOOL':6} {'WHEN':16}  {'BRANCH':30}  ID / FIRST PROMPT")
+    print("-" * 100)
+    for s in rows:
+        # first prompt needs a full parse; meta alone doesn't carry it
+        s.parse_full()
+        fp = s.first_prompt
+        ident = (s.id or os.path.basename(s.path))[:12]
+        print(f"{s.tool:6} {_rel_time(s.mtime):16}  {(s.branch or '-')[:30]:30}  {ident}  {_short(fp, 70)}")
+
+
+def _render_summary(s):
+    L = []
+    L.append(f"# {s.tool.title()} session {s.id or os.path.basename(s.path)}")
+    L.append("")
+    L.append(f"- tool: {s.tool}")
+    L.append(f"- cwd: {s.cwd}")
+    L.append(f"- branch: {s.branch}")
+    L.append(f"- started: {s.started}")
+    L.append(f"- last activity: {_rel_time(s.mtime)}")
+    L.append(f"- turns: {len(s.user_msgs)} user / {len(s.assistant_msgs)} assistant")
+    L.append(f"- file: {s.path}")
+    L.append("")
+    if s.first_prompt:
+        L.append("## Opening request")
+        L.append(_short(s.first_prompt, 600))
+        L.append("")
+    if len(s.user_msgs) > 1:
+        L.append("## Recent user turns")
+        for m in s.user_msgs[-5:]:
+            L.append(f"- {_short(m, 200)}")
+        L.append("")
+    files = _dedupe(s.files)
+    if files:
+        L.append(f"## Files touched ({len(files)})")
+        for f in files[-25:]:
+            L.append(f"- {f}")
+        L.append("")
+    if s.commands:
+        L.append(f"## Shell commands ({len(s.commands)}, last 15)")
+        for c in s.commands[-15:]:
+            L.append(f"- {_short(c, 160)}")
+        L.append("")
+    if s.last_reply:
+        L.append("## Where it left off (final assistant message)")
+        L.append(_short(s.last_reply, 1500))
+        L.append("")
+    return "\n".join(L)
+
+
+def cmd_read(args):
+    s = find_one(args.target)
+    if not s:
+        print(f"No session matching '{args.target}'", file=sys.stderr)
+        sys.exit(1)
+    s.parse_full()
+    if args.json:
+        print(json.dumps(s.as_dict(full=True), indent=2))
+        return
+    if args.transcript:
+        print(f"=== {s.tool} transcript {s.id} ({s.cwd}) ===\n")
+        # interleave in rough order: user then assistant blocks
+        for i in range(max(len(s.user_msgs), len(s.assistant_msgs))):
+            if i < len(s.user_msgs):
+                print(f"USER:\n{s.user_msgs[i]}\n")
+            if i < len(s.assistant_msgs):
+                print(f"ASSISTANT:\n{s.assistant_msgs[i]}\n")
+        return
+    print(_render_summary(s))
+
+
+def cmd_handoff(args):
+    s = find_one(args.target)
+    if not s:
+        print(f"No session matching '{args.target}'", file=sys.stderr)
+        sys.exit(1)
+    s.parse_full()
+    other = args.to or ("claude" if s.tool == "codex" else "codex")
+    files = _dedupe(s.files)
+    L = []
+    L.append(f"# Handoff: {s.tool} → {other}")
+    L.append("")
+    L.append(
+        f"You are resuming work from a {s.tool.title()} session. Read this brief, "
+        f"verify current repo state (git status, the files below), then continue."
+    )
+    L.append("")
+    L.append("## Context")
+    L.append(f"- source tool: {s.tool}  (session {s.id})")
+    L.append(f"- cwd: {s.cwd}")
+    L.append(f"- branch: {s.branch}")
+    L.append(f"- source transcript: {s.path}")
+    L.append("")
+    if s.first_prompt:
+        L.append("## Original goal")
+        L.append(_short(s.first_prompt, 800))
+        L.append("")
+    if len(s.user_msgs) > 1:
+        L.append("## Most recent instructions")
+        for m in s.user_msgs[-4:]:
+            L.append(f"- {_short(m, 240)}")
+        L.append("")
+    if files:
+        L.append("## Files the previous session touched")
+        for f in files[-30:]:
+            L.append(f"- {f}")
+        L.append("")
+    if s.last_reply:
+        L.append("## Where it left off")
+        L.append(_short(s.last_reply, 2000))
+        L.append("")
+    L.append("## Next step")
+    L.append(
+        "Re-verify the above against the working tree (files may have changed), "
+        "then pick up the unfinished thread. Do not assume the previous session's "
+        "claims are still true — check git status and re-read touched files first."
+    )
+    print("\n".join(L))
+
+
+def main():
+    p = argparse.ArgumentParser(prog="session-bridge", description=__doc__)
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    pl = sub.add_parser("list", help="list recent sessions across tools")
+    pl.add_argument("--tool", choices=["codex", "claude", "both"], default="both")
+    pl.add_argument("--cwd", help="filter to sessions under this dir ('.' = current)")
+    pl.add_argument("--limit", type=int, default=20)
+    pl.add_argument("--json", action="store_true")
+    pl.set_defaults(func=cmd_list)
+
+    pr = sub.add_parser("read", help="read + summarize one session")
+    pr.add_argument("target", help="session id / uuid / filename fragment / path")
+    pr.add_argument("--transcript", action="store_true", help="full conversation, not a summary")
+    pr.add_argument("--json", action="store_true")
+    pr.set_defaults(func=cmd_read)
+
+    ph = sub.add_parser("handoff", help="emit a handoff brief for the other tool")
+    ph.add_argument("target", help="session id / uuid / filename fragment / path")
+    ph.add_argument("--to", choices=["codex", "claude"], help="target tool (default: the other one)")
+    ph.set_defaults(func=cmd_handoff)
+
+    args = p.parse_args()
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()

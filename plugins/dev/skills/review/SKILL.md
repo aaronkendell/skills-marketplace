@@ -19,6 +19,33 @@ standard violation that should have been caught earlier, prefer one of:
 - Update the owning pattern doc in `references/patterns/`.
 - Let `skill-watch` promote recurring review misses into this skill after threshold.
 
+## Static pre-pass: run `swarm check arch` first
+
+Before hand-reviewing, run the repo's static architecture checker — it now catches a large slice of what used to be manual, so you only spend judgment on what a rule can't see:
+
+```bash
+swarm check arch            # all files (untracked included)
+swarm check arch --affected # git diff + untracked only
+swarm check arch --json     # machine-readable, for triage
+```
+
+Golf wires this through `pnpm check:architecture` (→ `./swarm check arch`), and lefthook runs `swarm check arch --affected` pre-push. Treat its output as the first review pass, then manually review the rest.
+
+Rules it enforces statically (error severity unless noted) — cite the rule id when you fix a hit:
+
+| Rule id | What it catches |
+|---|---|
+| `review-container-not-orchestrator` | A file in `containers/` that only does presentational work (local state / form hook / `forwardRef`, no data/store/identity/domain hook) — a dumb component relocated into `containers/` to dodge purity. Move it to `components/`; a real container fetches and passes props down. |
+| `review-component-not-dumb` | A file in `components/` or `screens/` importing a data/query/mutation/identity or store hook. Lift data to a container/hook and pass props. (Local UI hooks — animation, layout, disclosure — are allowed.) |
+| `review-no-inline-types` | `interface`/`type` declared inline (recurses into function/component bodies, not just top level). Move to a `*.types.ts` / `types/` module. |
+| `review-no-inline-constants` / `review-no-inline-utils` | Meaningful inline config/data or reusable helpers. Move to `constants.ts` / `utils`, `services`, `mappers`. |
+| `review-one-component-per-file` | More than one top-level component in a `.tsx`. |
+| `review-domain-layer-boundary` / `review-domain-no-cross-domain-internals` | DDD layer direction + cross-domain reach-through. |
+| `ui-no-classname-prop-on-golf-component` / `ui-no-style-prop-on-golf-component` | `className`/`style` passed to a golf-ui component (inside `packages/ui`). No exceptions: use props for spacing/sizing/layout; put spacing BETWEEN elements on the parent (`Stack gap` / Box wrapper), not a margin on the child; move one-off brand styling INTO the leaf that renders the raw element. className is only legal on the raw `div`/`View` inside a leaf primitive. |
+| `ui-no-direct-*` | Direct `expo-*` / `react-native-*` imports in golf-ui components that should route through the shared adapters. |
+
+The folder-role rules (`review-container-not-orchestrator`, `review-component-not-dumb`) encode the `frontend.md` contract — **Container = orchestrator, Screen = pure presentation, Components = dumb** — so a file's folder is a real contract, not a place to hide. When you find a repeated miss the checker *doesn't* catch, prefer adding a rule to `swarm check arch` over re-catching it by hand each time.
+
 ## When this skill fires vs. when the agent runs
 
 | Surface | Triggered by | Mode |

@@ -64,3 +64,7 @@ learn from Ponytail findings, but DDD/API/mobile/design guidance belongs in this
 
 Use the pskoett-style pattern as architecture: log evidence, group recurring deviations, promote
 only when thresholded, and keep the working-tree rewrite reviewable.
+
+For the full external-tooling posture — Ponytail (debt signal), SkillSpector (skill/MCP security
+gate for third-party skills we install), and Loopy (ideas to mine) — see
+[`references/external-tooling.md`](../../references/external-tooling.md).

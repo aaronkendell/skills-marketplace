@@ -1,0 +1,17 @@
+{
+	"$schema": "https://json.schemastore.org/claude-code-plugin",
+	"name": "session-bridge",
+	"version": "0.1.0",
+	"description": "Inspect, resume, and hand off agent sessions across Codex CLI and Claude Code. Switch tools without losing context.",
+	"author": {
+		"name": "bokendell"
+	},
+	"keywords": [
+		"sessions",
+		"resume",
+		"handoff",
+		"codex",
+		"claude-code",
+		"context"
+	]
+}

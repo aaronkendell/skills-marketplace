@@ -18,6 +18,11 @@
 			"description": "Claude Code + Codex hook loop for skill activation, standards drift, swarm/arch-check review signals, and reviewable auto-rewrites into this marketplace working tree."
 		},
 		{
+			"name": "session-bridge",
+			"source": "./plugins/session-bridge",
+			"description": "Inspect, resume, and hand off agent sessions across Codex CLI and Claude Code. `session-bridge` CLI reads both session stores; resume-session (read) + handoff-session (switch tools) skills."
+		},
+		{
 			"name": "ponytail",
 			"source": {
 				"source": "github",
