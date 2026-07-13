@@ -29,18 +29,22 @@ Golf is the standalone product repo. All paths below assume the cwd is the repo 
 | Shared shadcn host | `@bokendell/ui` (from registry) | Source in `aaronkendell/core` |
 | `swarm` flag | usually omit `--app` (auto-detected from `bokendell.config.json`); pass `--app golf` if it errors | — |
 
-The design app's architecture is documented in [`references/patterns/design.md`](../../../references/patterns/design.md) — surface groups (mobile/admin/marketing/kits), domain packages with `containers/screens/hooks/stores` + `flows/<flow>/{meta,decisions,sections,sketches}`, sketches collocation + server-scan + route handler, providers chain, env validation. **Read that pattern before composing any new structure in the design app.**
+The design app's architecture is documented in [`references/patterns/design.md`](../../../../references/patterns/design.md) — surface groups (mobile/admin/marketing/kits), domain packages with `containers/screens/hooks/stores` + `flows/<flow>/{meta,decisions,sections,sketches}`, sketches collocation + server-scan + route handler, providers chain, env validation. **Read that pattern before composing any new structure in the design app.**
 
 ## On invocation, ALWAYS do these in order
 
-1. **Load `dev:design` first**, then load the five base skills via the Skill tool, in this order. These are not optional — even a "quick" design ask should load them so the variant defaults and anti-slop directives are active:
+1. **Load `dev:design` first**, then load the base skills via the Skill tool, in this order. These are not optional — even a "quick" design ask should load them so the variant defaults and anti-slop directives are active:
    - `/dev:design` — orchestrator workflow (mock-first decisions, app/platform detection, persistent tunnels)
    - `/impeccable:impeccable` — anti-AI-slop directives (auto-reads `packages/ui/.impeccable.md`)
    - `/taste:design-taste-frontend` — high-agency frontend rules (typography bans, motion principles, layout diversification). This is the v2 taste-skill (plugin `taste`, SKILL.md `name: design-taste-frontend` — NOT `taste-skill`). For broad product/app UI (multi-step flows, dashboards) v2 scopes itself out, so prefer `/taste:design-taste-frontend-v1` there; either way load it for the anti-slop directives.
+   - `/emil-design-eng` — Emil Kowalski's design-engineering philosophy: UI polish, component design, animation decisions, and the invisible details that make software feel great. The craft bar for a motion-heavy app like golf. (skills.sh universal skill, `emilkowalski/skill`.)
+   - `/apple-design` — Apple's interface + fluid-motion foundations (springs, gestures, sheets, momentum, interruptible transitions, materials, optical typography, reduced-motion). Golf IS an Apple-style mobile app, so this is core, not optional.
    - `/ui-ux-pro-max:ui-ux-pro-max` — palette/font/component recommendation (mainly at the *exploration* phase; not every iteration)
    - `/huashu-design` — HTML-native prototype + 5-dimension review + 20 design philosophies (use for hi-fi mocks, slide-style flows, motion stories)
 
-   You can fire all five Skill calls in a single message — they're independent.
+   You can fire all these Skill calls in a single message — they're independent.
+
+   **On-demand (motion work, not every task):** `/improve-animations` (audit + prioritized plan of a codebase's motion — read-only planner) and `/review-animations` (review animation code against Emil's craft bar — default to flagging) — reach for these when the task is "make the motion better" / a motion audit or review, and `/design-review` folds `review-animations` in. `/animation-vocabulary` is a lookup glossary ("what's that effect called"). All from `emilkowalski/skill` (installed via `npx skills add emilkowalski/skill`, tracked in `skills-lock.json`).
 
 2. **Read the system docs.** In this exact order:
    - `apps/design/README.md` — workflow + structure + sync model
@@ -50,8 +54,8 @@ The design app's architecture is documented in [`references/patterns/design.md`]
    - `packages/ui/SIZING.md` — typed prop cheat sheet for every primitive
    - `packages/ui/VOICE.md` — copy rules ("bookkeeper meets editorial"; the explicit banned-phrase list)
    - `packages/ui/.impeccable.md` — brand voice + design context
-   - `packages/ui/SCAFFOLD-NOTES.md` — what's shipped, what's planned
-   - `references/patterns/design.md` — design app architecture (lib/, packages/, surface groups, sketches, providers)
+   - `packages/ui/DESIGN-SYSTEM.md` — component vocabulary, what's shipped, and what's planned
+   - `../../../../references/patterns/design.md` — design app architecture (lib/, packages/, surface groups, sketches, providers)
 
 3. **Read at least one reference screen + flow before composing JSX.** This is the step the agent gets wrong most often: respecting tokens but ignoring the signature compositions. Open `apps/design/src/packages/mobile/round/screens/in-round-screen.tsx` plus `apps/design/src/packages/mobile/round/flows/in-round/sections/01-round.tsx`. Skim how `<PageHeader italicTail>`, `<Card variant="solid">`, ledger-hairline list rows, and `<DesignCanvas>/<DCSection>/<DCArtboard>` + `<Frame theme="light">` are composed. Match that vocabulary — don't reinvent it.
 
@@ -61,7 +65,7 @@ The design app's architecture is documented in [`references/patterns/design.md`]
 
 > Every clarifying question that could be answered with a picture must be answered with **2–4 picture variants** instead. Treat asking a text question about layout/color/copy/component shape as a smell — generate the alternatives, let the user pick.
 
-This is the meta-rule that overrides "ask first." It's also why the five base skills are loaded up-front — they all reinforce the same default.
+This is the meta-rule that overrides "ask first." It's also why the base skills are loaded up-front — they all reinforce the same default.
 
 **The variant protocol:**
 
@@ -161,7 +165,7 @@ This keeps the skill an accurate map of the territory instead of an aging artifa
 
 ### The golf-ui primitive catalog (current state)
 
-Always check `packages/ui/SCAFFOLD-NOTES.md` for the live list. The shape:
+Always check `packages/ui/DESIGN-SYSTEM.md` for the live component vocabulary. The shape:
 
 | Tier | Primitives |
 |---|---|
@@ -186,7 +190,7 @@ When you find yourself writing the same className combination twice in a flow, *
    - Implement those primitives in golf-ui first, refactor the kit after
 ```
 
-The studio is `Next.js 15 App Router + Tailwind v4` (see [`patterns/design.md`](../../../references/patterns/design.md) for the full architecture). Each flow has a route file at `src/app/(surface)/<surface>/<domain>/<flow>/page.tsx` that's 8 lines — imports the container + per-flow PageMeta, scans sketches, renders. The discovery root (`/`) is fed by `src/packages/site/discovery/registry.ts` which explicitly imports each domain's `meta.ts`. **Adding a flow** means: scaffold the flow folder under `packages/<surface>/<domain>/flows/<slug>/`, add it to the domain meta, write a route file. No glob magic.
+The studio is `Next.js 15 App Router + Tailwind v4` (see [`patterns/design.md`](../../../../references/patterns/design.md) for the full architecture). Each flow has a route file at `src/app/(surface)/<surface>/<domain>/<flow>/page.tsx` that's 8 lines — imports the container + per-flow PageMeta, scans sketches, renders. The discovery root (`/`) is fed by `src/packages/site/discovery/registry.ts` which explicitly imports each domain's `meta.ts`. **Adding a flow** means: scaffold the flow folder under `packages/<surface>/<domain>/flows/<slug>/`, add it to the domain meta, write a route file. No glob magic.
 
 ### Mental model: flows are the workshop, kits are the showroom
 
@@ -380,7 +384,7 @@ mkdir -p $DOMAIN/flows/<slug>/{sections,sketches}
 # add the route file at apps/design/src/app/(surface)/mobile/<domain>/<slug>/page.tsx
 ```
 
-See [`patterns/design.md`](../../../references/patterns/design.md) for the full template.
+See [`patterns/design.md`](../../../../references/patterns/design.md) for the full template.
 
 ## Asset stacks — when to reach for what
 
@@ -403,6 +407,46 @@ Tobacco uses a four-tier motion stack. Different tool per tier; none try to be a
 Plus `huashu-design` for HTML→MP4 sketches during exploration (already loaded).
 
 **Why this matters now:** the current `CaddyAvatar` primitive uses inline CSS `@keyframes caddy-bloom` plus a separate Reanimated worklet for native. That's two implementations of one brand animation. Promotion candidate: re-author as `caddy-bloom.riv` → consumed via `<RiveAsset name="caddy-bloom">` on both platforms. Same file, identical 60fps result, ~5KB on disk.
+
+### Animated icons — reach for these BEFORE a static one
+
+When composing any screen/sketch/mock that has a tappable icon, a state-change cue, or any
+moment an icon could earn a micro-interaction (like/save toggles, sync/loading, notification
+bells, menu open/close), **check for an animated version before defaulting to static.** This is
+a standing rule for every new surface, not just the exploration phase.
+
+- **Web** (admin/marketing, via `@bokendell/ui`): `<DynamicIcon name="bell" animated />` — the
+  `animated` prop switches to a Motion-driven port when one exists in the 439-icon
+  `ANIMATED_ICON_REGISTRY` (`core/packages/shared/ui/src/shadcn/icons/registry.ts`), falling
+  back to the static lucide glyph automatically for any name without a port. No extra work to
+  opt in — just add `animated`.
+- **Mobile** (golf app, via `@bokendell/golf-ui/lab`): an experimental, opt-in subpath kept out
+  of the root golf-ui barrel — `import { BellRingIcon } from "@bokendell/golf-ui/lab"`. Only a
+  handful of icons are ported so far (mobile porting is per-icon, hand-translated from Motion.dev
+  keyframes onto Reanimated + `react-native-svg`); check `packages/ui/src/lab/` for what exists
+  before assuming an icon isn't available.
+- **Porting a new mobile icon or building a screen's signature micro-interaction?** Load the
+  **`rn-makeitanimated`** skill first — it documents a reusable keyframe-timeline architecture
+  pattern (`Loader`/`KeyframeView`) that cuts down the hand-translation work, plus Reanimated
+  best-practice rules (`scheduleOnRN`/`scheduleOnUI`, React Compiler `.get()`/`.set()`).
+
+### External motion/interaction references (required — you check these manually)
+
+None of these have an API Claude can query automatically — they're browse-in-browser
+resources. But before finalizing a new screen or flow's motion design (web or mobile), **Claude
+must prompt you to go check the relevant one(s)** rather than silently skipping this step:
+
+| Site | What it's for | When to check |
+|---|---|---|
+| [60fps.design](https://60fps.design/) | Video gallery of real premium-app motion, tagged by interaction (scroll, carousel, drag, spring physics, confetti, etc.) | Any new interactive component — "how do people animate a card stack / pull-to-refresh / etc." |
+| [spottedinprod.com](https://www.spottedinprod.com/) | Real iOS interaction videos at 60fps with touch-heatmaps + frame-by-frame playback (measure exact durations) | Fine-tuning timing/easing on a specific gesture or transition |
+| [khagwal.com/interactions](https://khagwal.com/interactions/) | One designer's handcrafted micro-interaction portfolio | A specific, narrow motion-taste reference — not a searchable library, just scroll it |
+| [makeitanimated.dev/resources](https://makeitanimated.dev/resources) | Link list of RN animation libraries/tools + the `rn-makeitanimated` project itself | Cross-checking whether a known RN animation library already solves the problem |
+| [refero.design](https://refero.design/) | Real product UI screens/flows (web + iOS), Figma-exportable; **has an official MCP** (`api.refero.design/mcp`, Pro required) | Layout/component reference for a new screen — closer/cheaper alternative to Mobbin if we get a Pro seat |
+
+If the user hasn't set up the Refero or Mobbin MCP (see `dev:design`'s Core Design Principles for
+the Mobbin note), treat both as manual-check sites too — just say "worth a look at refero.design
+for X" rather than skipping the reminder.
 
 Same pattern applies to:
 - `<LiveIndicator>` pulse → `live-indicator.riv`

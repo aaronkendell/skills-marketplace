@@ -22,14 +22,14 @@ You manage all design work across three apps: **golf** (Fairway), **portfolio**,
 This skill is a thin orchestrator. It:
 1. Detects which app and platform (web/mobile) from the files being touched
 2. Loads the right app-specific tokens from `references/apps/<app>.md`
-3. Invokes **four external design skills** under the hood for specialized work (see below)
+3. Invokes **external design skills** under the hood for specialized work (see below)
 4. Applies motion, anti-pattern, and quality principles consistently
 
 The heavy lifting comes from installed skills — this skill coordinates them and adds your project-specific standards.
 
 ## Required external design skills (check before invoking)
 
-This orchestrator delegates the actual taste/finishing/heuristics/HTML-prototyping work to four upstream resources. Before any design work, verify they are installed. The canonical reference (sources, roles, exact install commands) is at:
+This orchestrator delegates the actual taste/craft/finishing/heuristics/HTML-prototyping work to upstream resources. Before any design work, verify they are installed. The canonical reference (sources, roles, exact install commands) is at:
 
 → `~/repos/bokendell/skills-marketplace/references/design-stack.md` (or in the cache at `~/.claude/plugins/cache/bokendell-skills/references/design-stack.md`)
 
@@ -39,6 +39,7 @@ This orchestrator delegates the actual taste/finishing/heuristics/HTML-prototypi
 |---|---|
 | `/taste:design-taste-frontend` (v2; v1 fallback `/taste:design-taste-frontend-v1`) | `/plugin install taste@bokendell-skills` (Leonxlnx/taste-skill, sourced live). NOTE the invocable name is the SKILL.md `name:` (`design-taste-frontend`), NOT the folder `taste-skill`. The marketplace `skills` array must list each skill DIRECTORY — pointing at the bare `./skills` container registers zero skills. |
 | `/impeccable:impeccable` | `/plugin marketplace add pbakaus/impeccable` + `/plugin install impeccable@impeccable` |
+| `/emil-design-eng` + `/apple-design` (+ on-demand `/improve-animations`, `/review-animations`, `/animation-vocabulary`) | `npx skills add emilkowalski/skill` — installs all 5 as skills.sh universal skills (`.agents/skills/`, symlinked for Claude Code, tracked in `skills-lock.json`). `emil-design-eng` = Emil Kowalski's polish/component/motion philosophy; `apple-design` = Apple fluid-motion + materials + typography. The two are the always-load craft floor for app UI; the animation trio is motion-work-only. |
 | `/ui-ux-pro-max` | `/plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill` + `/plugin install ui-ux-pro-max@ui-ux-pro-max-skill` |
 | `/huashu-design` | `git clone https://github.com/alchaincyf/huashu-design ~/.claude/skills/huashu-design` *(upstream isn't a plugin — installs as user-scope skill; `git pull` to update)* |
 
@@ -48,6 +49,7 @@ ls ~/.claude/plugins/cache/bokendell-skills/taste/*/skills/ 2>/dev/null
 ls ~/.claude/plugins/cache/impeccable/impeccable/*/         2>/dev/null
 ls ~/.claude/plugins/cache/ui-ux-pro-max-skill/*/*/         2>/dev/null
 ls ~/.claude/skills/huashu-design/SKILL.md                  2>/dev/null
+ls ~/.claude/skills/{emil-design-eng,apple-design}/SKILL.md 2>/dev/null   # Emil (skills.sh)
 ```
 
 If any is missing, **stop and surface the install command to the user** rather than degrading silently.
@@ -236,8 +238,11 @@ Rules:
 ### For Design Exploration / Research Phase
 Invoke these skills via the Skill tool:
 - `taste:design-taste-frontend` — high-agency anti-slop directives (typography bans, color calibration, layout diversification, perpetual micro-interactions). Loads the baseline variance/motion/density knobs and the AI-tells blacklist. Load this FIRST — it establishes the taste floor everything else builds on. (v2 is scoped to landing/portfolio/redesign; for multi-step product/app UI use `taste:design-taste-frontend-v1`.)
+- `emil-design-eng` — Emil Kowalski's polish/component/motion craft philosophy: the invisible details that make software feel great. Load alongside taste on every design task.
+- `apple-design` — Apple's fluid-motion foundations (springs, gestures, sheets, momentum, interruptible transitions, materials, optical typography, reduced-motion). Required for any app/mobile UI or gesture-driven surface.
 - `ui-ux-pro-max` — for palette exploration, font pairing, style direction
 - `impeccable` — for bold aesthetic choices and polish sub-commands (animate, polish, bolder, distill, etc.)
+- **Motion work only:** `improve-animations` (audit + prioritized plan of the codebase's motion, read-only) and `review-animations` (grade animation code against Emil's craft bar). `animation-vocabulary` is a lookup glossary for naming an effect.
 - Reference `docs/design/references/` for inspiration from real sites (Linear, Stripe, Apple, etc.)
 
 ### For Component Building
@@ -291,6 +296,14 @@ Motion should feel intentional, not decorative. These principles apply cross-pla
 - **Golf**: variance=4 (refined elegance), motion=6 (engaging but not playful), density=5 (balanced)
 - **Portfolio**: variance=3 (clean professional), motion=4 (subtle and smooth), density=4 (airy)
 - **Hive**: variance=2 (data-focused), motion=3 (minimal functional), density=6 (information-dense)
+
+**Animated icons before static ones.** For any tappable icon or state-change cue (like/save,
+sync/loading, notifications, menu open/close) across any app, check for an animated version
+before defaulting to static — this applies to every new screen/sketch, not just exploration.
+Web apps built on `@bokendell/ui` get this via `<DynamicIcon name="..." animated />` (a large
+Motion-ported registry, falls back to static automatically when a name isn't ported). For
+mobile, load the `motion-stack` and `rn-makeitanimated` skills — the latter documents a reusable
+keyframe-timeline pattern for porting a new icon or interaction onto Reanimated.
 
 ### Component Architecture
 
@@ -402,6 +415,21 @@ Read 2-3 reference design systems from `docs/design/references/` based on what f
 | Developer tools | `cursor/`, `raycast/`, `vercel/` |
 
 Extract the specific tokens you like from each: their color approach, typography choices, spacing philosophy, component styles. Note what works and why.
+
+**Also — required, but manual (no API to auto-check):** before finalizing a new screen or
+flow's motion/interaction design, prompt the user to check live reference sites, don't just
+skip it silently. Which one depends on the question:
+
+| Question | Site |
+|---|---|
+| "How do real premium apps animate X interaction?" | [60fps.design](https://60fps.design/) (video gallery, tagged by interaction type) |
+| "What's the exact timing/easing on this gesture?" | [spottedinprod.com](https://www.spottedinprod.com/) (60fps iOS clips w/ frame-by-frame + touch heatmaps) |
+| "Show me real screens/flows for this layout pattern" | [refero.design](https://refero.design/) (web+iOS, Figma-exportable, **has an official MCP** — `api.refero.design/mcp`, needs Pro) or [mobbin.com](https://mobbin.com/) (bigger mobile-flow library, **has an official MCP** — `api.mobbin.com/mcp`, needs Pro; install via `claude mcp add mobbin --scope user --transport http https://api.mobbin.com/mcp`) |
+| One designer's handcrafted motion taste | [khagwal.com/interactions](https://khagwal.com/interactions/) — narrow, not a searchable library |
+
+If the user has a Refero or Mobbin Pro seat with the MCP installed, query it directly instead of
+just pointing at the URL. Otherwise, say "worth checking `<site>` for `<X>`" as an explicit
+prompt — don't quietly skip the reference step because it isn't automatable.
 
 ### Step 3: Generate Design Direction Options
 

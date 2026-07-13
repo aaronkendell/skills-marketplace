@@ -15,6 +15,8 @@ metadata:
 Is this an in-app gesture, transition, sheet rise, or press state?
 └── react-native-reanimated 4.x — already a peer dep in every bokendell Expo app.
     Same code runs RN + web at 120fps via JSI. No special skill to load — use the lib directly.
+    Porting a specific micro-interaction or icon recipe (Motion.dev/CSS keyframes → Reanimated)?
+    LOAD: `rn-makeitanimated` in this same plugin — architecture pattern + best-practice rules.
 
 Is this a branded animation (Caddy bloom, mascot, reveal moment, state machine)?
 └── Rive .riv files. LOAD: `rive-interactive` from the claude-design-skillstack marketplace.
