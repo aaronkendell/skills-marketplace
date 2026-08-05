@@ -25,6 +25,14 @@ things. Every other entry is an app project holding only credentials the app
 *uses*. That split is the privilege boundary; the folder names are identical on
 both sides so there is one mental model, not two.
 
+**A promoted app owns its own bootstrap credentials.** Once an app has its own
+tenant — its own Sentry org, its own Grafana stack — creating a project *inside*
+that tenant is an operation on that app, not a "create a new app" operation.
+So golf holds `/infrastructure/sentry/SENTRY_BOOTSTRAP_TOKEN` for the `bagman`
+org, while bokendell holds one for the shared `bokendell` org. The project name
+already identifies the tenant, so the key needs no suffix. bokendell only ever
+holds bootstrap credentials for tenants **it** owns.
+
 In CI the same identity arrives via OIDC, selected by the repo variables
 `INFISICAL_IDENTITY_ID` and `INFISICAL_PROJECT_SLUG`. Never hardcode a fallback
 identity in a workflow — a shared default silently authenticates one app into

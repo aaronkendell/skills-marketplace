@@ -50,7 +50,7 @@ project, with `bokendell` as the control plane. Everything below lives in
 | Cloudflare | `CLOUDFLARE_API_TOKEN` | Zone:Edit, DNS:Edit, R2:Edit, Tunnel:Edit, Account:Read | `/infrastructure/cloudflare` |
 | Neon | `NEON_API_KEY` | org-scoped | `/infrastructure/neon` |
 | Fly | `FLY_ORG_TOKEN` | org admin | `/infrastructure/fly` |
-| Sentry | `SENTRY_BOOTSTRAP_TOKEN` | `project:admin`, `org:read` | `/infrastructure/sentry` |
+| Sentry | `SENTRY_BOOTSTRAP_TOKEN` | `project:admin`, `org:read` | `/infrastructure/sentry` (one per Sentry org — a promoted app holds its own) |
 | Grafana | `GRAFANA_CLOUD_ACCESS_TOKEN` | `accesspolicies:write`, `stacks:write` | `/infrastructure/grafana` |
 | Upstash | `UPSTASH_MANAGEMENT_KEY` | account | `/infrastructure/upstash` |
 | PostHog | `POSTHOG_PERSONAL_API_KEY` | `organization:write`, `project:write` | `/infrastructure/posthog` |
@@ -120,10 +120,20 @@ DNS last so nothing points at an app that isn't up.
    (`<app>-production`). Mint a **deploy token per app**
    (`fly tokens create deploy -a <app>-<env>`) — that splits by environment for
    free and beats an org token on least privilege.
-4. **Upstash** — one database per environment, moved to the app's team. Never
-   share a database across apps; key collisions are silent.
+4. **Upstash** — one database per environment, moved to the app's team. Create
+   as **pay-as-you-go with a $20 minimum budget** (`POST /v2/redis/database`
+   takes `budget`). Never share a database across apps; key collisions are
+   silent, and three apps here were found sharing one.
 5. **Sentry** — one project per surface. Write DSNs to `/infrastructure/sentry`
    as `SENTRY_DSN_<SURFACE>`, referenced from each app path.
+
+   Two token types, and confusing them is why a token can look fine and still
+   fail. An **Organization Auth Token** (`sntrys_…`, Settings → Auth Tokens) has
+   fixed CI-only permissions — that's what sourcemap upload and releases use. An
+   **Internal Integration** (Settings → Custom Integrations) has customizable
+   scopes and is the only way to get `project:admin` for *creating* projects. It
+   is not an OAuth app: it issues a token directly, no authorization flow. Use
+   its **token**, not its client secret — the secret only verifies webhooks.
 6. **Grafana** — mint an access-policy token scoped
    `metrics:write,logs:write,traces:write`. Same stack is fine; separation is
    by `service.namespace`. Write `GRAFANA_OTLP_{ENDPOINT,AUTH_HEADER}`.
