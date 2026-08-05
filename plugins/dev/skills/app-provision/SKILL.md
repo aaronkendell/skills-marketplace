@@ -121,9 +121,16 @@ DNS last so nothing points at an app that isn't up.
    (`fly tokens create deploy -a <app>-<env>`) — that splits by environment for
    free and beats an org token on least privilege.
 4. **Upstash** — one database per environment, moved to the app's team. Create
-   as **pay-as-you-go with a $20 minimum budget** (`POST /v2/redis/database`
-   takes `budget`). Never share a database across apps; key collisions are
-   silent, and three apps here were found sharing one.
+   as **pay-as-you-go with a $20 budget**: `POST /v2/redis/database` with
+   `{plan: "payg", budget: 20, tls: true}`, then `POST /v2/redis/move-to-team`
+   with `{team_id, database_id}`. Never share a database across apps; key
+   collisions are silent, and three apps here were found sharing one.
+
+   **Gotcha:** `GET /v2/redis/databases` lists only *personal* databases. Once a
+   database is moved to a team it vanishes from that endpoint, and `?team_id=`
+   doesn't bring it back — there's no documented way to list team-owned
+   databases. An empty response does **not** mean the account has none. Verify a
+   database by pinging its REST URL, not by looking for it in the list.
 5. **Sentry** — one project per surface. Write DSNs to `/infrastructure/sentry`
    as `SENTRY_DSN_<SURFACE>`, referenced from each app path.
 
