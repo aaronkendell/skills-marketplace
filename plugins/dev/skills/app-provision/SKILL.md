@@ -131,6 +131,12 @@ DNS last so nothing points at an app that isn't up.
    doesn't bring it back — there's no documented way to list team-owned
    databases. An empty response does **not** mean the account has none. Verify a
    database by pinging its REST URL, not by looking for it in the list.
+
+   **Therefore: persist `database_id` from the create response**, as
+   `UPSTASH_DATABASE_ID` next to the credentials. It is the only handle for
+   `DELETE /v2/redis/database/{id}` later, and because team databases can't be
+   listed, a lost id means the database can only be removed from the console.
+   The hostname's numeric suffix is *not* the id.
 5. **Sentry** — one project per surface. Write DSNs to `/infrastructure/sentry`
    as `SENTRY_DSN_<SURFACE>`, referenced from each app path.
 
