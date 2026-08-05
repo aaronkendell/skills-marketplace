@@ -109,6 +109,14 @@ what it can see, not just that it returns 200.
 Order matters: Infisical first so everything downstream has somewhere to land,
 DNS last so nothing points at an app that isn't up.
 
+**Before creating anything, check whether the app already has a working one.**
+Probe the credential the app actually holds — ping the database, call the key's
+info endpoint — and skip on success. Do **not** infer "missing" from the
+resource not appearing under a name you'd have chosen: apps provisioned by hand
+use their own names and live in their own workspace or team, and several
+vendors here can't list resources they own. Getting this backwards overwrites a
+live credential with a new one, which is silent until something fails.
+
 1. **Infisical** — create the project, `development`/`stage`/`production`,
    `/global` (`APP_ENV`, `APP_NAMESPACE`, `APP_DOMAIN`), and a machine
    identity. Add it to `~/.config/bokendell/infisical.json`.
@@ -150,8 +158,11 @@ DNS last so nothing points at an app that isn't up.
 6. **Grafana** — mint an access-policy token scoped
    `metrics:write,logs:write,traces:write`. Same stack is fine; separation is
    by `service.namespace`. Write `GRAFANA_OTLP_{ENDPOINT,AUTH_HEADER}`.
-7. **OpenRouter** — a workspace for the app, then a provisioning-key-issued API
-   key per environment with its own spend cap.
+7. **OpenRouter** — **create the workspace first, then mint keys inside it.**
+   Keys issued before a workspace exists land in the personal account and have
+   to be moved by hand afterwards. One workspace per app, one key per
+   environment, each with its own spend cap — that cap is the isolation, so a
+   single app can't drain the shared balance.
 8. **Resend** — verify the domain, create an API key. Free tier is one domain
    per account, so this usually means a fresh account and signup email.
 9. **PostHog** — a project (free tier: a new **org**), write the project API key.
