@@ -21,11 +21,44 @@ You manage all design work across three apps: **golf** (Fairway), **portfolio**,
 
 This skill is a thin orchestrator. It:
 1. Detects which app and platform (web/mobile) from the files being touched
-2. Loads the right app-specific tokens from `references/apps/<app>.md`
+2. Reads the repo's root `DESIGN.md` when present (below), then fills gaps from `references/apps/<app>.md`
 3. Invokes **external design skills** under the hood for specialized work (see below)
 4. Applies motion, anti-pattern, and quality principles consistently
 
 The heavy lifting comes from installed skills — this skill coordinates them and adds your project-specific standards.
+
+### `DESIGN.md` is the token source of record
+
+When a repo has a root `DESIGN.md`, read it FIRST and prefer its values over any
+token table in this skill or in an app pack. It follows the
+[DESIGN.md spec](https://github.com/google-labs-code/design.md): YAML
+frontmatter carrying `colors`, `typography`, `rounded`, `spacing` (and
+optionally `components`), then up to eight markdown sections in a fixed order.
+
+It outranks the app packs for one reason: in golf it is **generated** from
+`packages/tokens/src/theme-source.ts` and diffed by `tokens:check` in CI, so it
+cannot disagree with the tokens the app actually ships. The tables in
+`references/apps/<app>.md` are hand-maintained and can lag — treat them as
+context and fallback, not as truth, wherever DESIGN.md covers the same ground.
+
+**Never hand-edit a generated `DESIGN.md`.** Its Overview says so and the CI
+diff rejects it. Change `theme-source.ts`, then run
+`pnpm --filter @bokendell/golf-tokens tokens:gen`.
+
+Two things it deliberately does not carry — do not read absence as permission:
+
+- **Components.** golf lists the section in `omitted` because the spec allows
+  only 8 component sub-tokens (`backgroundColor`, `textColor`, `typography`,
+  `rounded`, `padding`, `size`, `height`, `width`) and golf's components carry
+  shadow, motion, glass and focus-ring state that none of those express.
+  Component truth stays in golf-ui and the flow sketches.
+- **Dark values.** The frontmatter carries the LIGHT palette only — the spec has
+  a single palette. Both modes are tabulated under `## Colors` in the body, so
+  read that table before assuming a token is theme-independent.
+
+Its `## Do's and Don'ts` is derived from `packages/ui/HARD-RULES.md`, which
+remains the enforced source and carries the rationale and accepted alternative
+for each rule. Read HARD-RULES when a rule needs interpreting, not just obeying.
 
 ## Required external design skills (check before invoking)
 
