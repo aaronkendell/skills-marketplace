@@ -92,10 +92,31 @@ derive DESIGN.md's Do's and Don'ts.
 
 ### 6. `DESIGN.md` — generate it, never hand-write it
 
-If the app has `packages/tokens/src/theme-source.ts`, emit `DESIGN.md` from it (the
-[DESIGN.md spec](https://github.com/google-labs-code/design.md)) so DESIGN.md-aware tools and
-agents read tokens that provably match what ships. golf's implementation is the reference:
-`packages/tokens/scripts/design-md.ts`.
+**Standard for every app.** `buildDesignMd` ships in `@bokendell/tokens` — do not write or copy
+a generator. Call it from the app's `scripts/generate-tokens.ts` with the same `TokenDefinition`
+that produces the CSS:
+
+```ts
+import { buildDesignMd } from "@bokendell/tokens";
+
+writeFileSync(
+  join(REPO_ROOT, "DESIGN.md"),
+  buildDesignMd(tokens, {
+    name: "<App>",
+    description: "<one line>",
+    overview: "<character of the system — not values>",
+    regenCommand: "pnpm --filter @bokendell/<app>-tokens tokens:gen",
+    sourcePath: "packages/tokens/src/theme-source.ts",
+    hardRules: readFileSync(join(REPO_ROOT, "packages/ui/HARD-RULES.md"), "utf8"),
+  }),
+);
+```
+
+It handles the spec's sharp edges for you: `var(--fs-*)` / `var(--text-*)` refs resolve to
+concrete dimensions, absent type properties are omitted rather than emitted empty, sections with
+no data are declared in `omitted` instead of shipping empty headings, and Do's and Don'ts derive
+from HARD-RULES' `### <n>. <RULE>` headings. A stub HARD-RULES.md is fine — the section is
+omitted, not emitted blank.
 
 A hand-written DESIGN.md is a second source of truth for the same values and drifts the moment
 `theme-source.ts` changes — silently, because nothing reads it back.
