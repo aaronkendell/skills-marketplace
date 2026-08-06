@@ -7,6 +7,11 @@ description: Provision a new app across Cloudflare, Infisical, Neon, Fly, Sentry
 
 Stand up a new app's infrastructure and wire it into Infisical.
 
+**Repo side first.** `dev:app-scaffold` creates the repo, config, catalog, design pack and CI
+wiring; this skill does the vendors. Provisioning needs the app name and Infisical project
+already decided, so run that one first. The `infisical.projectId` it writes is the value this
+skill's secrets hang off — a repo without it silently reads golf's secrets.
+
 Ten of the fourteen vendors can be created via API; Inngest, Langfuse Cloud,
 RevenueCat projects and Expo cannot. **A provisioning run is never
 unattended** — do what's scriptable, then hand over an explicit checklist.
