@@ -33,16 +33,30 @@
 | Docs | `docs/design/`, `docs/planning/<initiative>/` (NOT `docs/apps/golf/...`) |
 | Verify | `pnpm --filter @bokendell/golf-design check-types` after touching the studio |
 
-## Tokens (quick reference — canonical in `packages/ui` tokens)
+## Tokens — read `DESIGN.md`, never take values from here
 
-- Paper light: bg `oklch(0.962 0.012 85)` · elevated `oklch(0.985 0.008 85)` · ink
-  `oklch(0.28 0.022 60)` · soft `oklch(0.46 0.02 60)` · rule `oklch(0.885 0.014 80)`
-- Dark (warm black): bg `oklch(0.185 0.010 55)` · elevated paper `oklch(0.235 0.014 56)`
-- Signal amber: `oklch(0.62 0.20 50)` · deep `oklch(0.48 0.185 50)` (brick CTAs/user pill)
-  · dark-mode amber one step brighter (`~0.74–0.78 L`)
-- Money: up `oklch(0.50 0.11 150)` · down `oklch(0.52 0.15 25)` · U+2212 minus, tabular nums
-- Type: **Bricolage Grotesque** (display) · **Geist** (body) · **Geist Mono** (data/money)
-  · **Source Serif 4 italic** (editorial/advice/flavor lines)
+**Canonical: `DESIGN.md` at the golf repo root.** It is generated from
+`packages/tokens/src/theme-source.ts` and diffed by `tokens:check` in CI, so it
+cannot disagree with what ships. Read its frontmatter for `colors` /
+`typography` / `rounded` / `spacing`, and its `## Colors` table for dark values
+(the frontmatter carries the light palette only).
+
+This section used to restate the palette. Every value had drifted: `bg` was
+listed as `oklch(0.962 0.012 85)` against a shipped `oklch(0.956 0.013 87)`,
+`ink` as `0.28 0.022 60` against `0.239 0.013 72`, and the accent as
+`0.62 0.20 50` against `0.62 0.138 39` — a chroma error big enough to see. A
+hand-maintained copy of generated values always ends this way, so the list is
+deleted rather than corrected. What follows is *character*, not values.
+
+- **Character:** warm cream paper in light, warm near-black in dark — never a
+  cold console grey. One burnt-orange accent carries every primary action.
+- **Money:** U+2212 minus (not a hyphen), tabular numerals. Up/down/flat are
+  semantic tokens, never raw green/red.
+- **Type — four voices:** Bricolage Grotesque (display) · Geist (body) ·
+  Geist Mono (data/money) · Source Serif 4 italic (editorial/advice).
+- **OKLch always** (HARD-RULES #14) — it keeps lightness perceptually even when
+  a hue shifts between themes, which is what lets one token read on both
+  surfaces.
 
 ## Fidelity anchors (match THESE shipped artifacts, not old mocks)
 
