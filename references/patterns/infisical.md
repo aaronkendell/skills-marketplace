@@ -33,10 +33,43 @@ org, while bokendell holds one for the shared `bokendell` org. The project name
 already identifies the tenant, so the key needs no suffix. bokendell only ever
 holds bootstrap credentials for tenants **it** owns.
 
-In CI the same identity arrives via OIDC, selected by the repo variables
-`INFISICAL_IDENTITY_ID` and `INFISICAL_PROJECT_SLUG`. Never hardcode a fallback
-identity in a workflow — a shared default silently authenticates one app into
-another app's project, and nothing errors.
+In CI the same identity arrives via OIDC, selected by `INFISICAL_IDENTITY_ID`
+and `INFISICAL_PROJECT_SLUG`. Never hardcode a fallback identity in a workflow —
+a shared default silently authenticates one app into another app's project, and
+nothing errors.
+
+### The project slug cannot be a GitHub secret
+
+**Preference is that Infisical owns CI config and syncs it**, so it never has to
+be set by hand. That holds for everything *except* the project slug.
+
+Infisical's GitHub sync writes **secrets only** — there is no variables
+destination. And GitHub registers a secret's value for masking as soon as it is
+available to a run, then refuses to emit any job output containing that string.
+The slug's value is the bare app name (`swarm`, `hive`, `portfolio`), which is a
+substring of nearly every identifier in its own repo — app names, image tags,
+package names. Syncing it as a secret therefore suppresses outputs that merely
+*mention* the app:
+
+```
+##[warning]Skip output 'matrix' since it may contain secret.
+```
+
+That killed every deploy matrix in swarm, portfolio and hive — jobs *skipped*
+rather than failed, so it read as a gating bug. golf was unaffected only because
+its slug was a repo variable. Changing how the workflow reads the value does not
+help: masking follows the registration, not the expression.
+
+So:
+
+- **`INFISICAL_IDENTITY_ID` — sync it as a secret.** A UUID never collides with
+  an identifier, so masking it costs nothing.
+- **`INFISICAL_PROJECT_SLUG` — never a secret.** Prefer the repo's own
+  `bokendell.config.ts`, which already declares `infisical.projectId` and is
+  enforced by `swarm check config`; `load-ci-secrets` accepts `project-slug` and
+  `identity-id` as inputs, with the repo variable only as a fallback. That keeps
+  it out of GitHub config entirely and puts the value that decides *which
+  project you read* under review in git.
 
 ---
 
