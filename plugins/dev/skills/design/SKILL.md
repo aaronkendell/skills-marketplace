@@ -1,7 +1,7 @@
 ---
 name: design
 description: >
-  Unified design orchestrator for all apps (golf, portfolio, hive). Use when building UI
+  Unified design orchestrator for every app (golf/Bagman, portfolio, hive, keepings). Use when building UI
   components, designing screens, creating mocks, reviewing design compliance, updating design
   tokens, exploring color palettes or typography, implementing animations/motion, or doing any
   visual/frontend work. Also use when the user mentions "design system", "make it look better",
@@ -15,13 +15,13 @@ disable-model-invocation: false
 
 # Design Orchestrator
 
-You manage all design work across three apps: **golf** (Fairway), **portfolio**, and **hive**. Instead of the user needing to know which of 5+ design skills to invoke, you detect context and pull in the right references automatically. This is also the cross-app replacement for the old direct `golf-design-studio` entrypoint.
+You own the design METHOD for every app — golf (Bagman), portfolio, hive, keepings, and any app added later. Each app's own brand, primitives and law live in that app's repo at `.claude/skills/design/SKILL.md`, which loads automatically when you work there; this skill supplies the workflow that is identical across all of them. Adding an app requires no change to this skill.
 
 ## How This Skill Works
 
 This skill is a thin orchestrator. It:
 1. Detects which app and platform (web/mobile) from the files being touched
-2. Reads the repo's root `DESIGN.md` when present (below), then fills gaps from `references/apps/<app>.md`
+2. Reads the repo's own design pack — `<repo>/.claude/skills/design/SKILL.md` (auto-loaded) + `<repo>/DESIGN.md`
 3. Invokes **external design skills** under the hood for specialized work (see below)
 4. Applies motion, anti-pattern, and quality principles consistently
 
@@ -35,10 +35,10 @@ token table in this skill or in an app pack. It follows the
 frontmatter carrying `colors`, `typography`, `rounded`, `spacing` (and
 optionally `components`), then up to eight markdown sections in a fixed order.
 
-It outranks the app packs for one reason: in golf it is **generated** from
-`packages/tokens/src/theme-source.ts` and diffed by `tokens:check` in CI, so it
-cannot disagree with the tokens the app actually ships. The tables in
-`references/apps/<app>.md` are hand-maintained and can lag — treat them as
+It outranks every other token surface for one reason: in golf it is **generated**
+from `packages/tokens/src/theme-source.ts` and diffed by `tokens:check` in CI, so
+it cannot disagree with the tokens the app actually ships. A repo's
+`.claude/skills/design/SKILL.md` is hand-maintained and can lag — treat it as
 context and fallback, not as truth, wherever DESIGN.md covers the same ground.
 
 **Never hand-edit a generated `DESIGN.md`.** Its Overview says so and the CI
@@ -96,7 +96,8 @@ Detect the app from file paths or user mention:
 | `apps/golf/`, `packages/golf/`, "fairway", "golf" | **golf** |
 | `apps/portfolio/`, `packages/portfolio/`, "portfolio" | **portfolio** |
 | `apps/hive/`, `packages/hive/`, "hive", "agents" | **hive** |
-| `packages/shared/ui/` | **shared** (load all app tokens for comparison) |
+| `keepings/`, `apps/design/src/packages/{mobile,site}/`, "keepings", "capture" | **keepings** |
+| `packages/shared/ui/` | **shared** (compare across repos; read each repo's own DESIGN.md) |
 
 Detect platform:
 
@@ -105,22 +106,37 @@ Detect platform:
 | `apps/*/mobile/`, `.tsx` in mobile paths, "mobile", "native", "expo" | **mobile** (React Native) |
 | `apps/*/app/`, `apps/*/admin/`, "web", "admin", "dashboard", "next" | **web** (Next.js) |
 
-**If the app is ambiguous** (shared packages, no path signal, new surface): ASK which app before composing — the apps share one workflow but different tokens, and guessing the wrong pack poisons everything downstream. Each app's pack lives at `references/apps/<app>.md`; the pack also names where that app's **living design law** (flow `decisions.md` files) and **fidelity anchors** live.
+**If the app is ambiguous** (shared packages, no path signal, new surface): ASK which app before composing — the apps share one workflow but different tokens, and guessing the wrong pack poisons everything downstream. Each app's pack lives in its own repo at `.claude/skills/design/SKILL.md` and is auto-loaded there; the pack also names where that app's **living design law** (flow `decisions.md` files) and **fidelity anchors** live.
 
-## Studio Router
+## Studio Router — the app pack lives in the app's repo
 
 When the prompt mentions "design studio", "studio sketch", "flow", "primitive", "kit", or
-`swarm design`, stay in this `design` skill and load the detected app's studio pack:
+`swarm design`, stay in this skill for the METHOD and read the app pack from the repo you are
+working in:
 
-| App | Studio pack |
-|---|---|
-| golf | `plugins/dev/skills/golf-design-studio/SKILL.md` as the golf app pack |
-| portfolio | `references/apps/portfolio.md` plus app-local `apps/design` docs if present |
-| hive | `references/apps/hive.md` plus app-local `apps/design` docs if present |
+```
+<repo>/.claude/skills/design/SKILL.md    ← brand character, primitives, studio workflow, repo law
+<repo>/DESIGN.md                          ← tokens, generated + CI-diffed (golf today)
+<repo>/packages/ui/HARD-RULES.md          ← the enforced rules
+```
 
-`golf-design-studio` remains available as a compatibility alias because people remember that name,
-but it should delegate here. New app-specific studio behavior belongs either in this router or in an
-app pack, not in a new per-app top-level skill.
+Project skills load automatically, so in golf, hive, portfolio and keepings that pack is already
+in context — you do not need to go find it. If it is missing, say so rather than designing from
+memory.
+
+**Why the packs are not in this marketplace.** They used to be, and they drifted: every OKLch
+value in the old `references/apps/golf.md` was wrong against the shipped tokens (`bg` listed as
+`0.962 0.012 85` against `0.956 0.013 87`, the accent off by 0.06 chroma). A pack stored away
+from the code cannot be reviewed in the PR that changes the code. In-repo it can also be
+*generated* — which is what `DESIGN.md` now is. Three further reasons, from the Claude Code
+skills docs: cloud and Cowork sessions load a repo's committed `.claude/skills/` but never
+`~/.claude/skills/`; plugin skills are namespaced (`dev:design`) so a repo-level `/design` cannot
+collide; and a nested `.claude/skills/` inside a package loads only when that package is touched.
+
+**Adding a new app requires no change here.** Give the repo a
+`.claude/skills/design/SKILL.md` and, where it has a `theme-source.ts`, a generated `DESIGN.md`.
+Do NOT create a per-app top-level skill (`<app>-design-studio`) in this marketplace — that
+scales linearly with apps and puts app truth back where it drifts.
 
 If the app cannot be inferred from path or product words, ask one short question before composing.
 
@@ -208,7 +224,7 @@ The rule, in order of preference:
 
 - Before asking any clarifying question, ask yourself: "could I show this instead of saying it?" If yes, build the mock.
 - Generating a mock is cheaper than spending 3 turns clarifying a misunderstanding. Assume text will be misread.
-- Use the existing golf/portfolio/hive token files so mocks look like the real app, not a generic preview. Inline the tokens as CSS custom properties at the top of the HTML file (see [references/apps/](references/apps/) for the token values).
+- Use the real token values so mocks look like the app, not a generic preview. Inline them as CSS custom properties at the top of the HTML file, read from the repo's `DESIGN.md` frontmatter (or `packages/tokens/src/theme-source.ts` where no DESIGN.md exists yet) — never from memory or from a second-hand list.
 - Realistic scenario data: actual course names (Torrey Pines, Pebble Beach), real game types (Nassau, Skins), realistic player names and scores. Never "User A / User B / Player 1".
 - Each option gets a Pro/Con block. The user should be able to pick in <30s per comparison.
 - **Verify physical space before including elements.** For Dynamic Island / Lock Screen / native widget mocks, calculate the actual point budget: Dynamic Island Compact base = 126pt wide, camera cutout ~24pt, ~22pt padding → ~40pt per side slot. DM Mono at 16pt ≈ 9px/char. If a string overflows the slot, drop the unit or shorten the token, don't inflate the mock's dimensions to make it fit. Include a fit-verification note in the mock showing the math.
@@ -266,7 +282,7 @@ Rules:
 
 ### Always Load
 - This skill's core principles (below)
-- App-specific tokens: read [references/apps/<app>.md](references/apps/) for the detected app
+- App-specific tokens: read the repo's `DESIGN.md` (generated, CI-diffed); fall back to `packages/tokens/src/theme-source.ts`
 
 ### For Design Exploration / Research Phase
 Invoke these skills via the Skill tool:
@@ -427,7 +443,7 @@ Before exploring any visuals, deeply understand what the app IS:
 
 1. **Read existing docs**: start with `docs/MAP.md` (retrieval contract), then `docs/product/prd.md`, `docs/architecture/overview.md`
 2. **Scan the codebase**: What screens exist? What components? What's the current visual state?
-3. **Read the current reference file**: [references/apps/<app>.md](references/apps/) — what's already defined?
+3. **Read the repo's design pack**: `<repo>/.claude/skills/design/SKILL.md` + `<repo>/DESIGN.md` — what's already defined?
 4. **Interview the user** — ask ONE question at a time (superpowers:brainstorming style):
    - What's the emotional tone? (professional, playful, premium, technical, warm, cold)
    - Who is the target user? (golfers, hiring managers, developers)
@@ -555,7 +571,7 @@ Once approved, save three things:
 - This is the visual record of what was decided — always kept in sync with design-system.md
 - When tokens change, regenerate this file
 
-**3. Plugin reference file** at `.claude/plugins/dev/skills/design/references/apps/<app>.md`:
+**3. The app's own pack** at `<repo>/.claude/skills/design/SKILL.md`:
 - Quick-reference version of the design system
 - Points to the full doc for details
 - Includes the design variance/motion/density knobs
@@ -617,9 +633,10 @@ docs/design/references/
 ## Reference Files
 
 App-specific tokens and design docs:
-- [Golf (Fairway)](references/apps/golf.md) — OKLch colors, glass effects, three-voice typography
-- [Portfolio](references/apps/portfolio.md) — Professional, Stripe-inspired clean design
-- [Hive](references/apps/hive.md) — Data-dense agent dashboard, Linear-inspired
+- **golf (Bagman)** — `golf/.claude/skills/design/SKILL.md` + generated `golf/DESIGN.md`
+- **portfolio** — `portfolio/.claude/skills/design/SKILL.md`
+- **hive** — `hive/.claude/skills/design/SKILL.md`
+- **keepings** — `keepings/.claude/skills/design/SKILL.md` (Ink · Carbon)
 
 External design system references for inspiration:
 - `docs/design/references/` — 15 real-world design systems from awesome-design-md
