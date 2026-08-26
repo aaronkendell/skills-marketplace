@@ -39,7 +39,11 @@ Secrets in the Cursor Secrets UI (least-privilege): `NODE_AUTH_TOKEN` (GitHub PA
 - **Hono/tsx API:** build its deps, then `swarm run --app <api id> -- ./node_modules/.bin/tsx apps/api/src/server.ts`; health is typically `GET /api/v1/health`.
 - **Next.js (admin/marketing/design/web):** `cd apps/<x> && ../../swarm run --app <id> -- ../../node_modules/.bin/next dev --hostname 0.0.0.0 --port <port>`.
 - **Email preview (react-email):** `cd packages/emails && ../../node_modules/.bin/email dev --dir ./src/templates --port <port>`.
-- **Inngest:** `cd apps/inngest && ../../node_modules/.bin/inngest-cli dev --port <port> --no-discovery`; then **workers** via `swarm run --app <workers id> -- tsx watch src/server.ts` (registers to the dev server).
+- **Background jobs (Inngest + workers)** — when the repo has `apps/inngest` and/or `apps/workers`, async work only runs if BOTH the local Inngest dev server and the workers process are up, in this order:
+  1. Inngest dev server: `cd apps/inngest && ../../node_modules/.bin/inngest-cli dev --port <PORT_*_INNGEST|3106> --no-discovery`. It has a web dashboard (viewable — tunnel it to watch runs).
+  2. Workers: build first if tsx, then `swarm run --app <workers id> -- ./node_modules/.bin/tsx watch apps/workers/src/server.ts`. They register their function configs to the dev server over a connect-mode WebSocket, so start them AFTER step 1.
+  3. API: it must point at the local dev server (`INNGEST_DEV` / `PORT_*_INNGEST`, from `.env.workspace` or Infisical dev) so events it emits reach the functions.
+  Set `SKIP_AI_INNGEST=true` when the workspace has no real AI provider keys (the AI pipeline retries upstream auth failures fast enough to crash the dev process). To validate an async flow end to end: Inngest up → workers connected → API emits an event → confirm the run in the Inngest dashboard.
 - **Mobile / Metro:** use the repo's `.cursor/mobile-tunnel.sh` — it boots + tunnels the API and Metro and wires `EXPO_PUBLIC_API_URL` + `EXPO_PACKAGER_PROXY_URL`. The phone needs the EAS dev client already installed; open the printed Metro URL in "Enter URL manually".
 - **MCP servers (hq-style):** actually RUN them and check the handshake — HTTP/SSE: curl the endpoint / list tools; stdio: a minimal `initialize` handshake or the repo's MCP test.
 - **Pure library repos (core):** no servers — validate with `turbo run build`, `check-types`, `test`, and lint.
