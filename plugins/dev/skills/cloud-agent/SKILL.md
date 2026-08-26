@@ -59,18 +59,20 @@ Run dev servers/tunnels under tmux or `nohup` with a log; don't block a single f
 
 ## Connecting & viewing (default behavior)
 
-The user wants to *see and use* what's running, not just be told it started. When a
-repo has any viewable surface, proactively bring it up, expose it, and report the
-public URL plus exactly how to open it — then keep it running for them:
+The user wants to *see and use* what's running. Match the verification method to the
+surface — and know the key constraint: **a quick tunnel only lives as long as the VM
+serving it.** A *verification subagent* suspends the moment its task ends, so its
+tunnel dies within seconds; the *primary agent* the user launched stays alive while
+the session is open. So:
 
-- **Web surfaces** (admin / marketing / design studio / email preview): start the dev server, `cloudflared tunnel --url http://localhost:<port>`, and give the `https://<...>.trycloudflare.com` URL to open in a browser.
-- **Mobile**: run `.cursor/mobile-tunnel.sh` and give the Metro URL to paste into the EAS dev client ("Enter URL manually"), noting the API tunnel it talks to (`EXPO_PUBLIC_API_URL`). The device must already have the custom dev client installed.
-- **APIs**: share the tunnel URL + a sample endpoint (e.g. `/api/v1/health`, `/docs`).
-- **MCP servers** (HTTP/SSE): tunnel it and give the URL + how to point a client at it; for stdio, give the run command.
+- **Web surfaces** (admin / marketing / design studio / email preview): don't gate "done" on a live tunnel. **Verify with a durable screenshot** — drive headless Chrome against `http://localhost:<port>` and attach the image as proof (this persists; a tunnel URL does not). Offer a `cloudflared tunnel --url http://localhost:<port>` URL **on request** for the user to click around live during the session.
+- **Mobile** (the case where live device testing matters): run `.cursor/mobile-tunnel.sh`, hand over the **Metro URL** (for the EAS dev client → "Enter URL manually") + the API tunnel it uses (`EXPO_PUBLIC_API_URL`), and **keep this primary session open** so the tunnels stay up while the user tests on their phone. Do NOT do device-tunnel testing from a verification subagent — its VM suspends and the URL 530s. The device must already have the custom dev client installed.
+- **APIs**: validate fully and non-visually — `GET /api/v1/health` 200, `/docs` — no tunnel needed for proof.
+- **MCP servers** (HTTP/SSE): tunnel + list tools; stdio: give the run command.
 
-Keep these under tmux or `nohup` with the mobile-tunnel watchdog. Quick-tunnel URLs
-are random and rotate on restart — offer a named Cloudflare tunnel (token) if the
-user wants a fixed hostname. End the session by listing every live URL.
+Keep long-lived processes under tmux/`nohup` with the mobile-tunnel watchdog. Quick-tunnel
+URLs are random and rotate on restart — offer a named Cloudflare tunnel (token) for a
+fixed hostname. End with a list of live URLs (noting they last only while the session runs).
 
 ## Network
 
