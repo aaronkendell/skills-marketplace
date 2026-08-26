@@ -53,6 +53,21 @@ Everything runs inside the VM; reach it with `cloudflared tunnel --url http://lo
 
 Run dev servers/tunnels under tmux or `nohup` with a log; don't block a single foreground command. Treat multi-hour idle survival as test-before-relying (the VM can sleep); mobile-tunnel.sh includes a watchdog that restarts a dropped tunnel.
 
+## Connecting & viewing (default behavior)
+
+The user wants to *see and use* what's running, not just be told it started. When a
+repo has any viewable surface, proactively bring it up, expose it, and report the
+public URL plus exactly how to open it — then keep it running for them:
+
+- **Web surfaces** (admin / marketing / design studio / email preview): start the dev server, `cloudflared tunnel --url http://localhost:<port>`, and give the `https://<...>.trycloudflare.com` URL to open in a browser.
+- **Mobile**: run `.cursor/mobile-tunnel.sh` and give the Metro URL to paste into the EAS dev client ("Enter URL manually"), noting the API tunnel it talks to (`EXPO_PUBLIC_API_URL`). The device must already have the custom dev client installed.
+- **APIs**: share the tunnel URL + a sample endpoint (e.g. `/api/v1/health`, `/docs`).
+- **MCP servers** (HTTP/SSE): tunnel it and give the URL + how to point a client at it; for stdio, give the run command.
+
+Keep these under tmux or `nohup` with the mobile-tunnel watchdog. Quick-tunnel URLs
+are random and rotate on restart — offer a named Cloudflare tunnel (token) if the
+user wants a fixed hostname. End the session by listing every live URL.
+
 ## Network
 
 Keep "Allow all" egress. If locking down, the allowlist must include `*.trycloudflare.com` + `*.argotunnel.com` (cloudflared edge) plus `registry.npmjs.org`, `npm.pkg.github.com`, `ghcr.io`, `github.com`, `app.infisical.com`, `*.neon.tech`, `*.upstash.io`, and the AI/observability hosts.
