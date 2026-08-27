@@ -12,6 +12,7 @@ import {
 	getChangedFiles,
 	groupPromotionCandidates,
 	hasSwarmCli,
+	parseArchViolations,
 	readEvents,
 	recommendValidationCommands,
 	resolveMarketplaceRoot,
@@ -87,6 +88,21 @@ function runPostTool(input: unknown): void {
 			message: "Architecture check was run during review/build work.",
 			cwd,
 		});
+		// Record WHICH rules fired, not just that the check ran. These are
+		// deliberately type "signal", never "deviation": a firing arch rule means
+		// the rule already exists and the code is drifting past it, which calls for
+		// fixing the code or escalating warn -> error. Filing it as a deviation
+		// would feed groupPromotionCandidates and append yet another paragraph to a
+		// SKILL.md about a rule that is already being enforced mechanically.
+		for (const violation of parseArchViolations(tool.output ?? "")) {
+			appendEvent(marketplaceRoot, {
+				type: "signal",
+				skill: "dev:review",
+				key: `arch-violation:${violation.rule}`,
+				message: `${violation.severity} x${violation.count} — rule '${violation.rule}' is firing; fix the code or escalate the rule.`,
+				cwd,
+			});
+		}
 	}
 	if (typeof tool.exitCode === "number" && tool.exitCode !== 0) {
 		appendEvent(marketplaceRoot, {

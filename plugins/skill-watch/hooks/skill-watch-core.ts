@@ -305,6 +305,7 @@ export function extractTool(input: unknown): {
 	toolName?: string;
 	command?: string;
 	exitCode?: number;
+	output?: string;
 } {
 	if (!input || typeof input !== "object") return {};
 	const record = input as Record<string, unknown>;
@@ -329,7 +330,60 @@ export function extractTool(input: unknown): {
 			: typeof record.exitCode === "number"
 				? record.exitCode
 				: undefined;
-	return { toolName, command, exitCode };
+	return { toolName, command, exitCode, output: extractToolOutput(record) };
+}
+
+/**
+ * PostToolUse carries the command's own output in `tool_response`, whose shape
+ * varies by host: a bare string, `{ stdout, stderr }`, or `{ output }`. Reading
+ * it is what lets the hook record WHAT a check found rather than only that it
+ * ran — the difference between telemetry you can act on and a counter.
+ *
+ * Capped hard: these events are appended to a JSONL file on every tool call, and
+ * an uncapped build log would turn the telemetry into the largest file in the
+ * repo within a day.
+ */
+const MAX_CAPTURED_OUTPUT = 20_000;
+
+function extractToolOutput(record: Record<string, unknown>): string | undefined {
+	const response = record.tool_response ?? record.toolResponse ?? record.output;
+	if (typeof response === "string") return response.slice(0, MAX_CAPTURED_OUTPUT);
+	if (response && typeof response === "object") {
+		const nested = response as Record<string, unknown>;
+		const parts = [nested.stdout, nested.stderr, nested.output]
+			.filter((part): part is string => typeof part === "string")
+			.join("\n");
+		if (parts) return parts.slice(0, MAX_CAPTURED_OUTPUT);
+	}
+	return undefined;
+}
+
+/**
+ * Pulls the violated RULE NAMES out of `swarm check arch` output.
+ *
+ * The printed shape is `  [warn]  [rule-name] /abs/path:line`, so the rule name
+ * is the second bracketed token on the line. Returns one entry per distinct
+ * rule with its worst severity and how many times it fired, because the useful
+ * question is "which rule is being ignored, and is it an error yet" — not which
+ * individual files happen to be dirty this run.
+ */
+export function parseArchViolations(
+	output: string,
+): { rule: string; severity: "error" | "warn"; count: number }[] {
+	const pattern = /\[(error|warn)\]\s+\[([a-z0-9][a-z0-9-]*)\]/gi;
+	const seen = new Map<string, { rule: string; severity: "error" | "warn"; count: number }>();
+	for (const match of output.matchAll(pattern)) {
+		const severity = match[1].toLowerCase() === "error" ? "error" : "warn";
+		const rule = match[2];
+		const current = seen.get(rule);
+		if (current) {
+			current.count += 1;
+			if (severity === "error") current.severity = "error";
+		} else {
+			seen.set(rule, { rule, severity, count: 1 });
+		}
+	}
+	return [...seen.values()].sort((a, b) => b.count - a.count || a.rule.localeCompare(b.rule));
 }
 
 export function buildPromptContext(

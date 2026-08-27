@@ -4,6 +4,7 @@ import {
 	classifyPrompt,
 	groupPromotionCandidates,
 	normalizeSkillName,
+	parseArchViolations,
 	recommendValidationCommands,
 } from "./skill-watch-core.ts";
 
@@ -102,4 +103,28 @@ test("normalizeSkillName keeps plugin-qualified skills stable", () => {
 		normalizeSkillName("/taste:design-taste-frontend"),
 		"taste:design-taste-frontend",
 	);
+});
+
+test("parseArchViolations groups by rule and keeps the worst severity", () => {
+	const output = [
+		"Semantic pattern violations:",
+		"  [warn]  [mobile-screen-purity] /repo/apps/mobile/src/a.tsx:42",
+		"     Screen file calls domain/business hook 'useTheme' directly.",
+		"  [warn]  [mobile-screen-purity] /repo/apps/mobile/src/b.tsx:17",
+		"     Screen file calls domain/business hook 'useNavClearance' directly.",
+		"  [error] [mobile-screen-purity] /repo/apps/mobile/src/c.tsx:9",
+		"  [warn]  [component-purity] /repo/apps/mobile/src/d.tsx:16",
+	].join("\n");
+
+	const parsed = parseArchViolations(output);
+
+	assert.deepEqual(parsed, [
+		{ rule: "mobile-screen-purity", severity: "error", count: 3 },
+		{ rule: "component-purity", severity: "warn", count: 1 },
+	]);
+});
+
+test("parseArchViolations returns nothing for clean output", () => {
+	assert.deepEqual(parseArchViolations("Semantic pattern violations: none\n"), []);
+	assert.deepEqual(parseArchViolations(""), []);
 });
