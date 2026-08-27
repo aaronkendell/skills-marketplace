@@ -1,8 +1,8 @@
 {
 	"$schema": "https://json.schemastore.org/claude-code-plugin",
 	"name": "mcp-pack",
-	"version": "1.3.0",
-	"description": "Bundle of MCP servers that follow you across every repo and superset worktree. Infra: Mapbox docs + DevKit, Proxyman. Motion: Higgsfield (AI cinematic video). Static assets: Recraft (vector SVG), Nano-Banana (Gemini Flash Image), Iconify (icon search), Unsplash (stock photo), Playwright (visual review). Neon and Grafana moved to claude.ai connectors (hosted remote MCPs with OAuth) so cloud sessions get them too. Enable at user scope so all sessions get them. Secrets read from shell env vars wrapped by Infisical \u2014 never committed.",
+	"version": "1.4.0",
+	"description": "Bundle of MCP servers that follow you across every repo and superset worktree. Infra: Mapbox docs + DevKit, Proxyman. Static assets: Recraft (vector SVG), Iconify (icon search), Unsplash (stock photo), Playwright (visual review). Neon and Grafana moved to claude.ai connectors; Higgsfield and Nano-Banana removed 2026-08-27 \u2014 they need HF_API_KEY/HF_SECRET that were never set, so every session started with two failing servers. Re-add via the higgsfield-cli skill when needed. Enable at user scope so all sessions get them.",
 	"author": {
 		"name": "bokendell"
 	},
@@ -10,14 +10,10 @@
 		"mcp",
 		"mapbox",
 		"proxyman",
-		"higgsfield",
 		"recraft",
-		"nano-banana",
 		"iconify",
 		"unsplash",
 		"playwright",
-		"ai-video",
-		"ai-image",
 		"design",
 		"infra"
 	],
@@ -36,18 +32,6 @@
 			"args": [],
 			"env": {}
 		},
-		"higgsfield": {
-			"type": "stdio",
-			"command": "uvx",
-			"args": [
-				"higgsfield-mcp"
-			],
-			"env": {
-				"HIGGSFIELD_API_KEY": "${HF_API_KEY}",
-				"HIGGSFIELD_SECRET": "${HF_SECRET}"
-			},
-			"comment": "v1.2.2 switched from npm jfikrat/higgsfield-mcp to PyPI Hikhakk/higgsfield-mcp-unified (uvx). Same platform.higgsfield.ai endpoint + key+secret auth, but correct official-API model slugs \u2014 fixes Seedance v1 Pro 404 and routes per-model to the right backend. Web backend (Sora 2 / Veo 3 / Kling 3.0) NOT opted in (HIGGSFIELD_ENABLE_WEB_BACKEND missing); those require the consumer subscription path. Pay-as-you-go cloud credits at cloud.higgsfield.ai cover the 8 official-API models."
-		},
 		"recraft": {
 			"type": "stdio",
 			"command": "npx",
@@ -57,17 +41,6 @@
 			],
 			"env": {
 				"RECRAFT_API_KEY": "${RECRAFT_API_KEY}"
-			}
-		},
-		"nano-banana": {
-			"type": "stdio",
-			"command": "npx",
-			"args": [
-				"-y",
-				"nano-banana-2-mcp"
-			],
-			"env": {
-				"GEMINI_API_KEY": "${GEMINI_API_KEY}"
 			}
 		},
 		"iconify": {

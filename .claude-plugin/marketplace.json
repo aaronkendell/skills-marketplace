@@ -37,7 +37,7 @@
 				"source": "github",
 				"repo": "Leonxlnx/taste-skill"
 			},
-			"description": "Premium frontend design taste \u2014 sourced live from Leonxlnx/taste-skill. taste-skill (v2 main, name: design-taste-frontend) + taste-skill-v1 fallback, plus redesign, soft, minimalist, brutalist, stitch, output, image-to-code, imagegen-frontend-{web,mobile}, brandkit, gpt-tasteskill. NOTE: `skills` must list each skill DIRECTORY (one containing a SKILL.md); pointing at the bare `./skills` container registers ZERO skills.",
+			"description": "Premium frontend design taste \u2014 sourced live from Leonxlnx/taste-skill. strict:true because upstream's plugin.json also declares components; with strict, this entry's `skills` list is authoritative and the two stop conflicting. `skills` must list each skill DIRECTORY (one containing a SKILL.md) \u2014 pointing at the bare ./skills container registers ZERO skills.",
 			"skills": [
 				"./skills/taste-skill",
 				"./skills/taste-skill-v1",
@@ -53,7 +53,7 @@
 				"./skills/brandkit",
 				"./skills/gpt-tasteskill"
 			],
-			"strict": false
+			"strict": true
 		},
 		{
 			"name": "skills",
