@@ -1,70 +1,54 @@
 ---
 name: dev
 description: >
-  Use when the user invokes dev workflows with `/dev <subcommand> <args...>` where subcommand
-  is one of research, plan, build, or ship. Also triggers when the user says "start development",
-  "implement this feature", "ship it", "create a plan", or describes wanting to go through
-  the full SDLC. Routes to the correct phase skill.
+  Use at the START of any substantive dev task to decide how much process it needs —
+  before planning, before building. Classifies the task and loads only the phase
+  skills the task's shape warrants. Also handles explicit `/dev <subcommand>`
+  invocations (research, plan, build, ship).
 disable-model-invocation: false
 ---
 
-# Dev — SDLC Router
+# Dev — task triage
 
-Routes `/dev <subcommand>` to the correct phase skill.
+Decide how much process a task deserves, then get out of the way. Pick the FIRST
+row that matches, load only what it names, and start.
 
-## Subcommands
+| Task shape | Route |
+|---|---|
+| Trivial fix, mechanical change, rename, config tweak | Implement directly. The repo's own skills (auto-loaded) and its arch rules / CI gates carry it. No phase skills. |
+| Feature, clear scope | Build directly; plan first ONLY if genuinely open questions remain. `dev:dev-build` when working a Linear issue. |
+| UI / visual work | `/design` pipeline (`dev:design`) — the design stack loads on demand. |
+| Risky: schema, money, auth, data migration | `dev:dev-plan` → build → `dev:review` before staging. Follow the repo's verification skill if it has one. |
+| Open-ended idea, research, "should we…" | `dev:dev-research` — brainstorm, PRD, mocks. |
+| Multi-repo change, audit, broad review | Propose a Workflow-tool fan-out (user must opt in) or split per-repo. |
 
-| Command | Phase | Skill | Description |
-|---------|-------|-------|-------------|
-| `/dev research <app> <idea>` | 1 | `dev:dev-research` | Research, brainstorm, PRD, mocks |
-| `/dev plan <app> [path]` | 2 | `dev:dev-plan` | Break into projects/issues, sync to Linear |
-| `/dev build <LINEAR-ID>` | 3 | `dev:dev-build` | Branch, TDD, test, review, stage |
-| `/dev ship` | 4 | `dev:dev-ship` | Commit, push, PR, Linear update, merge |
+**Hard constraint:** this skill stays a table plus a sentence per route. Process
+detail lives in the phase skills it names; if methodology accumulates here,
+move it there. A misroute costs one turn — when unsure between two rows, take
+the lighter one and say so.
 
-## Supported Apps
+## Explicit subcommands
 
-| App | Linear Team | API Server | Admin | Mobile |
-|-----|-------------|------------|-------|--------|
-| `golf` | GOLF | `apps/golf/api` | `apps/golf/admin` | `apps/golf/mobile` |
-| `portfolio` | PORT | `apps/portfolio/api` | `apps/portfolio/admin` | `apps/portfolio/app` |
-| `hive` | AGENTS | `apps/hive/api` | `apps/hive/admin` | — |
+`/dev <subcommand>` always routes directly, no triage:
 
-## Routing
+| Command | Skill |
+|---|---|
+| `/dev research <app> <idea>` | `dev:dev-research` |
+| `/dev plan <app> [path]` | `dev:dev-plan` |
+| `/dev build <LINEAR-ID>` | `dev:dev-build` |
+| `/dev ship` | `dev:dev-ship` |
+| `/dev <LINEAR-ID>` (bare issue id) | `dev:dev-build` |
 
-Parse `$ARGUMENTS`:
-1. Extract the **subcommand** (first word): `research`, `plan`, `build`, or `ship`
-2. Extract the **remaining args** (everything after the subcommand)
-3. Invoke the corresponding skill via the Skill tool:
-   - `dev:dev-research` with remaining args
-   - `dev:dev-plan` with remaining args
-   - `dev:dev-build` with remaining args
-   - `dev:dev-ship` with remaining args
+## App config — read, never carry
 
-If no subcommand is given, ask the user which phase they want to run.
+Per-app facts (Linear team key, paths, work dir) live in each repo's
+`.claude/planner.local.md`; repo conventions live in that repo's own
+`.claude/skills/`. This skill deliberately carries NO app table — the last one
+drifted stale (pre-sibling-clone paths, pre-migration teams) because a router
+is the wrong place for facts it doesn't own.
 
-If the user just says `/dev` with a Linear issue ID (e.g., `/dev GOLF-123`), default to `/dev build GOLF-123`.
+## Context loading
 
-## Context Loading
-
-Every phase MUST load the relevant context patterns before starting work. Read the marketplace pattern docs (resolve via the context-patterns skill: `${CLAUDE_PLUGIN_ROOT}/../../references/patterns/`) based on what's being worked on:
-- Backend: `ddd.md`, `testing.md`, `api.md`
-- Frontend/Web: `frontend.md`, `testing.md`
-- Mobile: `mobile.md`, `testing.md`
-- Always: `testing.md`
-
-## App Config
-
-Read `.claude/planner.local.md` for per-app Linear team keys and paths. The YAML frontmatter maps app names to team keys:
-
-```yaml
-apps:
-  golf:
-    teamKey: GOLF
-    workPath: docs/planning
-  portfolio:
-    teamKey: PORT
-    workPath: docs/planning
-  hive:
-    teamKey: AGENTS
-    workPath: docs/planning
-```
+Repo skills auto-load by path — trust them first. Reach for the marketplace
+pattern docs (`${CLAUDE_PLUGIN_ROOT}/../../references/patterns/`) only when the
+repo lacks a skill for the area, and load only the file the task touches.

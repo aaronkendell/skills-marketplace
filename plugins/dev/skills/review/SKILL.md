@@ -100,6 +100,7 @@ The 18 canonical pattern files (each loads on demand — don't read them all upf
 | `design.md` | `apps/*/design/**` — Next.js design app architecture (lib/, packages/, surface groups, sketches, providers) |
 | `design-studio.md` | `apps/*/design/**` — element IDs + annotation system + comment workflow |
 | `design-workflow.md` | Design files, mocks, decisions.md, per-flow workflow conventions |
+| `copy.md` (review-criteria only) | ANY diff touching a user-facing string — screens, components, notification/email templates, `packages/ui/**` default labels. Voice, em-dash slop, every-line-pays-rent. The app's own `docs/design/voice-and-copy.md` outranks it. |
 | `di.md` | `composition/**`, `apps/*/workers/**` — Awilix patterns, cradle, transactions |
 | `testing.md` | `*.test.ts`, `*.test.tsx`, `*.integration.test.ts` — Vitest projects, Testcontainers, factories |
 | `cli.md` | `apps/cli/**` — trpc-cli patterns, swarm topic groups |

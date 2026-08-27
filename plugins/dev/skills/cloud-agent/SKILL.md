@@ -40,13 +40,16 @@ PG16, Redis, Docker). The base image can't be replaced, so the Dockerfile
 doesn't apply; the repo's `scripts/cloud/*.sh` still do. Per repo:
 
 - The environment's **setup script** is the repo-agnostic *fleet toolchain
-  script* (hq `docs/tools/cloud-runbook.md`): Node 24, pnpm, Infisical CLI,
+  script* (hq `docs/tools/cloud-runbook.md`): Node 24 (+ a shim over the VM's
+  `/opt/node22/bin`, which shadows `/usr/local/bin` in interactive shells), pnpm,
+  Infisical CLI via npm (`@infisical/cli` — no GitHub release binaries),
   cloudflared, plus a best-effort dep warm-up. It must not reference repo paths —
   its working directory is not the repo (relative paths exit 127).
 - `.claude/settings.json` SessionStart hook (matcher `startup|resume`, timeout
   900) runs `scripts/cloud/claude-session.sh`, which exits immediately unless
   `CLAUDE_CODE_REMOTE=true`, then: toolchain guard → `GITHUB_PACKAGES_TOKEN`
-  from Infisical → `install.sh` → `start.sh`.
+  from Infisical → `install.sh` → start dockerd (not running per session) →
+  `start.sh`. Full output: `/tmp/cloud-session.log`; WARNING lines on stdout.
 - `start.sh` takes a Docker path when `CLOUD_PG_IMAGE` is set (DB repos whose
   Postgres major/extensions aren't in Anthropic's image, e.g.
   `ghcr.io/aaronkendell/test-postgres:latest`); otherwise the baked cluster.

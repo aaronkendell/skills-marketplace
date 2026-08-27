@@ -87,6 +87,17 @@ ls ~/.claude/skills/{emil-design-eng,apple-design}/SKILL.md 2>/dev/null   # Emil
 
 If any is missing, **stop and surface the install command to the user** rather than degrading silently.
 
+## Words are not your job — hand them to `copy`
+
+This skill owns pixels, motion, and layout. The moment you're deciding what a
+button SAYS, what an empty state's message reads, or whether copy sounds
+AI-written, invoke the **`copy`** skill instead (same plugin). It carries the
+voice dials, the humor-by-surface matrix, and the AI-slop tells; the app's
+own `docs/design/voice-and-copy.md` is the law it enforces.
+
+A mock with placeholder words is an unfinished mock: pull the real strings
+through `copy` before you call a board done.
+
 ## App Detection
 
 Detect the app from file paths or user mention:
@@ -163,6 +174,48 @@ Skills carry principles; the project's achieved taste lives in its **shipped scr
 5. **Correction protocol.** When the user says output looks "basic / generic / AI-slop":
    do not iterate adjectives. Ask for (or propose) a concrete in-app artifact as the new
    anchor, then rebuild around that metaphor.
+
+## Exploration engine: Claude Design `/design` (adopted 2026-08-21)
+
+Variant EXPLORATION runs on Claude Code's `/design` command (Claude Design
+artboards) whenever it is available; the hand-built HTML boards + tunnel
+protocol below become the FALLBACK (research-preview outage, offline, or a
+board that must be interactive in ways artboards can't express). The method
+does not change — the engine does.
+
+**The pipeline — each step keeps its owner:**
+
+1. **Brief (ours).** Before invoking `/design`, assemble the same ground truth
+   this skill always required — repo design pack, generated `DESIGN.md`
+   (import it: it follows the design-system spec Claude Design consumes, and
+   it is CI-diffed against the shipped tokens so artboards start on-brand),
+   the flow's `decisions.md` locks, current app screenshots, and the craft
+   skills (taste / emil-design-eng / apple-design / impeccable) DISTILLED
+   INTO THE PROMPT — Claude Design cannot invoke skills, so the brief carries
+   them.
+2. **Explore (theirs).** `/design` 3-4 GENUINELY different directions, both
+   themes, same content in every direction. Artboards are EPHEMERAL: nothing
+   on the canvas is law, ever.
+3. **Pick/mix (user).** Canvas/WYSIWYG edits welcome.
+4. **Graduate (ours) — the step that makes this safe.** The keeper is
+   CONVERTED into the design app, not copied: a numbered sketch in the flow's
+   `sketches/` importing the studio's `shared.css`, every hard-coded artboard
+   value replaced with real tokens, registered in `sketches.ts`, and the lock
+   appended to `decisions.md`. Un-graduated artboards may be discarded
+   freely; a decision that only exists on a canvas does not exist.
+5. **Build (ours).** Primitives and screens land in the app as always; a
+   screen needing more iteration keeps cycling as a studio sketch.
+
+**Hard rules:**
+- `/design-sync` is PULL-ONLY. Never let the canvas push components or
+  tokens into a repo: `theme-source.ts` is the token source of truth and
+  components flow OUT of the UI package, never in from a canvas.
+- Graduated sketches go through the same verify pass as any sketch
+  (design-verify / impeccable) — graduation is conversion + verification,
+  not a rename.
+- Anything user-facing built from an artboard still follows the repo's
+  HARD-RULES.md and device-pass obligations; the artboard is a sketch of
+  intent, not a spec of record.
 
 ## The Exploration Program (multi-round method for big surfaces)
 
