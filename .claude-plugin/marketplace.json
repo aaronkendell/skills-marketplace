@@ -5,12 +5,12 @@
 		"name": "bokendell",
 		"url": "https://github.com/bokendell"
 	},
-	"description": "Bokendell's personal marketplace: SDLC workflow (dev), design taste (taste), a cross-cutting skills bundle (skills) covering framework references + motion/video stack (motion-stack, higgsfield-cli, plus the official remotion-best-practices), AI tooling, GitHub helpers, and Expo helpers. For Rive/Lottie/Framer Motion + 3D, additionally add the upstream `freshtechbro/claudedesignskills` marketplace \u2014 the `motion-stack` skill documents the integration.",
+	"description": "Bokendell's personal marketplace: SDLC workflow (dev), design taste (taste), a cross-cutting skills bundle (skills) covering framework references + motion/video stack (motion-stack, higgsfield-cli, plus the official remotion-best-practices), AI tooling, GitHub helpers, and Expo helpers. For Rive/Lottie/Framer Motion + 3D, additionally add the upstream `freshtechbro/claudedesignskills` marketplace — the `motion-stack` skill documents the integration.",
 	"plugins": [
 		{
 			"name": "dev",
 			"source": "./plugins/dev",
-			"description": "Full SDLC: research \u2192 plan \u2192 build \u2192 ship. Linear integration, TDD, automated testing, code review. Includes the workspace, design, and copy (voice/microcopy) skills."
+			"description": "Full SDLC: research → plan → build → ship. Linear integration, TDD, automated testing, code review. Includes the workspace, design, and copy (voice/microcopy) skills."
 		},
 		{
 			"name": "skill-watch",
@@ -37,7 +37,7 @@
 				"source": "github",
 				"repo": "Leonxlnx/taste-skill"
 			},
-			"description": "Premium frontend design taste \u2014 sourced live from Leonxlnx/taste-skill. strict:true because upstream's plugin.json also declares components; with strict, this entry's `skills` list is authoritative and the two stop conflicting. `skills` must list each skill DIRECTORY (one containing a SKILL.md) \u2014 pointing at the bare ./skills container registers ZERO skills.",
+			"description": "Premium frontend design taste — sourced live from Leonxlnx/taste-skill. strict:true because upstream's plugin.json also declares components; with strict, this entry's `skills` list is authoritative and the two stop conflicting. `skills` must list each skill DIRECTORY (one containing a SKILL.md) — pointing at the bare ./skills container registers ZERO skills.",
 			"skills": [
 				"./skills/taste-skill",
 				"./skills/taste-skill-v1",
@@ -105,7 +105,70 @@
 				"url": "https://github.com/freshtechbro/claudedesignskills.git",
 				"path": "plugins/individual/rive-interactive"
 			},
-			"description": "Rive interactive animation skill. Rive is in golf's real asset pipeline (assets:plates, the rive MCP) \u2014 the other four motion plugins were dropped 2026-08-27."
+			"description": "Rive interactive animation skill. Rive is in golf's real asset pipeline (assets:plates, the rive MCP) — the other four motion plugins were dropped 2026-08-27."
+		},
+		{
+			"name": "langfuse",
+			"source": {
+				"source": "github",
+				"repo": "langfuse/skills"
+			},
+			"description": "Official Langfuse skills — tracing, prompt management, datasets and evaluation for the LLM work in golf/hive/portfolio. Pairs with the langfuse/* routes on mcp.bokendell.com, which are the only way Claude can reach Langfuse's MCP server at all (it takes HTTP Basic, and claude.ai connectors accept OAuth only).",
+			"skills": [
+				"./skills/langfuse"
+			],
+			"strict": true
+		},
+		{
+			"name": "grafana",
+			"source": {
+				"source": "github",
+				"repo": "grafana/skills"
+			},
+			"description": "Official Grafana Labs skills for Grafana, Prometheus, Loki, Tempo and the wider LGTM stack. Upstream is itself a marketplace of several plugins rather than one, so each skill directory is listed explicitly and strict makes this list authoritative.",
+			"skills": [
+				"./skills/grafana-core",
+				"./skills/grafana-cloud",
+				"./skills/grafana-datasources",
+				"./skills/grafana-lgtm",
+				"./skills/grafana-plugins",
+				"./skills/grafana-app-sdk",
+				"./skills/grafana-k6"
+			],
+			"strict": true
+		},
+		{
+			"name": "sentry",
+			"source": {
+				"source": "github",
+				"repo": "getsentry/skills"
+			},
+			"description": "Sentry's own engineering skills — code review, find-bugs, commit and branch helpers, Django perf/access review. Not Sentry-product-specific, so it is useful beyond the sentry/* gateway routes; strict keeps this list authoritative against upstream churn.",
+			"skills": [
+				"./skills/code-review",
+				"./skills/find-bugs",
+				"./skills/code-simplifier",
+				"./skills/commit",
+				"./skills/create-branch",
+				"./skills/document-api-endpoint",
+				"./skills/django-perf-review",
+				"./skills/django-access-review",
+				"./skills/claude-settings-audit",
+				"./skills/agents-md"
+			],
+			"strict": true
+		},
+		{
+			"name": "fly",
+			"source": {
+				"source": "github",
+				"repo": "superfly/skills"
+			},
+			"description": "Fly.io's own skills repo. Only `sprites` today — no flyctl ops skill upstream, which is why the local `fly-ops` skill in the skills plugin covers deploys, machines, logs and token scoping. Watch this for an official one.",
+			"skills": [
+				"./skills/sprites"
+			],
+			"strict": true
 		}
 	]
 }
