@@ -40,3 +40,4 @@ context/
 ├── review-criteria/      ← per-domain review checklists (BLOCKING/IMPORTANT/ADVISORY)
 └── templates/            ← doc templates for humans and agents
 ```
+- `fan-out.md` — when to fan out to parallel agents vs. stay sequential; the diamond shape, the three failure modes, and the rule that a skill never launches a Workflow on its own
