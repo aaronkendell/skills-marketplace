@@ -80,6 +80,32 @@
 				"repo": "nextlevelbuilder/ui-ux-pro-max-skill"
 			},
 			"description": "UI/UX reference database: styles, palettes, font pairings, product types, UX guidelines, chart types across 22 stacks. Required by dev:design as the heuristics layer."
+		},
+		{
+			"name": "auth-skills",
+			"source": {
+				"source": "github",
+				"repo": "better-auth/skills"
+			},
+			"description": "Better Auth agent skills: create-auth scaffolding + best practices. Better Auth is a stack non-negotiable."
+		},
+		{
+			"name": "expo",
+			"source": {
+				"source": "git-subdir",
+				"url": "https://github.com/expo/skills.git",
+				"path": "plugins/expo"
+			},
+			"description": "Expo skills: app design, deployment/EAS, upgrades, router, native UI. Upstream exposes expo-app-design / expo-deployment / upgrading-expo as aliases of this one plugin."
+		},
+		{
+			"name": "rive-interactive",
+			"source": {
+				"source": "git-subdir",
+				"url": "https://github.com/freshtechbro/claudedesignskills.git",
+				"path": "plugins/individual/rive-interactive"
+			},
+			"description": "Rive interactive animation skill. Rive is in golf's real asset pipeline (assets:plates, the rive MCP) \u2014 the other four motion plugins were dropped 2026-08-27."
 		}
 	]
 }
