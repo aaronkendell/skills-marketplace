@@ -1,0 +1,30 @@
+name: domain-vendor-leak
+description: >
+  Does dev:review catch a domain service that reaches for a vendor SDK and
+  process.env directly, and swallows an error? These are three of the workspace's
+  named non-negotiables, so a review that misses them is not usable as a gate.
+prompt: |
+  Review this file against our patterns and list every violation you find.
+
+  ```ts
+  import { Resend } from "resend";
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  export class NotificationService {
+  	async notifyRoundComplete(userId: string, email: string): Promise<void> {
+  		try {
+  			await resend.emails.send({
+  				from: process.env.FROM_EMAIL ?? "noreply@example.com",
+  				to: email,
+  				subject: "Your round is complete",
+  				html: `<p>Nice round, ${userId}.</p>`,
+  			});
+  		} catch {
+  			// keep going
+  		}
+  	}
+  }
+  ```
+tags: [review, ddd, recall]
+runs: 3

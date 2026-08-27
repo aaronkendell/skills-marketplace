@@ -1,0 +1,4 @@
+# one JSON object per run: {"date","case","mean","min","runs","answerModel","judgeModel","skillSha"}
+{"date":"2026-08-27","case":"domain-vendor-leak","mean":1.0,"min":1.0,"runs":1,"answerModel":"sonnet","judgeModel":"opus","note":"baseline; 3/3 recall"}
+{"date":"2026-08-27","case":"mobile-purity","mean":1.0,"min":1.0,"runs":1,"answerModel":"sonnet","judgeModel":"opus","note":"baseline; 3/3 recall"}
+{"date":"2026-08-27","case":"api-contract","mean":1.0,"min":1.0,"runs":1,"answerModel":"sonnet","judgeModel":"opus","note":"baseline; 3/3 recall"}

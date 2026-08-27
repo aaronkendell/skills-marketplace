@@ -187,3 +187,43 @@ If the user runs:
 - **Don't widen scope.** If the user asked to review one file, don't open and edit twelve others "while you're there." Stay tight.
 - **Don't re-implement features.** This skill fixes pattern violations only. Functional bugs are out of scope unless the user asks.
 - **Be terse.** A long review feels like make-work. The structured report above is the format — no preamble, no recap of what each pattern says.
+
+## Big diff? Offer to fan it out — do not just do it
+
+Reviewing one file, or a handful, is a sequence. Do it inline; a fleet is pure overhead.
+
+Review goes **wide** when there are many files AND several independent dimensions
+(correctness, patterns, security, tests) that do not need each other's answers. That is
+the fake-edge test from `references/fan-out.md`: reviewing file B never reads what the
+review of file A returned, so those waits are wasted.
+
+When it is genuinely wide, **say so in one line and let Aaron choose** — a skill never
+launches a `Workflow` on its own, because fleets cost real money and the opt-in is his:
+
+> "34 files across 4 domains. Want this fanned out — roughly a dozen agents — or
+> should I work through it sequentially?"
+
+If he opts in, the shape is fan out per dimension -> dedupe in code -> **verify each
+finding on a fresh context with a different model** -> report survivors. A finding
+checked by the agent that produced it has not been checked. Count what came back
+against what you dispatched and flag the gap rather than reporting a partial set as
+complete. Full guidance: `references/fan-out.md`.
+
+Parallel read-only exploration agents are fine unprompted — they are cheap and bounded.
+The opt-in rule is about fleets that judge or write.
+
+## Changing this skill? Run its evals
+
+`evals/` holds fixture files with violations planted on purpose. The number this
+skill is judged on is **recall** — what fraction of the planted violations a review
+actually finds. Editing this file or the pattern docs it loads can drop recall
+without any visible symptom, which is exactly the kind of regression that goes
+unnoticed for months.
+
+Run the suite before and after a change to this skill: `evals/README.md` has both
+runners. If recall drops, the edit is a regression regardless of how much better
+the new wording reads.
+
+Two rules if you add a case: the fixture must stay **blind** (no comment marking the
+planted violations — an agent that knows it is being graded reviews differently),
+and the judge must be a different model from the one under test.

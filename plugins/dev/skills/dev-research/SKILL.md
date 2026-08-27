@@ -134,3 +134,19 @@ Reference templates in the `templates/` directory for consistent document struct
 - ALWAYS load context patterns before brainstorming so the design aligns with existing architecture.
 - ALWAYS read existing planning docs to avoid proposing something that's already planned or conflicts.
 - The design document is the source of truth for all subsequent phases.
+
+
+## When the research is wide, offer a fan-out
+
+Most research here is a conversation — one agent you steer, which is correct and should
+stay the default. Exploratory work wants a single thread you can redirect, not a fleet
+locked into a plan drawn before you knew what you were looking for.
+
+It goes wide when the question genuinely splits into **independent angles** that do not
+read each other's answers: competitor A's pricing, competitor B's pricing, the category's
+feature gaps, what buyers complain about. Four researchers, four sources, no shared state.
+
+When that is the shape, name it and let Aaron opt in — never launch a `Workflow`
+unprompted. If he does, every claim carries its source, a **fresh-context** skeptic
+attacks each finding before it reaches the report, and unsupported findings die there
+rather than getting softened into the summary. See `references/fan-out.md`.

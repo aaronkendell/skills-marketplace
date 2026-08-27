@@ -1,0 +1,30 @@
+name: mobile-purity
+description: >
+  Does dev:review catch screen-purity and useMemo-placement violations in a
+  React Native screen? These are enforced by arch rules in some repos and by
+  review alone in others, which makes review's recall here load-bearing.
+prompt: |
+  Review this file against our patterns and list every violation you find.
+
+  ```tsx
+  import { useMemo } from "react";
+  import { Text, View } from "react-native";
+  import { useQuery } from "@tanstack/react-query";
+  import { useScorecardStore } from "../../domain/scorecard.store";
+
+  export function ScorecardScreen({ roundId }: { roundId: string }) {
+  	const store = useScorecardStore();
+  	const { data } = useQuery({ queryKey: ["scorecard", roundId], queryFn: () => fetch(`/api/v1/rounds/${roundId}`).then((r) => r.json()) });
+
+  	const total = useMemo(() => (data?.holes ?? []).reduce((sum: number, h: { strokes: number }) => sum + h.strokes, 0), [data]);
+
+  	return (
+  		<View style={{ backgroundColor: "#1a1a1a", padding: 16 }}>
+  			<Text>{`Total: ${total}`}</Text>
+  			<Text>{`Par: ${store.par}`}</Text>
+  		</View>
+  	);
+  }
+  ```
+tags: [review, mobile, frontend, recall]
+runs: 3

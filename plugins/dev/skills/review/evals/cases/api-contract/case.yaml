@@ -1,0 +1,27 @@
+name: api-contract
+description: >
+  Does dev:review catch a raw fetch to the app's own backend, an unvalidated
+  payload reaching a repository, and a list route with no pagination? The raw-fetch
+  case has a matching swarm arch rule, so this doubles as a check that review and
+  the arch rule agree.
+prompt: |
+  Review this file against our patterns and list every violation you find.
+
+  ```ts
+  import { db } from "@bokendell/app-db";
+  import { rounds } from "@bokendell/app-db/schema";
+
+  const API_URL = "https://api.example.com";
+
+  export async function listRounds(userId: string) {
+  	return db.select().from(rounds);
+  }
+
+  export async function syncRoundFromLegacy(roundId: string) {
+  	const res = await fetch(`${API_URL}/api/v1/rounds/${roundId}`);
+  	const payload = (await res.json()) as { strokes: number };
+  	return db.insert(rounds).values({ id: roundId, strokes: payload.strokes });
+  }
+  ```
+tags: [review, api, recall]
+runs: 3
