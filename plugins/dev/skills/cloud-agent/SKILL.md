@@ -20,14 +20,16 @@ script for the specific ids, ports, and Infisical paths.
 ## The environment (shared base image + per-repo install/start)
 
 Repos boot from `ghcr.io/aaronkendell/cloud-agent-base` (Node 24, pnpm, Infisical
-CLI, cloudflared, postgresql-client, build toolchain; user `ubuntu`), referenced
-from `.cursor/environment.json`. DB repos extend it via `.cursor/Dockerfile`
-(`FROM` the base + their Postgres major/extensions). Committed lifecycle scripts live in the cloud-agnostic `scripts/cloud/` folder (`.cursor/environment.json` + `.cursor/Dockerfile` and `.claude/settings.json` only point at them):
+CLI, cloudflared, postgresql-client, build toolchain; user `ubuntu`) via
+`.cursor/environment.json` → `build.dockerfile` (Cursor's schema has no `image`,
+`name`, or `user` keys — a committed environment.json overrides the dashboard).
+Non-DB repos ship a one-line `FROM` Dockerfile; DB repos add their Postgres
+major/extensions on top. Committed lifecycle scripts live in the cloud-agnostic `scripts/cloud/` folder (`.cursor/environment.json` + `.cursor/Dockerfile` and `.claude/settings.json` only point at them):
 
 - `scripts/cloud/install.sh` — writes `~/.npmrc` with `//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}` (a `${VAR}` ref, never the literal token) + `verify-deps-before-run=false`, then `pnpm install --frozen-lockfile` (with `CI=1` so the root `prepare`/lefthook hook is skipped).
 - `scripts/cloud/start.sh` — per-boot: bring up local Postgres + Redis if the repo uses them (no systemd → `pg_ctlcluster` directly), apply migrations by calling `drizzle-kit migrate` directly (not via pnpm; `push` needs a TTY), write `.env.workspace` pointing at the local stack, and reconstruct `~/.config/bokendell/infisical.json` (keyed by the repo's swarm account) from `INFISICAL_CLIENT_ID`/`INFISICAL_CLIENT_SECRET` so `swarm run` authenticates.
 
-Secrets in the Cursor Secrets UI (least-privilege): `NODE_AUTH_TOKEN` (GitHub PAT, read:packages — team scope) and a **dev, read-only** Infisical machine identity per repo (`INFISICAL_CLIENT_ID`/`INFISICAL_CLIENT_SECRET`). Everything else is fetched from Infisical at run time (env slug `development`). To mimic prod, delete `.env.workspace` so Infisical's Neon/Upstash URLs win.
+Secrets in the Cursor Secrets UI (least-privilege): a **dev, read-only** Infisical machine identity per repo (`INFISICAL_CLIENT_ID`/`INFISICAL_CLIENT_SECRET`). `NODE_AUTH_TOKEN` is optional — `start.sh` pulls `GITHUB_PACKAGES_TOKEN` (`/infrastructure/github`, env `development`, present in every project) into `~/.npmrc` each boot. Everything else is fetched from Infisical at run time (env slug `development`). To mimic prod, delete `.env.workspace` so Infisical's Neon/Upstash URLs win.
 
 
 ## Claude Code cloud sessions — same scripts, thin parity layer
@@ -48,10 +50,10 @@ doesn't apply; the repo's `scripts/cloud/*.sh` still do. Per repo:
   Postgres major/extensions aren't in Anthropic's image, e.g.
   `ghcr.io/aaronkendell/test-postgres:latest`); otherwise the baked cluster.
 - Environment form: setup `bash scripts/cloud/claude-setup.sh`; vars
-  `INFISICAL_CLIENT_ID`, `INFISICAL_CLIENT_SECRET`, **`NODE_AUTH_TOKEN`** (the
-  same read:packages PAT Cursor holds at team scope — `~/.npmrc` references
-  `${NODE_AUTH_TOKEN}`, and a setup-script-derived value does not survive into
-  sessions, so a later `pnpm install` 401s without it) (+ `CLOUD_PG_IMAGE`);
+  `INFISICAL_CLIENT_ID`, `INFISICAL_CLIENT_SECRET` (+ `CLOUD_PG_IMAGE`). `NODE_AUTH_TOKEN`
+  is optional: `start.sh` resolves `GITHUB_PACKAGES_TOKEN` from Infisical
+  (`/infrastructure/github`, env `development`) every boot and writes it into
+  `~/.npmrc`;
   network **Custom** = Trusted + `nodejs.org`, `app.infisical.com`,
   `*.trycloudflare.com`, `*.argotunnel.com` (+ `*.neon.tech`, `*.upstash.io`
   only when mimicking prod). GitHub goes through Anthropic's proxy — no PAT.
