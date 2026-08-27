@@ -102,6 +102,15 @@ cloud session.
 
 ## Tunnels (phone / external browser)
 
+**Provider depends on the runtime.** cloudflared needs a raw outbound connection on
+port 7844 (QUIC or TCP/h2): Cursor Cloud Agents allow it, but Claude Code cloud
+sessions route all egress through an HTTP CONNECT proxy limited to 443, so
+cloudflared fails its edge pre-check and quick-tunnel URLs return Cloudflare 1033 /
+HTTP 530. `mobile-tunnel.sh` probes 7844 and falls back to a single ngrok agent
+(`connect.ngrok-agent.com:443`, honours `HTTPS_PROXY`) publishing both endpoints;
+it needs `NGROK_AUTHTOKEN` in the environment or at Infisical `/infrastructure/ngrok`.
+With neither provider, do device testing from a Cursor agent or the laptop.
+
 Everything runs inside the VM; reach it with `bash scripts/cloud/tunnel.sh <port> [name]` (fleet helper with a restart watchdog; `--list` shows live URLs) or raw `cloudflared tunnel --url http://localhost:<port>` (outbound-only; prints a `*.trycloudflare.com` URL). APIs already trust `*.trycloudflare.com` for CORS. Quick-tunnel URLs rotate on restart — use a named tunnel token for a fixed hostname.
 
 ## Long-running processes
