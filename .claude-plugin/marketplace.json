@@ -5,12 +5,12 @@
 		"name": "bokendell",
 		"url": "https://github.com/bokendell"
 	},
-	"description": "Bokendell's personal marketplace: SDLC workflow (dev), design taste (taste), a cross-cutting skills bundle (skills) covering framework references + motion/video stack (motion-stack, higgsfield-cli, plus the official remotion-best-practices), AI tooling, GitHub helpers, and Expo helpers. For Rive/Lottie/Framer Motion + 3D, additionally add the upstream `freshtechbro/claudedesignskills` marketplace — the `motion-stack` skill documents the integration.",
+	"description": "Bokendell's personal marketplace: SDLC workflow (dev), design taste (taste), a cross-cutting skills bundle (skills) covering framework references + motion/video stack (motion-stack, higgsfield-cli, plus the official remotion-best-practices), AI tooling, GitHub helpers, and Expo helpers. For Rive/Lottie/Framer Motion + 3D, additionally add the upstream `freshtechbro/claudedesignskills` marketplace \u2014 the `motion-stack` skill documents the integration.",
 	"plugins": [
 		{
 			"name": "dev",
 			"source": "./plugins/dev",
-			"description": "Full SDLC: research → plan → build → ship. Linear integration, TDD, automated testing, code review. Includes the workspace + design skills."
+			"description": "Full SDLC: research \u2192 plan \u2192 build \u2192 ship. Linear integration, TDD, automated testing, code review. Includes the workspace, design, and copy (voice/microcopy) skills."
 		},
 		{
 			"name": "skill-watch",
@@ -37,7 +37,7 @@
 				"source": "github",
 				"repo": "Leonxlnx/taste-skill"
 			},
-			"description": "Premium frontend design taste — sourced live from Leonxlnx/taste-skill. taste-skill (v2 main, name: design-taste-frontend) + taste-skill-v1 fallback, plus redesign, soft, minimalist, brutalist, stitch, output, image-to-code, imagegen-frontend-{web,mobile}, brandkit, gpt-tasteskill. NOTE: `skills` must list each skill DIRECTORY (one containing a SKILL.md); pointing at the bare `./skills` container registers ZERO skills.",
+			"description": "Premium frontend design taste \u2014 sourced live from Leonxlnx/taste-skill. taste-skill (v2 main, name: design-taste-frontend) + taste-skill-v1 fallback, plus redesign, soft, minimalist, brutalist, stitch, output, image-to-code, imagegen-frontend-{web,mobile}, brandkit, gpt-tasteskill. NOTE: `skills` must list each skill DIRECTORY (one containing a SKILL.md); pointing at the bare `./skills` container registers ZERO skills.",
 			"skills": [
 				"./skills/taste-skill",
 				"./skills/taste-skill-v1",
@@ -64,6 +64,22 @@
 			"name": "mcp-pack",
 			"source": "./plugins/mcp-pack",
 			"description": "Bundle of MCP servers (Neon, Grafana, Mapbox docs+DevKit, Proxyman) that follow you across every repo and superset worktree when enabled at user scope. Secrets via shell env vars."
+		},
+		{
+			"name": "impeccable",
+			"source": {
+				"source": "github",
+				"repo": "pbakaus/impeccable"
+			},
+			"description": "Design finishing workflow: direction contract -> approved comp -> build -> finish review, with asset-producer/documenter/reviewer sub-agents. Required by dev:design."
+		},
+		{
+			"name": "ui-ux-pro-max",
+			"source": {
+				"source": "github",
+				"repo": "nextlevelbuilder/ui-ux-pro-max-skill"
+			},
+			"description": "UI/UX reference database: styles, palettes, font pairings, product types, UX guidelines, chart types across 22 stacks. Required by dev:design as the heuristics layer."
 		}
 	]
 }
