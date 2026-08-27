@@ -39,17 +39,18 @@ run on Anthropic's VM (Ubuntu 24.04, ~4 vCPU · 16 GB · 30 GB, Node 20–22,
 PG16, Redis, Docker). The base image can't be replaced, so the Dockerfile
 doesn't apply; the repo's `scripts/cloud/*.sh` still do. Per repo:
 
-- `scripts/cloud/claude-setup.sh` — the environment's **setup script** (runs once per
-  ~7-day cache): installs what `cloud-agent-base` bakes (Node 24, pnpm,
-  Infisical CLI, cloudflared), derives `NODE_AUTH_TOKEN` from the Infisical
-  identity, runs `scripts/cloud/install.sh`, pre-pulls `CLOUD_PG_IMAGE` if set.
-- `.claude/settings.json` SessionStart hook (matcher `startup|resume`) runs
-  `scripts/cloud/start.sh` only when `CLAUDE_CODE_REMOTE_SESSION_ID` is set — no
-  effect on laptops.
+- The environment's **setup script** is the repo-agnostic *fleet toolchain
+  script* (hq `docs/tools/cloud-runbook.md`): Node 24, pnpm, Infisical CLI,
+  cloudflared, plus a best-effort dep warm-up. It must not reference repo paths —
+  its working directory is not the repo (relative paths exit 127).
+- `.claude/settings.json` SessionStart hook (matcher `startup|resume`, timeout
+  900) runs `scripts/cloud/claude-session.sh`, which exits immediately unless
+  `CLAUDE_CODE_REMOTE=true`, then: toolchain guard → `GITHUB_PACKAGES_TOKEN`
+  from Infisical → `install.sh` → `start.sh`.
 - `start.sh` takes a Docker path when `CLOUD_PG_IMAGE` is set (DB repos whose
   Postgres major/extensions aren't in Anthropic's image, e.g.
   `ghcr.io/aaronkendell/test-postgres:latest`); otherwise the baked cluster.
-- Environment form: setup `bash scripts/cloud/claude-setup.sh`; vars
+- Environment form: setup = fleet toolchain script; vars
   `INFISICAL_CLIENT_ID`, `INFISICAL_CLIENT_SECRET` (+ `CLOUD_PG_IMAGE`). `NODE_AUTH_TOKEN`
   is optional: `start.sh` resolves `GITHUB_PACKAGES_TOKEN` from Infisical
   (`/infrastructure/github`, env `development`) every boot and writes it into
@@ -57,8 +58,10 @@ doesn't apply; the repo's `scripts/cloud/*.sh` still do. Per repo:
   network **Custom** = Trusted + `nodejs.org`, `app.infisical.com`,
   `*.trycloudflare.com`, `*.argotunnel.com` (+ `*.neon.tech`, `*.upstash.io`
   only when mimicking prod). GitHub goes through Anthropic's proxy — no PAT.
-- One env per repo; pin it with `remote.defaultEnvironmentId` in that repo's
-  `.claude/settings.json` or `/remote-env`. Hand-off: `claude --teleport`
+- One env for the whole fleet: identities are per-repo keys
+  (`INFISICAL_CLIENT_ID_GOLF` / `INFISICAL_CLIENT_SECRET_GOLF`, `…_HIVE`, …,
+  `…_BOKENDELL` for core + hq); `claude-session.sh` maps them to the generic names.
+  DB repos default their own `CLOUD_PG_IMAGE`. Pin with `/remote-env`. Hand-off: `claude --teleport`
   pulls branch + transcript to the laptop; `/remote-control` keeps the phone
   attached to a local session.
 - Plugins installed at user scope do **not** load in cloud VMs. A repo that
