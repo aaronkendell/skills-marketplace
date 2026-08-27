@@ -48,7 +48,10 @@ doesn't apply; the repo's `scripts/cloud/*.sh` still do. Per repo:
   Postgres major/extensions aren't in Anthropic's image, e.g.
   `ghcr.io/aaronkendell/test-postgres:latest`); otherwise the baked cluster.
 - Environment form: setup `bash scripts/cloud/claude-setup.sh`; vars
-  `INFISICAL_CLIENT_ID`, `INFISICAL_CLIENT_SECRET` (+ `CLOUD_PG_IMAGE`);
+  `INFISICAL_CLIENT_ID`, `INFISICAL_CLIENT_SECRET`, **`NODE_AUTH_TOKEN`** (the
+  same read:packages PAT Cursor holds at team scope — `~/.npmrc` references
+  `${NODE_AUTH_TOKEN}`, and a setup-script-derived value does not survive into
+  sessions, so a later `pnpm install` 401s without it) (+ `CLOUD_PG_IMAGE`);
   network **Custom** = Trusted + `nodejs.org`, `app.infisical.com`,
   `*.trycloudflare.com`, `*.argotunnel.com` (+ `*.neon.tech`, `*.upstash.io`
   only when mimicking prod). GitHub goes through Anthropic's proxy — no PAT.
