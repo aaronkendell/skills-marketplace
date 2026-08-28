@@ -193,6 +193,22 @@
 				"./skills/wrangler"
 			],
 			"strict": true
+		},
+		{
+			"name": "resend",
+			"source": {
+				"source": "github",
+				"repo": "resend/resend-skills"
+			},
+			"description": "Resend's own skills: the API skill, resend-cli, react-email (which is what we send with), email-best-practices, and the agent email inbox. Preferred over the Resend MCP connector, which is 99 tools and ~33k tokens of schema on every request whether or not an email is sent.",
+			"skills": [
+				"./skills/resend",
+				"./skills/resend-cli",
+				"./skills/react-email",
+				"./skills/email-best-practices",
+				"./skills/agent-email-inbox"
+			],
+			"strict": true
 		}
 	]
 }
