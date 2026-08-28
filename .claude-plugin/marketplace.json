@@ -8,6 +8,76 @@
 	"description": "Bokendell's personal marketplace: SDLC workflow (dev), design taste (taste), a cross-cutting skills bundle (skills) covering framework references + motion/video stack (motion-stack, higgsfield-cli, plus the official remotion-best-practices), AI tooling, GitHub helpers, and Expo helpers. For Rive/Lottie/Framer Motion + 3D, additionally add the upstream `freshtechbro/claudedesignskills` marketplace — the `motion-stack` skill documents the integration.",
 	"plugins": [
 		{
+			"name": "app-store-connect",
+			"source": {
+				"source": "github",
+				"repo": "rorkai/app-store-connect-cli-skills"
+			},
+			"description": "App Store Connect automation — build lifecycle, TestFlight orchestration, release flow, signing, metadata and localisation, screenshots, pricing, crash triage and submission health. Apple publishes no agent skills, so this fills the gap for golf and keepings.",
+			"skills": [
+				"./skills/asc-ad-hoc-distribution",
+				"./skills/asc-analytics-reports",
+				"./skills/asc-app-create-ui",
+				"./skills/asc-apple-ads",
+				"./skills/asc-aso-audit",
+				"./skills/asc-build-lifecycle",
+				"./skills/asc-cli-usage",
+				"./skills/asc-crash-triage",
+				"./skills/asc-id-resolver",
+				"./skills/asc-localize-metadata",
+				"./skills/asc-metadata-sync",
+				"./skills/asc-notarization",
+				"./skills/asc-ppp-pricing",
+				"./skills/asc-release-flow",
+				"./skills/asc-revenuecat-catalog-sync",
+				"./skills/asc-screenshot-resize",
+				"./skills/asc-shots-pipeline",
+				"./skills/asc-signing-setup",
+				"./skills/asc-submission-health",
+				"./skills/asc-subscription-localization",
+				"./skills/asc-testflight-orchestration",
+				"./skills/asc-wall-submit",
+				"./skills/asc-whats-new-writer",
+				"./skills/asc-workflow",
+				"./skills/asc-xcode-build"
+			],
+			"strict": true
+		},
+		{
+			"name": "apple-dev",
+			"source": {
+				"source": "github",
+				"repo": "rshankras/claude-code-apple-skills"
+			},
+			"description": "Apple platform development — SwiftUI, SwiftData, iOS, macOS, watchOS, visionOS, Core ML, Apple Intelligence, MapKit, testing, performance and release review. Broader than App Store Connect: this is writing the app, that is shipping it.",
+			"skills": [
+				"./skills/app-store",
+				"./skills/apple-intelligence",
+				"./skills/core-ml",
+				"./skills/design",
+				"./skills/foundation",
+				"./skills/generators",
+				"./skills/growth",
+				"./skills/ios",
+				"./skills/legal",
+				"./skills/macos",
+				"./skills/mapkit",
+				"./skills/monetization",
+				"./skills/performance",
+				"./skills/product",
+				"./skills/release-review",
+				"./skills/security",
+				"./skills/shared",
+				"./skills/swift",
+				"./skills/swiftdata",
+				"./skills/swiftui",
+				"./skills/testing",
+				"./skills/visionos",
+				"./skills/watchos"
+			],
+			"strict": true
+		},
+		{
 			"name": "auth-skills",
 			"source": {
 				"source": "github",
@@ -92,6 +162,58 @@
 			"description": "Design finishing workflow: direction contract -> approved comp -> build -> finish review, with asset-producer/documenter/reviewer sub-agents. Required by dev:design."
 		},
 		{
+			"name": "infisical",
+			"source": {
+				"source": "github",
+				"repo": "infisical/ai-skills"
+			},
+			"description": "Infisical's own skills — setup, API, app connections, secret syncs, dynamic secrets, rotation, access control, SSO, PKI, KMS and the Kubernetes operator. Every credential in this workspace comes from Infisical, so this is the one vendor whose skills touch every task.",
+			"skills": [
+				"./skills/infisical-access-control",
+				"./skills/infisical-agent",
+				"./skills/infisical-api",
+				"./skills/infisical-app-connections",
+				"./skills/infisical-dynamic-secrets",
+				"./skills/infisical-gateway",
+				"./skills/infisical-kms",
+				"./skills/infisical-kubernetes-operator",
+				"./skills/infisical-pam",
+				"./skills/infisical-pki",
+				"./skills/infisical-secret-rotation",
+				"./skills/infisical-secret-scanning",
+				"./skills/infisical-secret-syncs",
+				"./skills/infisical-self-host",
+				"./skills/infisical-setup",
+				"./skills/infisical-sso",
+				"./skills/infisical-terraform"
+			],
+			"strict": true
+		},
+		{
+			"name": "inngest",
+			"source": {
+				"source": "github",
+				"repo": "inngest/inngest-claude-code-plugin"
+			},
+			"description": "Inngest's official Claude Code plugin — setup, events, durable functions, steps, flow control, middleware, realtime, plus a brownfield audit and the v3→v4 migration. It also wires MCP for the LOCAL dev server at 127.0.0.1:8288, which only resolves while `inngest dev` is running in the same sandbox; in a cloud agent start the dev server first or the connection simply fails, harmlessly.",
+			"skills": [
+				"./skills/inngest-agents",
+				"./skills/inngest-api-cli",
+				"./skills/inngest-api",
+				"./skills/inngest-brownfield-audit",
+				"./skills/inngest-cli",
+				"./skills/inngest-durable-functions",
+				"./skills/inngest-events",
+				"./skills/inngest-flow-control",
+				"./skills/inngest-middleware",
+				"./skills/inngest-realtime",
+				"./skills/inngest-setup",
+				"./skills/inngest-steps",
+				"./skills/inngest-v3-v4-migration"
+			],
+			"strict": true
+		},
+		{
 			"name": "langfuse",
 			"source": {
 				"source": "github",
@@ -107,6 +229,24 @@
 			"name": "mcp-pack",
 			"source": "./plugins/mcp-pack",
 			"description": "Bundle of MCP servers (Neon, Grafana, Mapbox docs+DevKit, Proxyman) that follow you across every repo and superset worktree when enabled at user scope. Secrets via shell env vars."
+		},
+		{
+			"name": "neon",
+			"source": {
+				"source": "github",
+				"repo": "neondatabase/agent-skills"
+			},
+			"description": "Neon's own skills — Postgres, branching workflows, the egress optimizer, plus Functions, Object Storage and AI Gateway. Supersedes the local skills:neon-postgres for anything Neon-specific.",
+			"skills": [
+				"./skills/neon-ai-gateway",
+				"./skills/neon-functions",
+				"./skills/neon-object-storage",
+				"./skills/neon-postgres-branches",
+				"./skills/neon-postgres-egress-optimizer",
+				"./skills/neon-postgres",
+				"./skills/neon"
+			],
+			"strict": true
 		},
 		{
 			"name": "openrouter",
