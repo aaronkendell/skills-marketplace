@@ -73,6 +73,12 @@ read gets both and the two cannot drift.
 | Grafana | `GRAFANA_SA_TOKEN` (Viewer) | `GRAFANA_URL` |
 | Langfuse | `LANGFUSE_SECRET_KEY` | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_BASE_URL` |
 | Resend | `RESEND_API_KEY` | — |
+| Inngest | `INNGEST_API_KEY` (`sk-inn-api-`) | `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY` |
+| OpenRouter | `OPENROUTER_API_KEY` | — |
+| Upstash | `UPSTASH_REDIS_REST_TOKEN` | `UPSTASH_REDIS_REST_URL`, `REDIS_URL` |
+| Neon | `NEON_API_KEY` (`napi_`, project-scoped) | `NEON_PROJECT_ID` |
+| PostHog | `POSTHOG_PERSONAL_API_KEY` | `POSTHOG_HOST`, `POSTHOG_PROJECT_ID` |
+| RevenueCat | `REVENUECAT_API_KEY` (v1 `sk_`) | `REVENUECAT_PROJECT_ID` |
 
 So the shape of every lookup is the same:
 
@@ -105,6 +111,48 @@ revoked without touching the others.
 ```bash
 curl -s "https://sentry.io/api/0/organizations/$SENTRY_ORG/issues/?query=is:unresolved" \
   -H "Authorization: Bearer $SENTRY_READ_TOKEN"
+```
+
+### Inngest — the CLI covers the whole Cloud MCP surface
+
+`npx inngest-cli@latest api` reaches run debugging, event-run lookup, traces,
+invocation, app syncs, webhooks, environments, keys and Insights — everything the
+Cloud MCP exposes. Add `--prod` to target Cloud rather than a local dev server.
+
+```bash
+INNGEST_API_KEY=$(fetch /infrastructure/inngest INNGEST_API_KEY)
+npx inngest-cli@latest api --prod --api-key "$INNGEST_API_KEY" get-account
+npx inngest-cli@latest api --prod --api-key "$INNGEST_API_KEY" get-account-envs
+```
+
+Keys are scoped per org **and** per environment, so read the one for the
+environment you are targeting. `INNGEST_API_KEY` starts `sk-inn-api-`; the
+signing and event keys are different things and are not accepted here.
+
+Several operations mutate — sending events, invoking functions, rerunning or
+cancelling runs, syncing apps, patching environments. Say what you are about to
+do before doing it against production.
+
+### Neon keys are project-scoped
+
+`napi_` keys reject anything outside their project by design, so
+`GET /api/v2/projects` returns 404 and `GET /api/v2/projects/$NEON_PROJECT_ID`
+returns 200. That is correct behaviour, not a broken key — read
+`NEON_PROJECT_ID` and address the project directly, or use `neonctl`.
+
+### RevenueCat has two kinds of key, and they are not interchangeable
+
+`REVENUECAT_API_KEY` here is a **v1 secret SDK key** (`sk_…`). It does not work
+against the v2 project-management API, which is what the `rc` CLI and the MCP
+server both use — v2 endpoints answer 403 with it.
+
+For `rc`, mint a **v2 API key** in the RevenueCat dashboard (Project Settings →
+API keys → v2), store it as `REVENUECAT_V2_API_KEY`, and pass it as `RC_API_KEY`
+or `--api-key`. Never `rc auth login`, which is browser OAuth:
+
+```bash
+RC_API_KEY=$(fetch /infrastructure/revenuecat REVENUECAT_V2_API_KEY) \
+  npx @revenuecat/cli projects list
 ```
 
 ### Grafana tokens are per app and per environment
@@ -172,6 +220,30 @@ dashboards.
 We send with **React Email** rendered through Resend. Use the
 `resend/resend-skills` skills — `react-email` for the templates,
 `resend` / `resend-cli` for delivery, `email-best-practices` for the rest.
+
+## Verified working
+
+Every one of these was exercised against the live vendor with the Infisical
+credential, production environment, on 2026-08-28:
+
+| Vendor | golf | hive | portfolio | swarm | keepings | bokendell |
+|---|---|---|---|---|---|---|
+| Sentry (issues) | 200 | 200 | 200 | 200 | — | 200 |
+| Grafana (search) | 200 | 200 | 200 | 200 | — | 200 |
+| Resend (domains) | 200 | 200 | 200 | 200 | — | — |
+| Langfuse (projects) | 200 | 200 | 200 | — | — | — |
+| Fly (apps list) | ok | ok | ok | ok | — | — |
+| Cloudflare (workers) | 403* | 200 | 200 | 200 | — | 200 |
+| Inngest (account) | 200 | 200 | 200 | — | 200 | — |
+| OpenRouter (key) | 200 | 200 | 200 | — | 200 | 200 |
+| Upstash (redis ping) | 200 | 200 | 200 | 200 | 200 | — |
+| OTLP push | 200 | 200 | 200 | 200 | — | 200 |
+
+`*` golf's Cloudflare token is scoped to R2/Pages and cannot list Workers. Not a
+fault unless golf needs Workers.
+
+A dash means the credential is absent, which is usually correct — swarm has no
+Langfuse project, keepings sends no email, bokendell runs no Fly apps.
 
 ## Why not MCP
 
