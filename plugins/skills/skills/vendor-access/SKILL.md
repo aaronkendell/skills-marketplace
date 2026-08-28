@@ -59,26 +59,61 @@ Skills for most of these are installed from the vendors' own repos:
 `cloudflare/skills`, `getsentry/skills`, `grafana/skills`, `langfuse/skills`,
 `resend/resend-skills`. Prefer them over improvising against the API.
 
-## Identifiers — read them from the repo
+## Identifiers live beside the credential
 
-**Every repo carries its own `.claude/vendors.md`.** Read that file before doing
-anything vendor-specific: it names which Fly org, Sentry org, Cloudflare account,
-Grafana stack, Langfuse project and Resend account *that* repo uses, and which
-Infisical project owns the credentials.
+There is no registry file and no per-repo list. **The identifier is a secret in
+the same `/infrastructure/<vendor>` folder as the token it belongs to**, so one
+read gets both and the two cannot drift.
 
-    cat .claude/vendors.md
+| Vendor | Token | Identifier beside it |
+|---|---|---|
+| Fly | `FLY_ORG_TOKEN` | `FLY_ORG_SLUG` — the slug, **not** the name |
+| Sentry | `SENTRY_READ_TOKEN` (queries) · `SENTRY_AUTH_TOKEN` (CI) | `SENTRY_ORG`, `SENTRY_PROJECT_*` |
+| Cloudflare | `CLOUDFLARE_API_TOKEN` | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_ZONE_ID` |
+| Grafana | `GRAFANA_SA_TOKEN` (Viewer) | `GRAFANA_URL` |
+| Langfuse | `LANGFUSE_SECRET_KEY` | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_BASE_URL` |
+| Resend | `RESEND_API_KEY` | — |
 
-Per-repo rather than one shared registry, because the answers genuinely differ —
-golf is on the bagman Cloudflare account and the bagman Sentry org while hive,
-portfolio and swarm share bokendell; hive, portfolio and swarm share one Grafana
-stack while golf has its own; keepings has a Resend key that is empty in every
-environment. A single table would be a list of exceptions.
+So the shape of every lookup is the same:
 
-It also puts the file where the work is: a repo's `.claude/` is present in every
-worktree and every cloud agent checkout, which a workspace-root file is not.
+```bash
+GRAFANA_URL=$(fetch /infrastructure/grafana GRAFANA_URL)
+GRAFANA_SA_TOKEN=$(fetch /infrastructure/grafana GRAFANA_SA_TOKEN)
+curl -s "$GRAFANA_URL/api/search?limit=1" -H "Authorization: Bearer $GRAFANA_SA_TOKEN"
+```
 
-If `.claude/vendors.md` is missing, say so rather than guessing an org slug — a
-wrong one fails with a message that reads like a permissions problem.
+Read the identifier; never hardcode or guess one. A wrong Fly org slug fails with
+`error getting organization: Could not find`, which reads like a permissions
+problem and is not.
+
+**Which Infisical project?** The one named for the app you are working in —
+`golf`, `hive`, `portfolio`, `swarm`, `keepings` — or `bokendell` for anything
+workspace-level. Products do not share credentials even when they share an
+account: hive, portfolio and swarm all use the `bokendell` Sentry org and the
+`bokendell.grafana.net` stack, but each holds its own token, so one can be
+revoked without touching the others.
+
+### Two Sentry tokens, and they are not interchangeable
+
+- `SENTRY_AUTH_TOKEN` — CI: releases, source maps, deploys. **Cannot read
+  issues**; it returns 403.
+- `SENTRY_READ_TOKEN` — `org:read`, `project:read`, `event:read`. This is the one
+  for querying.
+
+`sentry-cli` has no issue-query command at all. Use the REST API:
+
+```bash
+curl -s "https://sentry.io/api/0/organizations/$SENTRY_ORG/issues/?query=is:unresolved" \
+  -H "Authorization: Bearer $SENTRY_READ_TOKEN"
+```
+
+### Grafana tokens are per app and per environment
+
+Named `<app>-<env>-readonly`, Viewer role — reads answer 200, writes answer 403.
+Never use an Admin service account from a session: an Admin one can assign RBAC
+roles, which is escalation from something meant to read dashboards.
+
+Only golf has a `staging` environment; it is the only product with stage infra.
 
 ## Scoping tokens
 
