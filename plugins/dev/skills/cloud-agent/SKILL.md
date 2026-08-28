@@ -10,6 +10,12 @@ description: >
 
 # Running a repo in a cloud VM (Cursor Cloud Agent · Claude Code cloud session)
 
+**Repo specifics live in the repo.** golf, hive and keepings each have their own
+`.claude/skills/cloud-agent/` covering their apps, secrets, bootstrap script and
+which services a task needs. Read that one alongside this. This skill carries only
+what is true of every repo in a cloud VM.
+
+
 Laptop = `swarm workspace dev` (Neon branch + tunnels + port allocation). A
 Cloud Agent is different: a **prebuilt environment** provides the toolchain and
 a local stack, and you start only the apps a task needs. This skill is the map

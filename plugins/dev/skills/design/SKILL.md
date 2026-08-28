@@ -104,9 +104,9 @@ Detect the app from file paths or user mention:
 
 | Signal | App |
 |--------|-----|
-| `apps/golf/`, `packages/golf/`, "fairway", "golf" | **golf** |
-| `apps/portfolio/`, `packages/portfolio/`, "portfolio" | **portfolio** |
-| `apps/hive/`, `packages/hive/`, "hive", "agents" | **hive** |
+| `golf/apps/`, `golf/packages/`, "fairway", "golf" | **golf** |
+| `portfolio/apps/`, `portfolio/packages/`, "portfolio" | **portfolio** |
+| `hive/apps/`, `hive/packages/`, "hive", "agents" | **hive** |
 | `keepings/`, `apps/design/src/packages/{mobile,site}/`, "keepings", "capture" | **keepings** |
 | `packages/shared/ui/` | **shared** (compare across repos; read each repo's own DESIGN.md) |
 

@@ -32,10 +32,10 @@ GOLF_API_URL="https://golf-api-ws-test-dev.bokendell.com"
 
 ## Step 2: Get Auth Credentials
 
-Test keys live in Infisical at `/apps/<project>/api`:
+Test keys live in Infisical at `/apps/api`:
 
 ```bash
-infisical export --env=development --path=/apps/golf/api --format=dotenv --silent | grep TEST_API_KEY
+infisical export --env=development --path=/apps/api --format=dotenv --silent | grep TEST_API_KEY
 # TEST_API_KEY_ADMIN=hive_...
 # TEST_API_KEY_USER=hive_...
 ```
@@ -47,9 +47,9 @@ If keys are missing or not working, run `swarm workspace verify-keys` — it rec
 Each API has a generated spec:
 
 ```
-apps/golf/api/openapi.json
-apps/portfolio/api/openapi.json
-apps/hive/api/openapi.json
+apps/api/openapi.json
+apps/api/openapi.json
+apps/api/openapi.json
 ```
 
 If the spec is stale (endpoints were added/changed), regenerate:
@@ -66,15 +66,15 @@ curl -sf http://localhost:${PORT}/health
 # Expect: 200 with JSON body
 ```
 
-### tRPC Query (GET)
+### oRPC Query (GET)
 ```bash
-curl "http://localhost:${PORT}/api/trpc/workspaces.list" \
+curl "http://localhost:${PORT}/api/v1/workspaces" \
   -H "Authorization: Bearer ${TEST_API_KEY_ADMIN}"
 ```
 
-### tRPC Mutation (POST)
+### oRPC Mutation (POST)
 ```bash
-curl -X POST "http://localhost:${PORT}/api/trpc/workspaces.create" \
+curl -X POST "http://localhost:${PORT}/api/v1/workspaces" \
   -H "Authorization: Bearer ${TEST_API_KEY_ADMIN}" \
   -H "Content-Type: application/json" \
   -d '{"json": {"name": "test", ...}}'
@@ -139,7 +139,7 @@ This:
 
 After it runs, re-export Infisical and retry the test:
 ```bash
-infisical export --env=development --path=/apps/golf/api --format=dotenv --silent
+infisical export --env=development --path=/apps/api --format=dotenv --silent
 ```
 
 If 403 but key is valid: you're using USER key on admin endpoint. Switch to TEST_API_KEY_ADMIN.
@@ -176,12 +176,12 @@ Don't try to start `swarm workspace dev` from the agent — it's blocking and ow
    pnpm --filter=@bokendell/<project>-api openapi:generate
    ```
 
-2. **tRPC path typo:** tRPC uses dot notation: `/api/trpc/<router>.<procedure>`. Check the actual router:
+2. **oRPC path typo:** oRPC uses dot notation: `/api/v1/<resource>`. Check the actual router:
    ```bash
-   grep -r "Router = router({" apps/<project>/api/src/packages/
+   grep -r "Router = router({" apps/api/src/packages/
    ```
 
-3. **Route not registered:** Check `apps/<project>/api/src/packages/api/v1/trpc.router.ts` for the router import.
+3. **Route not registered:** Check `apps/api/src/packages/api/v1/orpc.router.ts` for the router import.
 
 ### 500 Internal Server Error
 
@@ -217,7 +217,7 @@ Don't try to start `swarm workspace dev` from the agent — it's blocking and ow
 
 Compare against the OpenAPI request schema:
 ```bash
-jq '.paths["/api/trpc/<procedure>"].post.requestBody' apps/<project>/api/openapi.json
+jq '.paths["/api/v1/<resource>"].post.requestBody' apps/api/openapi.json
 ```
 
 ### NXDOMAIN / Tunnel URL Unreachable
@@ -270,7 +270,7 @@ swarm workspace cleanup --all   # Kills all dev + tunnel processes
    ```bash
    pnpm --filter=@bokendell/<project>-api openapi:generate
    ```
-2. Check the actual Zod schema in `apps/<project>/api/src/packages/<domain>/` — the OpenAPI is derived from it.
+2. Check the actual Zod schema in `apps/api/src/packages/<domain>/` — the OpenAPI is derived from it.
 3. Check the DTO mapper — it might be adding computed fields not in the schema.
 
 ## Step 6: Report Results
@@ -278,7 +278,7 @@ swarm workspace cleanup --all   # Kills all dev + tunnel processes
 For each endpoint tested:
 
 ```
-POST /api/trpc/workspaces.create
+POST /api/v1/workspaces
   Status:   200 OK (expected 200)
   Time:     142ms
   Schema:   PASS
@@ -321,21 +321,21 @@ curl -sf $API_URL/health | jq
 curl -sf $INNGEST_URL/fn | jq -r '.functions[].name'
 
 # Auth works
-curl -sf $API_URL/api/trpc/workspaces.list -H "Authorization: Bearer $ADMIN_KEY" | jq
+curl -sf $API_URL/api/v1/workspaces -H "Authorization: Bearer $ADMIN_KEY" | jq
 ```
 
-### tRPC query (GET)
+### oRPC query (GET)
 
 ```bash
-curl -s "$API_URL/api/trpc/workspaces.list" \
+curl -s "$API_URL/api/v1/workspaces" \
   -H "Authorization: Bearer $ADMIN_KEY" \
   | jq
 ```
 
-### tRPC mutation (POST)
+### oRPC mutation (POST)
 
 ```bash
-curl -sX POST "$API_URL/api/trpc/workspaces.create" \
+curl -sX POST "$API_URL/api/v1/workspaces" \
   -H "Authorization: Bearer $ADMIN_KEY" \
   -H "Content-Type: application/json" \
   -d '{"json": {"name": "test-ws", "project": "golf", "path": "/tmp/x", "branch": "main"}}' \
@@ -346,11 +346,11 @@ curl -sX POST "$API_URL/api/trpc/workspaces.create" \
 
 ```bash
 # Same endpoint with admin key (expect 200) and user key (expect 403 for admin routes)
-curl -s -o /dev/null -w "%{http_code}\n" $API_URL/api/trpc/admin.users.list \
+curl -s -o /dev/null -w "%{http_code}\n" $API_URL/api/v1/admin/users \
   -H "Authorization: Bearer $ADMIN_KEY"   # -> 200
-curl -s -o /dev/null -w "%{http_code}\n" $API_URL/api/trpc/admin.users.list \
+curl -s -o /dev/null -w "%{http_code}\n" $API_URL/api/v1/admin/users \
   -H "Authorization: Bearer $USER_KEY"    # -> 403
-curl -s -o /dev/null -w "%{http_code}\n" $API_URL/api/trpc/admin.users.list \
+curl -s -o /dev/null -w "%{http_code}\n" $API_URL/api/v1/admin/users \
                                           # -> 401
 ```
 
@@ -363,13 +363,13 @@ OPENAPI=apps/$PROJECT/api/openapi.json
 jq -r '.paths | keys[]' $OPENAPI
 
 # Request schema for one path
-jq '.paths["/api/trpc/workspaces.create"].post.requestBody' $OPENAPI
+jq '.paths["/api/v1/workspaces"].post.requestBody' $OPENAPI
 
 # Response schema
-jq '.paths["/api/trpc/workspaces.create"].post.responses."200"' $OPENAPI
+jq '.paths["/api/v1/workspaces"].post.responses."200"' $OPENAPI
 
 # Does endpoint exist?
-jq '.paths["/api/trpc/my.endpoint"] != null' $OPENAPI
+jq '.paths["/api/v1/my-resource"] != null' $OPENAPI
 ```
 
 ### Check side effects
@@ -391,7 +391,7 @@ curl -sf $INNGEST_URL/runs | jq '.runs[] | {fn: .function_id, status, started: .
 # In a second terminal:
 swarm workspace logs --app=golf-api --follow        # watch API logs
 swarm workspace logs --level=error --since=5m       # recent errors
-swarm workspace logs --search=trpc --lines=200      # tRPC-related lines
+swarm workspace logs --search=orpc --lines=200      # oRPC-related lines
 ```
 
 ### Self-healing on failure

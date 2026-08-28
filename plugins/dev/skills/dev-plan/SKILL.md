@@ -117,8 +117,8 @@ What the implementation should do.
 - [ ] `turbo test --filter='@bokendell/golf-domains' -- --run round.service` passes
 
 ## Files to Touch
-- `packages/golf/domains/src/packages/rounds/application/round.service.ts`
-- `apps/golf/api/src/packages/rounds/rounds.trpc.router.ts`
+- `packages/domains/src/packages/rounds/application/round.service.ts`
+- `apps/api/src/packages/rounds/rounds.orpc.router.ts`
 ```
 
 ### 5. Sync to Linear

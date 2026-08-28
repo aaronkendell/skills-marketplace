@@ -1,18 +1,21 @@
 # Agents — Agent Context
 
-**Status:** Active | **Linear:** AGENTS | **Stack:** Hono + tRPC, Mastra, Inngest, Drizzle, Neon
+**Status:** Active | **Linear:** AGENTS | **Stack:** Hono + oRPC, Mastra, Inngest, Drizzle, Neon
 
 ## What it does
-Autonomous agent platform with two planes: **Swarm** (coding agents dispatched to Linear issues in git worktrees) and **Runtime** (Mastra agents for daily life tasks — health, finance, goals, projects). Includes a Discord bot and a vault sync worker that keeps the Obsidian docs vault indexed and enforces write policy.
+Autonomous agent platform with two planes: **Swarm** (coding agents dispatched to Linear issues in git worktrees) and **Runtime** (Mastra agents for daily life tasks — health, finance, goals, projects). Includes a Discord bot, an Inngest app for async work, and a Next.js web app.
 
 ## Key file locations
-- API + swarm orchestrator: `apps/hive/api/src/`
-- Vault sync worker: `apps/hive/vault-sync/src/`
-- Discord bot: `apps/hive/discord/src/`
-- Business logic: `packages/hive/domains/src/packages/`
+- API + swarm orchestrator: `apps/api/src/`
+- Web app: `apps/app/src/` · Discord bot: `apps/discord/src/`
+- Async jobs: `apps/inngest/src/` · Workers: `apps/workers/src/`
+- Business logic: `packages/domains/src/packages/`
   - `swarm/` — orchestrator, dispatcher, Linear webhook handler, run tracking
-  - `ai/` — Mastra agents, tools, workflows
-  - `vault/` — vault indexer, write policy enforcement, reconciler
+  - `ai/`, `agent-runs/`, `agent-actions/`, `agent-artifacts/` — Mastra agents + run tracking
+  - Runtime life domains: `health/`, `nutrition/`, `sleep/`, `training/`, `workouts/`,
+    `weight/`, `body/`, `health-markers/`, `financial/`, `investments/`, `goals/`,
+    `projects/`, `areas/`, `reviews/`, `journal/`, `career/`, `contacts/`,
+    `family-events/`, `lists/`, `inbox/`, `spirituality/`, `integrations/`
 
 ## Key packages
 - `@bokendell/hive-domains` — all agent business logic (DDD)
@@ -21,7 +24,7 @@ Autonomous agent platform with two planes: **Swarm** (coding agents dispatched t
 - Full DDD
 - Mastra for AI agent orchestration (tools, memory, workflows)
 - Inngest for scheduled Mastra workflows
-- tRPC + SSE for streaming agent output to UI
+- oRPC + SSE for streaming agent output to UI
 - Linear webhook → swarm dispatch pipeline
 - MCPClient (HTTP/SSE transport) for MCP tool access
 - Vault write policy: `safe_write` (agent artifacts) / `pr_required` (docs) / `blocked` (CLAUDE.md, source code)

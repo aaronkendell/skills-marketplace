@@ -14,7 +14,7 @@ linear_id:
 
 ```mermaid
 graph TD
-    A[{Client}] -->|tRPC| B[{API}]
+    A[{Client}] -->|oRPC| B[{API}]
     B --> C[{Service}]
     C --> D[{Repository}]
     D --> E[(Neon PostgreSQL)]
@@ -39,7 +39,7 @@ erDiagram
 [New tables or modified columns. If none, write "No schema changes."]
 
 ## API changes
-[New tRPC procedures or REST routes. If none, write "No API changes."]
+[New oRPC procedures or REST routes. If none, write "No API changes."]
 
 | Procedure | Method | Auth | Description |
 |-----------|--------|------|-------------|
@@ -55,7 +55,7 @@ erDiagram
 1. Schema / DB migration
 2. Repository
 3. Service + unit tests
-4. tRPC router + route tests
+4. oRPC router + route tests
 5. Frontend (container → hook → screen → components)
 6. E2E / integration tests
 

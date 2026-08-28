@@ -26,14 +26,14 @@ packages/shared/{pkg}/    ← truly shared across multiple apps
 apps/
 ├── portfolio/
 │   ├── app/          # Next.js 16 web frontend
-│   ├── api/          # Hono + tRPC backend
+│   ├── api/          # Hono + oRPC backend
 │   └── admin/        # Refine admin dashboard
 ├── goals/
 │   ├── mobile/       # Expo (iOS + Android)
-│   └── api/          # Hono + tRPC backend
+│   └── api/          # Hono + oRPC backend
 ├── golf/
 │   ├── mobile/       # Expo (iOS + Android)
-│   ├── api/          # Hono + tRPC backend
+│   ├── api/          # Hono + oRPC backend
 │   └── admin/        # Refine admin dashboard
 ├── agents/
 │   ├── api/          # Hono API + swarm orchestrator (same process)
@@ -47,7 +47,7 @@ apps/
 
 packages/
 ├── shared/
-│   ├── api/          # Hono app factory, tRPC base, middleware, webhooks — used by all APIs
+│   ├── api/          # Hono app factory, oRPC base, middleware, webhooks — used by all APIs
 │   ├── ui/           # Shadcn/ui web components — used by all web/admin apps
 │   ├── mobile-ui/    # Shared mobile UI — used by all Expo apps
 │   ├── emails/       # Email templates + sending (Resend + React Email)

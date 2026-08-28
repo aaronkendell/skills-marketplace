@@ -26,7 +26,7 @@ This pattern is the answer.
 
 | Layer | Built | Tracker |
 |---|---|---|
-| Studio framework (`@bokendell/design` + per-app `apps/<app>/design/`) | ✅ Done — golf shipped | `apps/golf/design/ROADMAP.md` |
+| Studio framework (`@bokendell/design` + per-app `apps/design/`) | ✅ Done — golf shipped | `apps/design/ROADMAP.md` |
 | Element-ID convention (`data-dc-slot` / `data-dc-section`, `<ArtboardIdBadge />`) | ✅ Done | — |
 | In-house annotation overlay (`AnnotationOverlay` + pick / draw + Cmd+.) | ✅ Done | — |
 | Auth-gated swarm-api persistence (annotations endpoint) | ✅ Done | — |
@@ -41,7 +41,7 @@ Both local dev and deployed previews write to the **same swarm-api annotations e
 
 ```
 ANY ENVIRONMENT (local dev, vercel preview, vercel production)
-  Studio mounted with the providers chain (Query + swarm-api tRPC + Tooltip; see `design.md`)
+  Studio mounted with the providers chain (Query + swarm-api oRPC + Tooltip; see `design.md`)
   → Cmd+. (or chrome toolbar) → AnnotationOverlay
   → screenshot + strokes + note → POST /api/v1/annotations
   → swarm-api persists thread + replies
@@ -64,13 +64,13 @@ Claude consumes via `swarm design comments pull --app <app>` (writes .annotation
    - `annotationsClient.create(...)` POSTs `{ app, flow, artboard, anchor, note, strokes, screenshot }` to swarm-api
 6. `swarm-api` persists the thread to its annotations table. The pin and any new replies stream back to every studio session via the realtime channel.
 7. Other studio viewers see a new `<AnnotationPins>` marker on the canvas; clicking it opens the `<CommentBubble>` thread inline.
-8. Claude pulls on demand: `pnpm swarm design comments pull --app <app>` writes `apps/<app>/design/flows/<flow>/.annotations/<timestamp>-<artboard>.md` + screenshots. User `git add`s what they want to track. No auto-commit per project rules.
+8. Claude pulls on demand: `pnpm swarm design comments pull --app <app>` writes `apps/design/flows/<flow>/.annotations/<timestamp>-<artboard>.md` + screenshots. User `git add`s what they want to track. No auto-commit per project rules.
 
 There is **no Vercel Toolbar dependency**, no `vitePluginAnnotate`, no separate "local vs deployed" write paths. One overlay writes to one backend in every environment.
 
 ## File format (after `swarm design comments pull`)
 
-The system-of-record is the swarm-api annotations table. `swarm design comments pull` projects it down to one `.md` per thread under `apps/<app>/design/flows/<flow>/.annotations/` so Claude can read with its standard tools.
+The system-of-record is the swarm-api annotations table. `swarm design comments pull` projects it down to one `.md` per thread under `apps/design/flows/<flow>/.annotations/` so Claude can read with its standard tools.
 
 ```
 .annotations/2026-05-11T14-02-sg-skins.md
@@ -116,7 +116,7 @@ The auto-regenerated `_index.md` Claude reads first:
 Every primitive in `@bokendell/<app>-ui` additionally exposes `data-component` on its root in the `.web.tsx`:
 
 ```tsx
-// packages/golf/ui/src/components/Bar/Bar.web.tsx
+// packages/ui/src/components/Bar/Bar.web.tsx
 <div
   data-component="Bar"
   data-variant={width}
@@ -138,7 +138,7 @@ The `<ArtboardIdBadge />` in every artboard corner is the manual fallback — cl
 
 **Convention via CLAUDE.md, not a hook.** The user is not always doing design work; a `UserPromptSubmit` hook would inject design context into unrelated turns.
 
-The CLAUDE.md `Design annotations` section directs Claude to read `apps/<app>/design/flows/<flow>/.annotations/_index.md` when the conversation mentions design comments / flow names / artboard IDs / "check comments". Screenshots in the index are openable via the Read tool.
+The CLAUDE.md `Design annotations` section directs Claude to read `apps/design/flows/<flow>/.annotations/_index.md` when the conversation mentions design comments / flow names / artboard IDs / "check comments". Screenshots in the index are openable via the Read tool.
 
 **Optional later:** a scoped `UserPromptSubmit` hook that only fires when the user has run the studio in the last N minutes (touchstone file). Add only if pull-on-demand creates friction.
 
@@ -151,7 +151,7 @@ The CLAUDE.md `Design annotations` section directs Claude to read `apps/<app>/de
 - **No writing from the studio without auth.** Studios wrap the tree in `DesignAuthProvider` (via `src/lib/auth/` + `src/lib/providers/`) and gate writes through `<StudioAuthGate>`. A studio mounted without auth runs in display-only mode — annotation actions are hidden.
 - **No abstraction over `@bokendell/<app>-ui` primitives.** Sections render primitives directly. Visual editors that wrap primitives lose typed variants and HARD-RULES discipline.
 - **No reinventing primitives in the framework.** `@bokendell/design` chrome is built on shadcn primitives from `@bokendell/ui` (`Button`, `Popover`, `Command`, `DropdownMenu`, `Tooltip`, `Avatar`, `ScrollArea`, …). Adding hand-rolled outside-click / Esc / focus management is a code-smell — use Radix.
-- **No hand-rolled fetch against swarm-api.** Every swarm-api call goes through `@bokendell/swarm-client` (tRPC) — `RootProviders` wires `TRPCProvider`, components use `useTRPC()`. Types come from the same package, so DTOs aren't duplicated. See `context/packages/swarm-client.md`.
+- **No hand-rolled fetch against swarm-api.** Every swarm-api call goes through `@bokendell/swarm-client` (oRPC) — `RootProviders` wires `SwarmOrpcProvider`, components use `useSwarmOrpc()`. Types come from the same package, so DTOs aren't duplicated. See `context/packages/swarm-client.md`.
 
 ## Open questions
 
@@ -162,4 +162,4 @@ The CLAUDE.md `Design annotations` section directs Claude to read `apps/<app>/de
 ## See also
 
 - `context/packages/design.md` — current `@bokendell/design` exports + new-app recipe.
-- `apps/golf/design/ROADMAP.md` — what's done, what's next, parallelization map.
+- `apps/design/ROADMAP.md` — what's done, what's next, parallelization map.

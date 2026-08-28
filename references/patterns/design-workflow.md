@@ -1,6 +1,6 @@
 # Design Workflow — daily loop for per-app design studios
 
-> One-page guide for working on `apps/<app>/design/` (Vite studio) day to day,
+> One-page guide for working on `apps/design/` (Vite studio) day to day,
 > now that the studio + swarm-api + annotation system are wired up. Loaded
 > automatically by `/dev:design` and `/context-patterns` skills.
 
@@ -15,7 +15,7 @@ Point your local studio at the **deployed swarm-api**. Faster to start (no
 second terminal), the same data accumulates, and you only need the local
 backend when you're actually changing it.
 
-One-time per worktree — drop this in `apps/<app>/design/.env.local`
+One-time per worktree — drop this in `apps/design/.env.local`
 (gitignored):
 
 ```bash
@@ -25,7 +25,7 @@ VITE_SWARM_API_URL=https://api.swarm.bokendell.com
 Then daily:
 
 ```bash
-cd apps/<app>/design
+cd apps/design
 pnpm dev                              # studio on http://localhost:5173/
 # OR from repo root:
 pnpm --filter @bokendell/<app>-design dev
@@ -110,10 +110,10 @@ VITE_SWARM_API_URL=http://localhost:3500 pnpm --filter @bokendell/<app>-design d
 
 You need a local swarm-api when changing:
 
-- `packages/swarm/domains/**` — entities, schemas, services
-- `apps/swarm/api/**` — tRPC routers, middleware, openapi
-- `packages/swarm/composition/**` — DI wiring
-- `packages/swarm/api-db/**` — DB schema
+- `packages/domains/**` — entities, schemas, services
+- `apps/api/**` — oRPC routers, middleware, openapi
+- `packages/composition/**` — DI wiring
+- `packages/api-db/**` — DB schema
 
 For destructive DB experiments or per-PR Neon branches, use the workspace
 tunnel system: `pnpm swarm workspace create <name> --project swarm-api ...`
@@ -125,7 +125,7 @@ design work but the right tool when you need real isolation.
 ```bash
 pnpm swarm design new-flow active-round --app golf
 # Scaffolds:
-#   apps/golf/design/flows/active-round/
+#   apps/design/flows/active-round/
 #     ├── index.html
 #     ├── main.tsx          ← uses createStudioApp + DesignCanvas
 #     ├── meta.json
@@ -140,18 +140,18 @@ new entry (Vite's globbed entries auto-reload).
 
 If you find yourself writing the same `className` combo more than once in
 a flow, that's a missing primitive. Move it to
-`packages/<app>/ui/src/components/<Name>/` (per the per-app-ui pattern).
+`packages/ui/src/components/<Name>/` (per the per-app-ui pattern).
 The studio's flows can only consume primitives, not invent them — that's
 the HARD-RULES 25 split.
 
 ## Anti-patterns — what NOT to do
 
 - **No local fetches against `/api/v1/*`** — every swarm-api call goes
-  through `useTRPC()` (auto-wired by `createStudioApp`). Types come from
+  through `useSwarmOrpc()` (auto-wired by `createStudioApp`). Types come from
   `@bokendell/swarm-client`. See `docs/context/packages/swarm-client.md`.
 - **No `.env` files for runtime secrets** — `.env.local` only carries
   client-side build-time config (the `VITE_*` URL). Backend secrets live in
-  Infisical at `/apps/swarm/api`; the workspace dev tunnel injects them.
+  Infisical at `/apps/api`; the workspace dev tunnel injects them.
 - **No emoji in code or UI** — Lucide icons inside components, plain text
   in copy / logs (the `no-emoji` arch rule enforces this).
 - **No auto-commit by skills** — Claude stages with `git add`; you commit.
@@ -161,7 +161,7 @@ the HARD-RULES 25 split.
 ## See also
 
 - `docs/context/packages/design.md` — `@bokendell/design` framework surface
-- `docs/context/packages/swarm-client.md` — tRPC client + types
+- `docs/context/packages/swarm-client.md` — oRPC client + types
 - `docs/context/patterns/design-studio.md` — full annotation flow
 - `docs/context/patterns/per-app-ui.md` — token contract
-- `apps/<app>/design/README.md` — per-studio specifics (Vercel deploy etc.)
+- `apps/design/README.md` — per-studio specifics (Vercel deploy etc.)

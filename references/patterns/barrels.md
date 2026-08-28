@@ -36,7 +36,7 @@ That payoff disappears for **internal** barrels, where the consumer is just anot
 
 ### Allowed barrel locations
 
-The arch rule (`apps/swarm/cli/src/packages/check/arch/semantic/no-nested-barrels-rule.ts`) accepts:
+The arch rule (`apps/cli/src/packages/check/arch/semantic/no-nested-barrels-rule.ts`) accepts:
 
 ```
 packages/<scope>/<pkg>/src/index.ts            ← package boundary
@@ -50,13 +50,13 @@ Anything else that's a pure re-export file (only `export { X } from "..."` lines
 ### Forbidden patterns
 
 ```ts
-// apps/golf/admin/src/packages/users/components/index.ts  ❌
+// apps/admin/src/packages/users/components/index.ts  ❌
 export { UserCard } from "./user-card";
 export { UserList } from "./user-list";
 ```
 
 ```ts
-// apps/golf/mobile/src/packages/round/hooks/index.ts  ❌
+// apps/mobile/src/packages/round/hooks/index.ts  ❌
 export { useRound } from "./use-round";
 export { useShots } from "./use-shots";
 ```

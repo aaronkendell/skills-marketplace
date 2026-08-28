@@ -11,7 +11,7 @@ All backend domains follow Domain-Driven Design. This is the single source of tr
 ## Directory structure
 
 ```
-packages/{app}/domains/src/{domain}/
+packages/domains/src/{domain}/
 ├── domain/
 │   ├── entities/
 │   │   └── {entity}.entity.ts          # Entity + Zod schema + factories
@@ -609,7 +609,7 @@ export class DuplicateSkillError extends ConflictError {
 |-------|---------|
 | Repository | Return `null` for "not found". Throw `Error` for unexpected DB failures. |
 | Service | Throw `NotFoundError` when resource must exist. Throw domain errors for business rules. Let other errors bubble. |
-| API route | Global error handler (oRPC bridge or tRPC middleware) catches `AppError` → maps `statusCode` + `errorCode`. Logs unexpected errors → 500. |
+| API route | Global error handler (oRPC bridge or oRPC middleware) catches `AppError` → maps `statusCode` + `errorCode`. Logs unexpected errors → 500. |
 
 ### Decision tree
 
@@ -661,7 +661,7 @@ export const publicBase = _bases.publicBase.use(async ({ next, path }) => {
 ## Package exports configuration
 
 ```json
-// packages/{app}/domains/package.json
+// packages/domains/package.json
 {
   "exports": {
     "./skills": "./src/skills/index.ts",
@@ -680,7 +680,7 @@ import { createSkillService } from "@bokendell/portfolio-domains/skills";
 ## Wiring in the API
 
 ```typescript
-// apps/{app}/api/src/index.ts or per-route factory
+// apps/api/src/index.ts or per-route factory
 const db = createDatabase();
 const skillRepository = createSkillRepository({ db });
 const skillService = createSkillService({ skillRepository });

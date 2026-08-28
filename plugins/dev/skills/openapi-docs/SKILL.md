@@ -13,9 +13,9 @@ Each API has a checked-in `openapi.json` at the package root. These are the sour
 
 | Project | Path |
 |---------|------|
-| golf | `apps/golf/api/openapi.json` |
-| portfolio | `apps/portfolio/api/openapi.json` |
-| hive | `apps/hive/api/openapi.json` |
+| golf | `apps/api/openapi.json` |
+| portfolio | `apps/api/openapi.json` |
+| hive | `apps/api/openapi.json` |
 
 These are **generated** from Zod schemas in the router code. Don't edit them by hand — regenerate instead.
 
@@ -65,32 +65,32 @@ Under the hood this runs `pnpm --filter=@bokendell/<project>-api openapi:generat
 Parse `openapi.json` to discover endpoints:
 
 ```bash
-jq -r '.paths | keys[]' apps/golf/api/openapi.json
+jq -r '.paths | keys[]' apps/api/openapi.json
 ```
 
 Get the request schema for an endpoint:
 
 ```bash
-jq '.paths["/api/trpc/workspaces.create"].post.requestBody.content["application/json"].schema' \
-  apps/golf/api/openapi.json
+jq '.paths["/api/v1/workspaces"].post.requestBody.content["application/json"].schema' \
+  apps/api/openapi.json
 ```
 
 Get the response schema:
 
 ```bash
-jq '.paths["/api/trpc/workspaces.create"].post.responses["200"]' \
-  apps/golf/api/openapi.json
+jq '.paths["/api/v1/workspaces"].post.responses["200"]' \
+  apps/api/openapi.json
 ```
 
 ### For clients
 
-OpenAPI-generated client SDKs live alongside the API spec — check `packages/<project>/client` for the generated types and tRPC client wrappers.
+OpenAPI-generated client SDKs live alongside the API spec — check `packages/client` for the generated types and oRPC client wrappers.
 
 ### Related collections
 
 Every API also publishes:
-- **Postman collection** at `apps/<project>/api/postman/collections/<project>-api.postman_collection.json`
-- **Bruno collection** at `apps/<project>/api/bruno/` (directory-based)
+- **Postman collection** at `apps/api/postman/collections/<project>-api.postman_collection.json`
+- **Bruno collection** at `apps/api/bruno/` (directory-based)
 
 These are regenerated alongside the OpenAPI spec when you pass `--api-docs`.
 
@@ -102,14 +102,14 @@ If an API call returns 404 for an endpoint you see in the code, or the response 
 swarm openapi regenerate <project>
 ```
 
-Then retry. If the issue persists, the router registration may be missing — check `apps/<project>/api/src/packages/api/v1/trpc.router.ts` for the route.
+Then retry. If the issue persists, the router registration may be missing — check `apps/api/src/packages/api/v1/orpc.router.ts` for the route.
 
 ## Tags (Section Grouping)
 
 Each endpoint has a tag for grouping in the UI. Find the tag registry at:
 
 ```
-apps/<project>/api/src/packages/api/openapi-tags.ts
+apps/api/src/packages/api/openapi-tags.ts
 ```
 
 Tags like `WORKSPACES`, `USERS`, `HEALTH` group routes together in the Scalar/Swagger UI.
@@ -127,7 +127,7 @@ open "http://localhost:$PORT/docs"                 # Swagger UI
 ### List all endpoints in the spec
 
 ```bash
-jq -r '.paths | keys[]' apps/golf/api/openapi.json
+jq -r '.paths | keys[]' apps/api/openapi.json
 ```
 
 ### Group endpoints by tag
@@ -140,21 +140,21 @@ jq -r '
   | .value
   | to_entries[]
   | "\(.value.tags[0] // "untagged")\t\(.key | ascii_upcase)\t\($path)"
-' apps/golf/api/openapi.json | sort
+' apps/api/openapi.json | sort
 ```
 
 ### Inspect one endpoint's full definition
 
 ```bash
-PATH='/api/trpc/workspaces.create'
-jq --arg p "$PATH" '.paths[$p]' apps/golf/api/openapi.json
+PATH='/api/v1/workspaces'
+jq --arg p "$PATH" '.paths[$p]' apps/api/openapi.json
 ```
 
 ### Diff spec against what the running API serves
 
 ```bash
 # Checked-in spec
-jq . apps/golf/api/openapi.json > /tmp/spec-disk.json
+jq . apps/api/openapi.json > /tmp/spec-disk.json
 
 # Live spec
 PORT=$(jq -r '.ports."golf-api"' .workspace.json)
@@ -176,12 +176,12 @@ swarm openapi regenerate --all                        # every project
 
 ```bash
 # Request body schema
-jq '.paths["/api/trpc/workspaces.create"].post.requestBody.content["application/json"].schema' \
-  apps/golf/api/openapi.json
+jq '.paths["/api/v1/workspaces"].post.requestBody.content["application/json"].schema' \
+  apps/api/openapi.json
 
 # Successful response schema
-jq '.paths["/api/trpc/workspaces.create"].post.responses."200".content["application/json"].schema' \
-  apps/golf/api/openapi.json
+jq '.paths["/api/v1/workspaces"].post.responses."200".content["application/json"].schema' \
+  apps/api/openapi.json
 ```
 
 ### Find all endpoints that require admin scope
@@ -192,16 +192,16 @@ jq -r '
   | .value | to_entries[]
   | select(.value.security // [] | map(.admin != null) | any)
   | "\($path) \(.key | ascii_upcase)"
-' apps/golf/api/openapi.json
+' apps/api/openapi.json
 ```
 
 ## Quick Reference
 
 | Need | Command or path |
 |------|-----------------|
-| Read spec file | `jq . apps/<project>/api/openapi.json` |
+| Read spec file | `jq . apps/api/openapi.json` |
 | Open live UI | `open http://localhost:<port>/reference` |
 | Regenerate spec | `swarm openapi regenerate <project>` |
-| List all endpoints | `jq -r '.paths \| keys[]' apps/<project>/api/openapi.json` |
-| Get endpoint schema | `jq '.paths["<path>"]' apps/<project>/api/openapi.json` |
+| List all endpoints | `jq -r '.paths \| keys[]' apps/api/openapi.json` |
+| Get endpoint schema | `jq '.paths["<path>"]' apps/api/openapi.json` |
 | Check if endpoint exists | `jq '.paths["<path>"] != null' ...` |

@@ -31,7 +31,7 @@ Parse `$ARGUMENTS`:
 6. **Load ALL context patterns** from the marketplace pattern docs (resolve via the context-patterns skill: `${CLAUDE_PLUGIN_ROOT}/../../references/patterns/`):
    - `ddd.md` — DDD service/repository patterns (ALWAYS for backend)
    - `testing.md` — test types, Testcontainers, factories (ALWAYS)
-   - `api.md` — Hono, tRPC, OpenAPI patterns (if API changes)
+   - `api.md` — Hono, oRPC, OpenAPI patterns (if API changes)
    - `frontend.md` — component patterns (if web frontend changes)
    - `mobile.md` — Expo, RN, hooks/stores/containers (if mobile changes)
 7. **Update Linear status** to "In Progress"
@@ -179,7 +179,7 @@ The reviewer checks:
 - Does implementation match the issue spec and acceptance criteria?
 - Does it follow DDD patterns (service layer, repository, mapper, no cross-domain repo access)?
 - Does it follow testing patterns (correct test types, factories, test DB)?
-- Does it follow API patterns (tRPC, OpenAPI, error handling)?
+- Does it follow API patterns (oRPC, OpenAPI, error handling)?
 - Does it follow mobile patterns (hooks/stores/containers split, form hooks, Zustand)?
 - **If the diff touches UI/mobile:** invoke the `design` skill (from this plugin) for compliance — it loads `taste-skill`, app tokens, the anti-pattern checklist, and app-specific reference rules. Check against the tiered component architecture, three-voice typography, OKLch tokens, and motion/haptic rules.
 

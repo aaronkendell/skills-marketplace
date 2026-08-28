@@ -1,6 +1,6 @@
 # Mobile Patterns (Expo + React Native)
 
-All mobile apps use Expo Router, tRPC, React Query, Zustand, and React Hook Form. Golf is the canonical reference — standardize on its patterns.
+All mobile apps use Expo Router, oRPC, React Query, Zustand, and React Hook Form. Golf is the canonical reference — standardize on its patterns.
 
 Brand chrome (Stack, Box, Button, Card, etc.) is provided by the per-app
 UI package (`@bokendell/<app>-ui`) which wraps `@bokendell/mobile-ui` +
@@ -75,7 +75,7 @@ src/packages/{domain}/
 
 ```
 DOMAIN HOOK                    FORM HOOKS (separate)
-  ├── useTRPC queries           ├── useForm + zodResolver
+  ├── q.* queries           ├── useForm + zodResolver
   ├── mutations                 ├── watch, setValue, reset
   ├── store (UI state)          ├── Conditional fields
   ├── onSuccess handlers        └── handleSubmit with haptics
@@ -84,41 +84,60 @@ DOMAIN HOOK                    FORM HOOKS (separate)
 
 ---
 
-## tRPC queries and mutations
+## oRPC queries and mutations
 
-Use `useTRPC()` — query keys and options are auto-generated:
+There is **no oRPC provider**. Each app builds its client once at module scope and
+exports `q` — the canonical query builders. Screens import `q`; they never spell an
+`input` themselves.
 
 ```typescript
-// hooks/use-rounds.ts
-import { useTRPC } from "@bokendell/golf-client/trpc";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+// apps/<app>/src/lib/api/orpc.ts — built once, imported everywhere
+import { createMobileGolfClient } from "@bokendell/golf-client/orpc";
+import { createGolfQueries } from "@bokendell/golf-client/queries";
+import { createResilientQueryClient } from "@bokendell/golf-client/resilience";
 
-export function useRounds() {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-
-  // Query
-  const roundsQuery = useQuery(trpc.rounds.list.queryOptions());
-
-  // Mutation with cache invalidation
-  const createMutation = useMutation(
-    trpc.rounds.create.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: trpc.rounds.list.queryKey() });
-      },
-    }),
-  );
-
-  return {
-    rounds: roundsQuery.data ?? [],
-    isLoading: roundsQuery.isLoading,
-    handleCreate: (data: CreateRoundData) => createMutation.mutate(data),
-    isCreating: createMutation.isPending,
-  };
-}
+export const { orpcClient, orpc } = createMobileGolfClient({ /* url, auth, fetch */ });
+export const q = createGolfQueries(orpc);
+export const queryClient = createResilientQueryClient({ /* ... */ });
 ```
 
-**Query invalidation:** always use `trpc.{router}.{procedure}.queryKey()` — never hardcode string keys.
+```typescript
+// any screen or hook
+import { orpc, q, queryClient } from "@lib/api/orpc";
+import { useQuery } from "@tanstack/react-query";
+
+const invitesQuery = useQuery(q.rounds.pendingInvites());
+
+// `enabled` and `select` may be spread in; freshness may NOT be
+const rosterQuery = useQuery({ ...q.friends.roster(), enabled: onlineIds.length > 0 });
+```
+
+**THE RULE:** a procedure + input pair is defined exactly once, in
+`packages/client/src/queries/`, and screens import it. Never write
+`orpc.<proc>.queryOptions({ input })` at a call site.
+
+Why: oRPC's TanStack key is `[path, { input, type }]` **structurally**, so two call
+sites passing different inputs for the same data get separate cache entries — two
+fetches, two copies of the truth, and any `refetchInterval` reaching only one of
+them. Not hypothetical: home rendered `friends.list?live=true` twice, differing only
+by an explicitly-passed default `offset: 0`. Only one copy polled, so the bell's
+"LIVE NOW" strip froze after mount.
+
+Rules the `queries/` directory exists to enforce:
+
+- Never pass a value the server already defaults (`offset: 0`, default limits).
+- Freshness (`staleTime` / `refetchInterval`) belongs to the QUERY, not the screen. A
+  screen may pass `enabled` / `select`; it may not disagree about how fresh data is.
+- One entry per MEANING, not per screen. Needing different freshness means you want a
+  differently-named entry — and naming it forces the question of whether it should exist.
+
+**Query invalidation:** `orpc.<path>.key({ input })` — never hardcode string keys.
+
+```typescript
+queryClient.invalidateQueries({
+  queryKey: orpc.rounds.lobbyPreview.key({ input: { id: roundId } }),
+});
+```
 
 ---
 
@@ -129,7 +148,6 @@ The domain hook composes everything and returns a unified API for the container:
 ```typescript
 // hooks/use-active-round.ts
 export function useActiveRound(roundId: string) {
-  const trpc = useTRPC();
   const queryClient = useQueryClient();
   const router = useRouter();
   const store = useRoundUIStore();
@@ -139,8 +157,8 @@ export function useActiveRound(roundId: string) {
   const setPendingSyncCount = useRoundUIStore((s) => s.setPendingSyncCount);
 
   // Server state
-  const roundQuery = useQuery(trpc.rounds.getById.queryOptions({ id: roundId }));
-  const submitMutation = useMutation(trpc.rounds.submitScores.mutationOptions());
+  const roundQuery = useQuery(q.rounds.byId(roundId));
+  const submitMutation = useMutation(orpc.rounds.submitScores.mutationOptions());
 
   // Pending mutation count tracking
   const pendingMutations = useIsMutating();
@@ -153,7 +171,7 @@ export function useActiveRound(roundId: string) {
     (data: ScoreEntryFormData) => {
       // 1. Optimistic update
       queryClient.setQueryData(
-        trpc.rounds.getById.queryKey({ id: roundId }),
+        orpc.rounds.getById.key({ input: { id: roundId } }),
         (old: RoundDetail | undefined) => {
           if (!old) return old;
           return { ...old, scores: mergeScores(old.scores, data) };
@@ -170,20 +188,20 @@ export function useActiveRound(roundId: string) {
           onError: () => {
             // Roll back on failure
             queryClient.invalidateQueries({
-              queryKey: trpc.rounds.getById.queryKey({ id: roundId }),
+              queryKey: orpc.rounds.getById.key({ input: { id: roundId } }),
             });
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
           },
           onSettled: () => {
             // Always re-validate for server truth
             queryClient.invalidateQueries({
-              queryKey: trpc.rounds.getById.queryKey({ id: roundId }),
+              queryKey: orpc.rounds.getById.key({ input: { id: roundId } }),
             });
           },
         },
       );
     },
-    [trpc, queryClient, roundId, setCurrentHole, submitMutation, roundQuery.data],
+    [queryClient, roundId, setCurrentHole, submitMutation, roundQuery.data],
   );
 
   return {
@@ -606,11 +624,11 @@ useEffect(() => {
 
   if (lastEvent.name === ROUND_EVENTS.SCORE_SUBMITTED) {
     queryClient.invalidateQueries({
-      queryKey: trpc.rounds.getById.queryKey({ id: roundId }),
+      queryKey: orpc.rounds.getById.key({ input: { id: roundId } }),
     });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }
-}, [lastEvent, queryClient, trpc, roundId]);
+}, [lastEvent, queryClient, roundId]);
 ```
 
 Event names live in `constants.ts`, not inline strings.
@@ -671,5 +689,5 @@ if (!session) return <Redirect href="/login" />;
 | Haptics | On every user interaction — `Light` for navigation, `Medium` for submit, `Success`/`Error` for async results |
 | Form reset | `setTimeout(() => form.reset(), 300)` on dialog close |
 | Stores | Non-persisted by default; persist only user preferences |
-| Query invalidation | `trpc.{router}.{procedure}.queryKey()` — never hardcoded strings |
+| Query invalidation | `orpc.<path>.key({ input })` — never hardcoded strings |
 | Realtime | Use channel hook + `useEffect` in domain hook; event names in `constants.ts` |

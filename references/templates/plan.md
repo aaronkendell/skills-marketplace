@@ -23,7 +23,7 @@ generated_by: planner:feature
 flowchart TD
     A[Schema / migration] --> B[Repository + tests]
     B --> C[Service + tests]
-    C --> D[tRPC router + tests]
+    C --> D[oRPC router + tests]
     D --> E[Container + hook]
     E --> F[Screen + components]
     F --> G[Integration / E2E tests]

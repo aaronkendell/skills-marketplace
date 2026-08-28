@@ -15,7 +15,7 @@
 - [ ] BLOCKING: Entity tests at `domain/entities/{entity}.entity.test.ts`
 - [ ] BLOCKING: Service tests at `application/{entity}.service.test.ts`
 - [ ] BLOCKING: Repository tests at `infrastructure/persistence/{entity}.repository.test.ts`
-- [ ] BLOCKING: Route tests at `apps/*/api/src/domains/{domain}/{domain}.routes.test.ts` or `*.trpc.router.test.ts`
+- [ ] BLOCKING: Route tests at `apps/*/api/src/domains/{domain}/{domain}.routes.test.ts` or `*.orpc.router.test.ts`
 
 ## Test quality
 

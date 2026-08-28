@@ -12,7 +12,7 @@ Every piece of logic that can be isolated must have a test. No inline business l
 | Service unit | `application/*.service.test.ts` | Vitest + vi.fn() | Business logic with mocked repository |
 | Repository integration | `infrastructure/persistence/*.repository.test.ts` | Vitest + Testcontainers | All repository methods against real DB |
 | Service integration | `integration/*.service.integration.test.ts` | Vitest + Testcontainers | Full domain flow with real DB |
-| tRPC route | `*.trpc.router.test.ts` | Vitest + `createCaller` | HTTP layer with mocked service |
+| oRPC route | `*.orpc.router.test.ts` | Vitest + `createCaller` | HTTP layer with mocked service |
 | Inngest function | `infrastructure/inngest/*.test.ts` | Vitest + `InngestTestEngine` | Async job handlers |
 | Domain logic | `domain/**/*.test.ts` | Vitest | Pure calculators, helpers, algorithms |
 | Zustand store | `stores/*.store.test.ts` | Vitest | State shape, mutations, reset |
@@ -335,16 +335,16 @@ describe("AreaService — integration", () => {
 
 ---
 
-## tRPC route tests
+## oRPC route tests
 
 Use `createCaller` — no HTTP round trip needed.
 
 ```typescript
-// health.trpc.router.test.ts
+// health.orpc.router.test.ts
 import type { HealthService } from "@bokendell/hive-domains/health";
 import { describe, expect, it, vi } from "vitest";
-import { router } from "../api/trpc";
-import { createHealthRouter } from "./health.trpc.router";
+import { router } from "../api/orpc";
+import { createHealthRouter } from "./health.orpc.router";
 
 // Build typed mock service
 function makeMockHealthService(overrides: Partial<HealthService> = {}): HealthService {
@@ -400,7 +400,7 @@ describe("healthRouter", () => {
 For routes that import services via module-level singletons, use `vi.hoisted` + `vi.mock`:
 
 ```typescript
-// courses.trpc.router.test.ts
+// courses.orpc.router.test.ts
 const { getHoleMaps, ensureHoleMapCached } = vi.hoisted(() => ({
   getHoleMaps: vi.fn(),
   ensureHoleMapCached: vi.fn(),
@@ -410,7 +410,7 @@ vi.mock("../../lib/services", () => ({
   courseService: { getHoleMaps, ensureHoleMapCached },
 }));
 
-import { coursesRouter } from "./courses.trpc.router";
+import { coursesRouter } from "./courses.orpc.router";
 
 describe("courses.getHoleMaps", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -425,7 +425,7 @@ describe("courses.getHoleMaps", () => {
 });
 ```
 
-**Every tRPC route must have tests.** Test both happy paths and error cases.
+**Every oRPC route must have tests.** Test both happy paths and error cases.
 
 ### Golf oRPC router tests
 
@@ -784,7 +784,7 @@ export default function () {
 | Repository reads/writes (integration) | Framework routing behavior |
 | Error throwing (NotFoundError, ForbiddenError) | That `vi.fn()` returns what you told it to |
 | Store state transitions | React rendering internals |
-| Calculator edge cases | tRPC protocol behavior |
+| Calculator edge cases | oRPC protocol behavior |
 | Authorization checks (correct user, correct role) | Third-party library behavior |
 
 **The rule:** If there's business logic, there's a test. If there's a branch, test both paths. If there's authorization, test the forbidden case.

@@ -11,7 +11,7 @@ Mapping rules. Match in order from top to bottom; a single file can match multip
 | `**/packages/*/composition/**/*.ts` | `di.md` | Awilix cradle, registration order, transactions |
 | `**/packages/*/api/**/*.ts` | `api.md`, `hono-api-anatomy.md` | Shared API package (`@bokendell/api`) — boot perf + router build |
 | `**/packages/*/db/**/*.ts` | `ddd.md` | ORM schema + repository layer |
-| `**/apps/*/api/**/*.ts` | `api.md`, `hono-api-anatomy.md`, `auth-and-scopes.md` | App-level Hono+tRPC routers, middleware, auth |
+| `**/apps/*/api/**/*.ts` | `api.md`, `hono-api-anatomy.md`, `auth-and-scopes.md` | App-level Hono+oRPC routers, middleware, auth |
 | `**/apps/*/api/**/*.openapi.json` | `api.md` | OpenAPI snapshot freshness |
 | `**/apps/*/api/scripts/**/*.ts` | `api.md` (sections on `runGenerateOpenApi` / `runGeneratePostman`) | Generator scripts shape |
 | `**/apps/*/app/**/*.{ts,tsx}` | `frontend.md`, `per-app-ui.md` | Next.js patterns, container/component split, token use |

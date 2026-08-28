@@ -1,6 +1,6 @@
 # Home Videos — Agent Context
 
-**Status:** Planned | **Linear:** HOMEVIDS | **Stack:** Expo (TV + mobile), Next.js admin, Hono + tRPC, Drizzle, Neon, Cloudflare R2, Python (Apple Vision)
+**Status:** Planned | **Linear:** HOMEVIDS | **Stack:** Expo (TV + mobile), Next.js admin, Hono + oRPC, Drizzle, Neon, Cloudflare R2, Python (Apple Vision)
 
 ## What it does
 Family video archiving platform. A macOS/Python worker running on M1 Max uses Apple Vision (PyObjC) for AI processing — face detection, scene tagging, speech transcription. Videos are stored in Cloudflare R2. A React Native TV app (iOS, Android, Apple TV, Android TV) handles playback and browsing; a Next.js + Refine admin dashboard handles library management.
@@ -16,11 +16,11 @@ Family video archiving platform. A macOS/Python worker running on M1 Max uses Ap
 ## Key packages
 - `@bokendell/home-videos-domains` — DDD domains (videos, people, albums, search)
 - `@bokendell/home-videos-db` — Drizzle schema + Neon
-- `@bokendell/home-videos-client` — tRPC client + React Query
+- `@bokendell/home-videos-client` — oRPC client + React Query
 
 ## Patterns used
 - Full DDD (see `context/patterns/ddd.md`)
-- tRPC for API (see `context/patterns/api.md`)
+- oRPC for API (see `context/patterns/api.md`)
 - Expo Router for TV + mobile navigation (golf is canonical mobile reference)
 - Cloudflare R2 for video + thumbnail storage
 - Python worker: Apple Vision via PyObjC for face detection, scene tagging, transcription

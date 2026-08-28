@@ -1,6 +1,6 @@
 # Trading — Agent Context
 
-**Status:** Planned | **Linear:** TRADING | **Stack:** Next.js, Hono + tRPC, Drizzle, Neon, React Flow, Trigger.dev, Mastra, Alpaca API
+**Status:** Planned | **Linear:** TRADING | **Stack:** Next.js, Hono + oRPC, Drizzle, Neon, React Flow, Trigger.dev, Mastra, Alpaca API
 
 ## What it does
 AI-powered trading platform with a visual strategy builder. Users construct trading workflows on a React Flow canvas — signal sources, entry/exit conditions, position sizing, risk rules. Strategies execute via Trigger.dev against the Alpaca brokerage API. Mastra agents monitor positions and surface analysis. Shares a financial data layer with Fiscax.
@@ -16,11 +16,11 @@ AI-powered trading platform with a visual strategy builder. Users construct trad
 ## Key packages
 - `@bokendell/trading-domains` — DDD domains (strategies, positions, signals, orders, risk)
 - `@bokendell/trading-db` — Drizzle schema + Neon
-- `@bokendell/trading-client` — tRPC client + React Query
+- `@bokendell/trading-client` — oRPC client + React Query
 
 ## Patterns used
 - Full DDD (see `context/patterns/ddd.md`)
-- tRPC for API (see `context/patterns/api.md`)
+- oRPC for API (see `context/patterns/api.md`)
 - Next.js App Router for frontend
 - React Flow for visual strategy builder (nodes = signals, conditions, actions)
 - Trigger.dev for strategy execution engine

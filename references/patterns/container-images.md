@@ -215,7 +215,7 @@ Recommended flow (if/when you enable):
    sentry-cli sourcemaps upload \
      --release "$RELEASE_SHA" \
      --org bokendell --project golf-api \
-     apps/golf/api/dist/
+     apps/api/dist/
    ```
 3. Strip `*.map` files from the runtime stage of the Dockerfile (Sentry has them — don't ship them in the image where any image puller could read them).
 4. Existing per-env Sentry release notification step keeps working as-is. It announces "release X is live in env Y"; Sentry already has the maps for X.

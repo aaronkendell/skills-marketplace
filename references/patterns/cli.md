@@ -1,8 +1,8 @@
 # Swarm CLI Patterns
 
-The swarm CLI (`apps/swarm/cli`) is a **presentation + orchestration layer** over `@bokendell/swarm-domains` services. It owns interactive prompts, output formatting, and command wiring; it does not own business logic — every action goes through a domain service via the cradle.
+The swarm CLI (`apps/cli`) is a **presentation + orchestration layer** over `@bokendell/swarm-domains` services. It owns interactive prompts, output formatting, and command wiring; it does not own business logic — every action goes through a domain service via the cradle.
 
-It is built on **trpc-cli** (commands defined as a tRPC router), **clack/prompts** (interactive Q&A), **loglayer** (structured logging), and **Awilix** (DI). It is paired with the Swarm desktop app (`apps/swarm/desktop`), which consumes the same router schema live and runs commands by spawning the CLI as a subprocess.
+It is built on **trpc-cli** (commands defined as a tRPC router), **clack/prompts** (interactive Q&A), **loglayer** (structured logging), and **Awilix** (DI). It is paired with the Swarm desktop app (`apps/desktop`), which consumes the same router schema live and runs commands by spawning the CLI as a subprocess.
 
 This document describes how the CLI is structured, the per-command pattern, what lives in domains vs CLI, and how schemas + tests are organized.
 
@@ -21,14 +21,14 @@ This document describes how the CLI is structured, the per-command pattern, what
 
 | Concern | Lives in |
 |---|---|
-| Business logic / state mutation / IO | `packages/swarm/domains/src/packages/<domain>/` (services, repos, adapters, entities) |
-| Input / output Zod schemas + DTOs | `packages/swarm/domains/src/packages/<domain>/presentation/` |
-| tRPC router (which commands exist) | `apps/swarm/cli/src/packages/<domain>/<domain>.router.ts` |
-| Interactive prompts (clack) | `apps/swarm/cli/src/packages/<domain>/prompts/` |
-| Output formatting (intro/note/outro/spinner) | `apps/swarm/cli/src/packages/<domain>/formatters/` |
-| Per-command orchestration | `apps/swarm/cli/src/packages/<domain>/handlers/` |
-| Static configs / mappings | `apps/swarm/cli/src/packages/<domain>/constants.ts` |
-| CLI-only types | `apps/swarm/cli/src/packages/<domain>/types.ts` |
+| Business logic / state mutation / IO | `packages/domains/src/packages/<domain>/` (services, repos, adapters, entities) |
+| Input / output Zod schemas + DTOs | `packages/domains/src/packages/<domain>/presentation/` |
+| tRPC router (which commands exist) | `apps/cli/src/packages/<domain>/<domain>.router.ts` |
+| Interactive prompts (clack) | `apps/cli/src/packages/<domain>/prompts/` |
+| Output formatting (intro/note/outro/spinner) | `apps/cli/src/packages/<domain>/formatters/` |
+| Per-command orchestration | `apps/cli/src/packages/<domain>/handlers/` |
+| Static configs / mappings | `apps/cli/src/packages/<domain>/constants.ts` |
+| CLI-only types | `apps/cli/src/packages/<domain>/types.ts` |
 
 The split mirrors `docs/context/patterns/frontend.md` — handlers play the role frontend `containers/` play (orchestrators), formatters are like `screens/` (presentation), prompts are reusable interactive components, and the router declares the surface the way a route page does.
 
@@ -57,7 +57,7 @@ The CLI runs from **compiled JS in `dist/`**, not tsx-on-demand. `tsx` was 50–
 ### Layout
 
 ```
-apps/swarm/cli/
+apps/cli/
 ├── bin/run.js              # Node entry — stale-check, build if dirty, help-manifest fast path, then dynamic-import dist/main.js
 ├── tsup.config.ts          # ESM bundle, splitting on, noExternal: [@bokendell/*], onSuccess builds the help manifest
 ├── src/
@@ -117,13 +117,13 @@ apps/swarm/cli/
 pnpm swarm <cmd>
 
 # Editing the CLI itself? Run continuous build in a tmux pane.
-pnpm --dir apps/swarm/cli dev
+pnpm --dir apps/cli dev
 
 # One-off: bypass dist entirely (slower per run, no build needed).
 SWARM_FORCE_TSX=1 pnpm swarm <cmd>
 
 # Explicit build (tsup writes dist/main.js + dist/help.json + dist/.last-build).
-pnpm --dir apps/swarm/cli build
+pnpm --dir apps/cli build
 ```
 
 ### The help manifest
@@ -140,12 +140,12 @@ If the manifest is missing or stale (e.g. you added a command and didn't rebuild
 
 Every domain (in both `swarm-domains` and `swarm-cli`) follows this exact structure. Anything that doesn't fit is a sign the package is doing too much.
 
-### Domain side (`packages/swarm/domains/src/packages/<domain>/`)
+### Domain side (`packages/domains/src/packages/<domain>/`)
 
 Strict DDD per `docs/context/patterns/ddd.md`, with a CLI-flavored presentation layer:
 
 ```
-packages/swarm/domains/src/packages/<domain>/
+packages/domains/src/packages/<domain>/
 ├── domain/
 │   └── entities/<entity>.entity.ts       # only when the domain has persistent state
 ├── application/
@@ -166,10 +166,10 @@ packages/swarm/domains/src/packages/<domain>/
 
 Test files live next to source: `<file>.test.ts`. Use `vitest` (already configured per package).
 
-### CLI side (`apps/swarm/cli/src/packages/<domain>/`)
+### CLI side (`apps/cli/src/packages/<domain>/`)
 
 ```
-apps/swarm/cli/src/packages/<domain>/
+apps/cli/src/packages/<domain>/
 ├── <domain>.router.ts          # thin trpc shell: meta + .input() + delegate to handler
 ├── handlers/                    # one .handler.ts per command — orchestrates prompts → service → formatter
 │   ├── <command>.handler.ts
@@ -202,7 +202,7 @@ import { bootstrapKeyInputSchema } from "@bokendell/swarm-domains/auth/cli";
 The `<domain>/cli` barrel is **auto-maintained** and lives next to the domain `index.ts`:
 
 ```ts
-// packages/swarm/domains/src/packages/auth/cli.ts
+// packages/domains/src/packages/auth/cli.ts
 // Auto-maintained: schema-only barrel for CLI consumption.
 // Importing from `@bokendell/swarm-domains/<group>/cli` loads ONLY zod
 // input/output schemas + their types — no application/* service code,
@@ -223,7 +223,7 @@ export * from "./presentation/schemas/auth.output.schema";
 The router declares what commands exist and what their public input shape is. It never reaches into domain services or runs prompts directly.
 
 ```ts
-// apps/swarm/cli/src/packages/auth/auth.router.ts
+// apps/cli/src/packages/auth/auth.router.ts
 import {
   bootstrapKeyInputSchema,
   generateAuthInputSchema,
@@ -287,7 +287,7 @@ const cradleMiddleware = middleware(async ({ ctx, next }) => {
 
 This is what lets `getCradle(ctx)` stay synchronous in handler code — by the time the handler body fires, `ctx.scope` is filled. `--help`/`--version` paths never reach a procedure body and never load composition.
 
-**`.meta()` is the desktop schema source.** `description`, `examples`, and `display` flow into the introspected schema that desktop consumes — keep them concise and accurate. Custom desktop UIs can declare themselves via `display.kind: "custom"` + `display.component: "FormName"`; see `apps/swarm/desktop/src/packages/swarm-schema/registry/command-components.ts`.
+**`.meta()` is the desktop schema source.** `description`, `examples`, and `display` flow into the introspected schema that desktop consumes — keep them concise and accurate. Custom desktop UIs can declare themselves via `display.kind: "custom"` + `display.component: "FormName"`; see `apps/desktop/src/packages/swarm-schema/registry/command-components.ts`.
 
 ### 2. Handler (`handlers/<command>.handler.ts`) — orchestration
 
@@ -300,7 +300,7 @@ The handler is what fires when the command runs. It:
 5. Handles cancellation cleanly.
 
 ```ts
-// apps/swarm/cli/src/packages/auth/handlers/bootstrap-key.handler.ts
+// apps/cli/src/packages/auth/handlers/bootstrap-key.handler.ts
 import * as p from "@clack/prompts";
 import type { BootstrapKeyInput } from "@bokendell/swarm-domains/auth/cli";
 import type { CliContext } from "../../trpc";
@@ -362,7 +362,7 @@ export async function bootstrapKeyHandler(
 Single-purpose functions that wrap clack and handle cancellation. They take whatever arguments the prompt needs (config map, current value, etc.) and return the selected value.
 
 ```ts
-// apps/swarm/cli/src/packages/auth/prompts/select-app.ts
+// apps/cli/src/packages/auth/prompts/select-app.ts
 import * as p from "@clack/prompts";
 import type { AppKey } from "../types";
 
@@ -381,14 +381,14 @@ export async function selectAppPrompt(
 }
 ```
 
-**Cross-domain prompts** (used by 3+ commands) live in `apps/swarm/cli/src/lib/prompts/`. Examples: `resolve-environment.ts`, `basic.ts` (`promptEmail`, `promptPassword`, `promptText`, `promptConfirm`).
+**Cross-domain prompts** (used by 3+ commands) live in `apps/cli/src/lib/prompts/`. Examples: `resolve-environment.ts`, `basic.ts` (`promptEmail`, `promptPassword`, `promptText`, `promptConfirm`).
 
 ### 4. Formatters (`formatters/<command>-result.ts`) — output blocks
 
 Pure functions that take handler-shape inputs and call the console helpers (`intro`, `note`, `outro`, `spinner`). Easy to unit test by mocking `../../../lib/console/style`.
 
 ```ts
-// apps/swarm/cli/src/packages/auth/formatters/bootstrap-result.ts
+// apps/cli/src/packages/auth/formatters/bootstrap-result.ts
 import type { BootstrapKeyOutput } from "@bokendell/swarm-domains/auth/cli";
 import { note, outro } from "../../../lib/console/style";
 
@@ -417,7 +417,7 @@ Domain types come from `@bokendell/swarm-domains/<domain>`. This file holds shap
 
 ## Single-source rule for cross-domain enums
 
-`project`, `environment`, `bucketAccess`, and other enums shared across many commands live **once** in `packages/swarm/domains/src/lib/schemas/common.ts`, derived from `@bokendell/core` constants:
+`project`, `environment`, `bucketAccess`, and other enums shared across many commands live **once** in `packages/domains/src/lib/schemas/common.ts`, derived from `@bokendell/core` constants:
 
 ```ts
 import { APP_NAMES, ENVIRONMENTS, BUCKET_ACCESS_TYPES } from "@bokendell/core";
@@ -431,7 +431,7 @@ export const bucketAccessSchema = z.enum(/* ... */).describe(...);
 Per-domain input schemas import from there:
 
 ```ts
-// packages/swarm/domains/src/packages/r2/presentation/schemas/r2.input.schema.ts
+// packages/domains/src/packages/r2/presentation/schemas/r2.input.schema.ts
 import { projectSchema, environmentSchema, bucketAccessSchema } from "../../../../lib/schemas/common";
 
 export const r2SyncInputSchema = z.object({
@@ -451,7 +451,7 @@ export const r2SyncInputSchema = z.object({
 The CLI uses `@bokendell/observability` LogLayer. Domain code reaches the logger via the slot pattern (`getLogger()`); the CLI wires the real instance at boot.
 
 ```ts
-// packages/swarm/domains/src/lib/logger.ts — domain slot
+// packages/domains/src/lib/logger.ts — domain slot
 import { createLoggerSlot } from "@bokendell/observability/logger-slot";
 import type { ILogLayer } from "loglayer";
 
@@ -462,7 +462,7 @@ export const getLogger = slot.getLogger;
 ```
 
 ```ts
-// apps/swarm/cli/src/lib/logger.ts — CLI side (lazy-init shim)
+// apps/cli/src/lib/logger.ts — CLI side (lazy-init shim)
 //
 // `createAppLogger` pulls pino + sentry + opentelemetry + multiple loglayer
 // transports — ~300-400ms of work we don't want on the hot path. The
@@ -500,7 +500,7 @@ export const logger: ILogLayer = buildShim();
 
 `swarm internal schema --json` walks `cliRouter._def.procedures` at runtime and emits a `SwarmSchema` JSON document (topics, commands, descriptions, examples, display, flag definitions converted from Zod). Desktop spawns this once at boot via Tauri shell, caches in zustand, and uses it to drive the command browser, palette, and auto-form.
 
-The schema types are defined in `apps/swarm/cli/src/schema-types.ts` (browser-safe; only types) and exposed via the `@bokendell/swarm-cli/schema-types` subpath. The introspection itself lives in `apps/swarm/cli/src/internal/introspect.ts` and `apps/swarm/cli/src/internal/zod-to-flag-def.ts`.
+The schema types are defined in `apps/cli/src/schema-types.ts` (browser-safe; only types) and exposed via the `@bokendell/swarm-cli/schema-types` subpath. The introspection itself lives in `apps/cli/src/internal/introspect.ts` and `apps/cli/src/internal/zod-to-flag-def.ts`.
 
 This means:
 - The router IS the schema. No hand-maintained command list, no drift.
@@ -531,7 +531,7 @@ Test conventions:
 
 ## Pre-built shared utilities
 
-Anything in `apps/swarm/cli/src/lib/` is fair game for any handler:
+Anything in `apps/cli/src/lib/` is fair game for any handler:
 
 | Module | Use for |
 |---|---|
@@ -543,7 +543,7 @@ Anything in `apps/swarm/cli/src/lib/` is fair game for any handler:
 | `lib/hive/device` | `ensureDeviceRegistered()` |
 | `lib/workspace/api-client` | Hive tRPC client wrapper for workspace persistence |
 | `lib/monorepo` | `findMonorepoRoot()` |
-| `lib/config/env` | Validated `env` object (zod-typed env vars from `apps/swarm/cli/src/lib/config/`) |
+| `lib/config/env` | Validated `env` object (zod-typed env vars from `apps/cli/src/lib/config/`) |
 | `lib/logger` | `logger` (LogLayer instance) |
 
 When a handler grows a helper that another handler will need, it goes in `lib/` — not duplicated across packages.
@@ -556,11 +556,11 @@ When a handler grows a helper that another handler will need, it goes in `lib/` 
 |---|---|
 | New CLI command? | Add a procedure to the router, write a `<command>.handler.ts`. Add input schema to `swarm-domains/<domain>/presentation/schemas/`. |
 | New stateful concept (workspace, tunnel, run)? | New domain in `swarm-domains` with entity + service + repo + presentation. |
-| New interactive prompt for one command? | `apps/swarm/cli/src/packages/<domain>/prompts/<name>.ts`. |
-| New interactive prompt for many commands? | `apps/swarm/cli/src/lib/prompts/<name>.ts`. |
-| New shared enum? | `packages/swarm/domains/src/lib/schemas/common.ts`, derived from `@bokendell/core` constants. |
-| Output formatting? | `apps/swarm/cli/src/packages/<domain>/formatters/<command>-result.ts`. |
-| Static config map? | `apps/swarm/cli/src/packages/<domain>/constants.ts`. |
+| New interactive prompt for one command? | `apps/cli/src/packages/<domain>/prompts/<name>.ts`. |
+| New interactive prompt for many commands? | `apps/cli/src/lib/prompts/<name>.ts`. |
+| New shared enum? | `packages/domains/src/lib/schemas/common.ts`, derived from `@bokendell/core` constants. |
+| Output formatting? | `apps/cli/src/packages/<domain>/formatters/<command>-result.ts`. |
+| Static config map? | `apps/cli/src/packages/<domain>/constants.ts`. |
 | Need to call an SDK / hit a DB? | Domain service. Never in a CLI handler directly. |
 | Need to log diagnostically? | `ctx.log/warn/error` in handlers, `getLogger()` in domain code. **Never `console.*`.** |
 | Need to emit JSON for piping? | `process.stdout.write(JSON.stringify(x) + "\n")`. |
@@ -578,7 +578,7 @@ Help paths are sub-200ms; real commands are ~3.4s after the optimizations above.
 **The shape:**
 
 ```ts
-// packages/swarm/domains/src/index.ts — AFTER
+// packages/domains/src/index.ts — AFTER
 export function createCliDomainFactories(config: CliDomainsConfig) {
   setSystemLogger(config.logger);
   return {
@@ -597,7 +597,7 @@ export function createCliDomainFactories(config: CliDomainsConfig) {
 ```
 
 ```ts
-// packages/swarm/composition/src/container.ts — AFTER
+// packages/composition/src/container.ts — AFTER
 container.register({
   workspaceService: asFunction(() => factories.workspaceService()).singleton(),
   authService: asFunction(() => factories.authService()).singleton(),
@@ -682,7 +682,7 @@ The router-equivalent for the APIs is **per-tRPC-router lazy load**, not per-Hon
 
 ## Critical rules
 
-1. **No `console.*`** anywhere in `apps/swarm/cli/src/` or `packages/swarm/`. Use the logger.
+1. **No `console.*`** anywhere in `apps/cli/src/` or `packages/swarm/`. Use the logger.
 2. **Routers are thin.** No prompts, no service calls, no formatting — only `.meta()`, `.input()`, and `=> handlerFn(input, ctx)`.
 3. **Handlers are dynamic-imported.** `.mutation(async ({ input, ctx }) => { const { fn } = await import("./handlers/foo.handler"); return fn(input, ctx); })`. Never `import { fooHandler }` at the top of a router file — it leaks handler-specific deps into every command's startup graph.
 4. **All actions go through the cradle.** `getCradle(ctx).<service>.<method>(...)`. Never `new XxxService(...)` in a handler.

@@ -9,7 +9,7 @@ off-network devices:
   approvals and brainstorming previews. Use this for one-off sharing.
 
 Both wrap `cloudflared` and reuse the pattern already in use by hive at
-`apps/hive/api/scripts/dev/index.ts`.
+`apps/api/scripts/dev/index.ts`.
 
 ---
 
@@ -218,7 +218,7 @@ Named tunnels use `https://*-dev.bokendell.com`. Add this to each API's
 `ALLOWED_ORIGINS` in Infisical:
 
 ```
-# Infisical path: /apps/golf/api (or /apps/hive/api, etc.)
+# Infisical path: /apps/api (or /apps/api, etc.)
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,https://development.bokendell.com,https://*-dev.bokendell.com
 ```
 
@@ -281,7 +281,7 @@ or add a one-off origin each time you preview (strict).
 - `packages/shared/cli/src/commands/tunnel/` — `swarm tunnel {start,list,stop,init}`
 - `packages/shared/cli/src/commands/dev/index.ts` — `--tunnel` flag
 - `.claude/skills/remote-preview/` — Claude-invoked quick-tunnel skill
-- `apps/hive/api/scripts/dev/index.ts` — original pattern this is based on
+- `apps/api/scripts/dev/index.ts` — original pattern this is based on
 
 ---
 

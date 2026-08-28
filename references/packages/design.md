@@ -2,11 +2,11 @@
 
 > Location: `packages/shared/design/`
 >
-> Brand-agnostic studio framework. Every app's design surface (`apps/<app>/design/`) consumes this package. Per-app brand tokens + primitives live elsewhere (`@bokendell/<app>-ui`); this package owns the *frame around the primitives*.
+> Brand-agnostic studio framework. Every app's design surface (`apps/design/`) consumes this package. Per-app brand tokens + primitives live elsewhere (`@bokendell/<app>-ui`); this package owns the *frame around the primitives*.
 
 ## Internal layout — `lib/` + `packages/`
 
-Mirrors the broader monorepo's `packages/<app>/domains/src/packages/<domain>/` convention. Each named feature is its own folder with an `index.ts` barrel; cross-feature utilities sit under `src/lib/`. **No top-level flat files** — if a thing is exported it lives under a feature package.
+Mirrors the broader monorepo's `packages/domains/src/packages/<domain>/` convention. Each named feature is its own folder with an `index.ts` barrel; cross-feature utilities sit under `src/lib/`. **No top-level flat files** — if a thing is exported it lives under a feature package.
 
 ```
 packages/shared/design/src/
@@ -67,15 +67,15 @@ import { DesignAuthProvider, StudioAuthGate, useDesignAuth, type DesignAuthClien
 
 ## API access — never hand-roll fetch
 
-Every swarm-api call goes through `@bokendell/swarm-client` (tRPC). `createStudioApp` wires the providers for you — inside any component under the studio, `useTRPC()` returns the typed proxy:
+Every swarm-api call goes through `@bokendell/swarm-client` (oRPC). `createStudioApp` wires the providers for you — inside any component under the studio, `useSwarmOrpc()` returns the typed proxy:
 
 ```tsx
-import { useTRPC } from "@bokendell/swarm-client/trpc";
+import { useSwarmOrpc } from "@bokendell/design/mount";
 import { useQuery } from "@tanstack/react-query";
 
 function Comments({ flow }: { flow: string }) {
-  const trpc = useTRPC();
-  const { data } = useQuery(trpc.annotations.list.queryOptions({ app: "golf", flow }));
+  const orpc = useSwarmOrpc();
+  const { data } = useQuery(orpc.annotations.list.queryOptions({ input: { app: "golf", flow } }));
   // data is fully typed off swarm-api's AppRouter
 }
 ```
@@ -86,7 +86,7 @@ Types come from the same package — no duplicate DTOs:
 import type { AnnotationResponse, AnnotationStatus } from "@bokendell/swarm-client";
 ```
 
-**Never write `fetch("/api/v1/...")` inside the design package or a consuming studio.** If a swarm-api route is missing for what you need, add the tRPC procedure in `apps/swarm/api/...` and re-export the schemas from `@bokendell/swarm-domains/<topic>/client` → `@bokendell/swarm-client`. See `context/packages/swarm-client.md`.
+**Never write `fetch("/api/v1/...")` inside the design package or a consuming studio.** If a swarm-api route is missing for what you need, add the oRPC procedure in `apps/api/...` and re-export the schemas from `@bokendell/swarm-domains/<topic>/client` → `@bokendell/swarm-client`. See `context/packages/swarm-client.md`.
 
 ## Primitive policy — no reinventing
 
@@ -112,10 +112,10 @@ Every interactive surface is built on `@bokendell/ui` primitives (shadcn host):
 
 ## How a new app consumes this
 
-1. Create `apps/<app>/design/` with this shape:
+1. Create `apps/design/` with this shape:
 
 ```
-apps/<app>/design/
+apps/design/
 ├── package.json              "name": "@bokendell/<app>-design"
 ├── biome.json                extends ../../../biome.json
 ├── tsconfig.json             extends @bokendell/tsconfig/browser.json
@@ -160,7 +160,7 @@ const input = Object.fromEntries(
 export default defineConfig({
   root: HERE,
   plugins: [react(), tailwindcss()],
-  resolve: { alias: { "@<app>-ui": resolve(HERE, "../../../packages/<app>/ui/src/index.ts") } },
+  resolve: { alias: { "@<app>-ui": resolve(HERE, "../../../packages/ui/src/index.ts") } },
   build: { outDir: "dist", emptyOutDir: true, rollupOptions: { input } },
 });
 ```
@@ -245,8 +245,8 @@ Then add a subpath to `package.json` `"exports"` and re-export from `src/index.t
 
 ## See also
 
-- `context/packages/swarm-client.md` — tRPC client used by every swarm-api call inside studios.
+- `context/packages/swarm-client.md` — oRPC client used by every swarm-api call inside studios.
 - `context/patterns/design-studio.md` — the studio + annotation pattern in full.
 - `context/patterns/per-app-ui.md` — token contract per app + how brand layers compose with this framework.
-- `apps/golf/design/ROADMAP.md` — current status, suggested task order, parallelization map.
-- `apps/golf/design/README.md` — workshop / showroom mental model + daily workflow.
+- `apps/design/ROADMAP.md` — current status, suggested task order, parallelization map.
+- `apps/design/README.md` — workshop / showroom mental model + daily workflow.

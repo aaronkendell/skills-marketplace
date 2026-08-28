@@ -1,12 +1,12 @@
-# API Patterns (Hono + tRPC)
+# API Patterns (Hono + oRPC)
 
-All backend APIs use Hono as the HTTP layer with tRPC for typed RPC endpoints. The shared foundation lives in `@bokendell/api`.
+All backend APIs use Hono as the HTTP layer with oRPC for typed RPC endpoints. The shared foundation lives in `@bokendell/api`.
 
-The architecture is a **Hono-with-tRPC hybrid**:
+The architecture is a **Hono-with-oRPC hybrid**:
 - Plain Hono routes for streaming (SSE, AI chat), webhooks, OG/share pages, `.well-known`.
-- A single tRPC router mounted at the catch-all (`router.all("/api/v1/*", trpcHandler)`) for all CRUD + queries + mutations. The tRPC router is itself composed of ~30 topic routers per app.
+- A single oRPC router mounted at the catch-all (`router.all("/api/v1/*", orpcHandler)`) for all CRUD + queries + mutations. The oRPC router is itself composed of ~30 topic routers per app.
 
-This shape matters for performance: tRPC's router-tree walk happens **once at server boot**, not per request. Per-request work is a hashmap lookup → procedure dispatch → handler. The composition graph + tRPC tree-build are the cold-start cost; routing is essentially free at steady state.
+This shape matters for performance: oRPC's router-tree walk happens **once at server boot**, not per request. Per-request work is a hashmap lookup → procedure dispatch → handler. The composition graph + oRPC tree-build are the cold-start cost; routing is essentially free at steady state.
 
 ---
 
@@ -17,11 +17,11 @@ This shape matters for performance: tRPC's router-tree walk happens **once at se
 | Phase | Golf API | Hive API | Portfolio API | Notes |
 |---|---|---|---|---|
 | `<app>-composition/container` import | ~16s | ~14s | ~13s | All services + transitive deps load (drizzle, better-auth, mastra, posthog, pusher, AWS, OTel) |
-| Full app import (incl. routes + middleware) | ~20s | n/a | n/a | Composition + Hono wiring + tRPC router build |
+| Full app import (incl. routes + middleware) | ~20s | n/a | n/a | Composition + Hono wiring + oRPC router build |
 | Service registrations | 93 | 120 | 70 | Awilix `.singleton()` resolvers — services constructed lazily on cradle access |
 | Per-test boot (router test) | ~17s wall | similar | similar | Vitest reload — every test file re-evaluates the graph |
 | Per-test boot (no composition) | ~6s wall | ~6s | ~6s | Vitest framework only |
-| Per-request (steady state) | ~5–50ms | ~5–50ms | ~5–50ms | tRPC dispatch + handler + DB |
+| Per-request (steady state) | ~5–50ms | ~5–50ms | ~5–50ms | oRPC dispatch + handler + DB |
 
 **Read this two ways:**
 
@@ -32,17 +32,17 @@ The CLI-style optimizations described in `docs/context/patterns/cli.md` (per-ser
 
 ---
 
-## When to use tRPC vs Hono REST
+## When to use oRPC vs Hono REST
 
 | Situation | Use |
 |-----------|-----|
-| Standard CRUD, queries, mutations | tRPC procedure |
+| Standard CRUD, queries, mutations | oRPC procedure |
 | Streaming responses (AI chat, SSE) | Hono REST route |
 | Inbound webhooks (Linear, Vault, etc.) | Hono REST route |
 | Special-purpose pages (OG images, AASA, share pages) | Hono REST route |
-| Internal service-to-service calls | tRPC `internalProcedure` |
+| Internal service-to-service calls | oRPC `internalProcedure` |
 
-**Default to tRPC.** Only reach for plain Hono when tRPC genuinely doesn't fit.
+**Default to oRPC.** Only reach for plain Hono when oRPC genuinely doesn't fit.
 
 ---
 
@@ -51,15 +51,15 @@ The CLI-style optimizations described in `docs/context/patterns/cli.md` (per-ser
 Every API app uses `createApiApp` from `@bokendell/api/app`:
 
 ```typescript
-// apps/{app}/api/src/app.ts
+// apps/api/src/app.ts
 import { createApiApp } from "@bokendell/api/app";
 import { auth, sessionMiddleware } from "@bokendell/{app}-domains/auth";
 
 export const app = createApiApp({
   authHandler: (req) => auth.handler(req),
   sessionMiddleware,
-  trpcRouter,
-  router,           // plain Hono router for non-tRPC routes
+  orpcRouter,
+  router,           // plain Hono router for non-oRPC routes
   inngestHandler,
   docs: {
     title: "Golf API",
@@ -76,7 +76,7 @@ export const app = createApiApp({
 });
 ```
 
-`createApiApp` wires up: Better Auth handler, session middleware, tRPC endpoint, Inngest handler, OpenAPI/Scalar docs at `/reference`, CORS, rate limiting, observability, and the global error handler. You don't configure any of those individually.
+`createApiApp` wires up: Better Auth handler, session middleware, oRPC endpoint, Inngest handler, OpenAPI/Scalar docs at `/reference`, CORS, rate limiting, observability, and the global error handler. You don't configure any of those individually.
 
 ---
 
@@ -117,10 +117,10 @@ export function requireUserId(c: Context): string {
 }
 ```
 
-### In tRPC context
+### In oRPC context
 
 ```typescript
-// The tRPC context factory — passed to createOpenApiFetchHandler
+// The oRPC context factory — passed to createOpenApiFetchHandler
 createContext: (c) => ({
   user: c.get("user"),
   session: c.get("session"),
@@ -174,11 +174,11 @@ const { roundService } = getCradle(context);
 
 ## Procedure types
 
-Procedures come from `createBaseTrpc` in `@bokendell/api/trpc`:
+Procedures come from `createBaseOrpc` in `@bokendell/api/orpc`:
 
 ```typescript
-// packages/api/trpc.ts (shared base)
-import { createBaseTrpc } from "@bokendell/api/trpc";
+// packages/api/orpc.ts (shared base)
+import { createBaseOrpc } from "@bokendell/api/orpc";
 
 export const {
   router,
@@ -186,13 +186,13 @@ export const {
   publicProcedure,
   protectedProcedure,
   adminProcedure,
-} = createBaseTrpc();
+} = createBaseOrpc();
 ```
 
 Hive extends the base with machine and scoped procedures:
 
 ```typescript
-// apps/hive/api/src/packages/api/trpc.ts
+// apps/api/src/packages/api/orpc.ts
 export const machineProcedure = publicProcedure.use(/* requires API key or OAuth token */);
 export const callerProcedure = publicProcedure.use(/* requires admin session, API key, or OAuth token */);
 export function scopedProcedure(requiredScopes: HiveScope | HiveScope[]) { /* callerProcedure + scope check */ }
@@ -219,59 +219,109 @@ only half the check — enforce the object-level rule in the service with a
 
 ---
 
-## tRPC route pattern
+## oRPC route pattern (contract-first)
+
+Golf splits every feature in two: a **contract** that is pure schema, and a
+**router** that implements it. This is the canonical pattern — copy it.
+
+### 1. The contract — pure input/output/route, no middleware, no context
 
 ```typescript
-// packages/{domain}/{domain}.trpc.router.ts
-import { router, protectedProcedure } from "../api/trpc";
+// apps/api/src/packages/{domain}/{domain}.contract.ts
+import { createListResponseSchema, paginationQuerySchema } from "@bokendell/core";
+import { Scopes } from "@bokendell/golf-domains/context";
 import { OPENAPI_TAGS } from "../api/openapi-tags";
+import { apiContract, protectSecurity, sessionContract } from "../api/procedures/contract-tiers";
 
-export function create{Domain}Router(service: {Domain}Service) {
-  return router({
-    // Query
-    getById: protectedProcedure
-      .meta({
-        openapi: {
-          method: "GET",
-          path: "/{domain}/{id}",
-          tags: [OPENAPI_TAGS.{DOMAIN}],
-          summary: "Get {entity} by ID",
-          protect: true,
-        },
-      })
-      .input(z.object({ id: z.string() }))
-      .output({entity}ResponseSchema)
-      .query(async ({ input, ctx }) => {
-        const result = await service.getById(input.id, ctx.user.id);
-        return to{Entity}Response(result);
-      }),
+// Scopes live HERE and the router imports them, so the tier gate can't drift
+// from the security the contract documents.
+export const ROUNDS_READ_SCOPES = [Scopes.RoundsRead] as const;
+export const ROUNDS_WRITE_SCOPES = [Scopes.RoundsWrite] as const;
 
-    // Mutation
-    create: protectedProcedure
-      .meta({
-        openapi: {
-          method: "POST",
-          path: "/{domain}",
-          tags: [OPENAPI_TAGS.{DOMAIN}],
-          summary: "Create {entity}",
-          protect: true,
-        },
-      })
-      .input(create{Entity}RequestSchema)
-      .output({entity}ResponseSchema)
-      .mutation(async ({ input, ctx }) => {
-        const result = await service.create(input, ctx.user.id);
-        return to{Entity}Response(result);
-      }),
-  });
-}
+const writeSession = sessionContract(ROUNDS_WRITE_SCOPES);
+const readSession = sessionContract(ROUNDS_READ_SCOPES);
+const liveApi = apiContract(ROUNDS_READ_SCOPES); // machine/caller credential tier
+
+export const roundsContract = {
+  create: writeSession
+    .route({
+      method: "POST",
+      path: "/rounds",
+      tags: [OPENAPI_TAGS.ROUNDS],
+      summary: "Create a new round",
+      spec: protectSecurity,
+    })
+    .input(createRoundRequestSchema)
+    .output(roundDetailResponseSchema),
+
+  getById: readSession
+    .route({
+      method: "GET",
+      path: "/rounds/{id}",
+      tags: [OPENAPI_TAGS.ROUNDS],
+      summary: "Get round details",
+      spec: protectSecurity,
+    })
+    .input(roundIdParamSchema)
+    .output(roundDetailResponseSchema),
+
+  invites: readSession
+    .route({ method: "GET", path: "/rounds/invites", tags: [OPENAPI_TAGS.ROUNDS], spec: protectSecurity })
+    .input(paginationQuerySchema.optional())
+    .output(createListResponseSchema(inviteResponseSchema)),
+};
+```
+
+`.route()` carries the real REST method + path — that IS the OpenAPI entry. There is
+no separate `.meta({ openapi })` step.
+
+### 2. The router — `implement(contract)`, tier middleware, handlers
+
+```typescript
+// apps/api/src/packages/{domain}/{domain}.orpc.router.ts
+import { toRoundDetailResponse } from "@bokendell/golf-domains/rounds";
+import { implement } from "@orpc/server";
+import { getCradle, idempotencyMiddleware, listHandler } from "../api/orpc";
+import type { GolfApiContext } from "../api/procedures/base";
+import { apiTierMw, sessionTierMw } from "../api/procedures/tier-middleware";
+import { ROUNDS_READ_SCOPES, ROUNDS_WRITE_SCOPES, roundsContract } from "./rounds.contract";
+
+const base = implement(roundsContract).$context<GolfApiContext>();
+const writeSession = base.use(sessionTierMw(ROUNDS_WRITE_SCOPES));
+const readSession = base.use(sessionTierMw(ROUNDS_READ_SCOPES));
+// Idempotency composes at the IMPLEMENTER level, above the handler
+const writeSessionIdem = writeSession.use(idempotencyMiddleware);
+
+export const roundsRouter = {
+  create: writeSessionIdem.create.handler(async ({ input, context }) => {
+    const { roundService } = getCradle(context);
+    const round = await roundService.createRound(context.caller, input, context.user.id);
+    return toRoundDetailResponse(round);
+  }),
+
+  getById: readSession.getById.handler(async ({ input, context }) => {
+    const { roundService } = getCradle(context);
+    return toRoundDetailResponse(await roundService.getById(input.id, context.user.id));
+  }),
+};
 ```
 
 **Rules:**
-- Always `.input()` and `.output()` — never skip output schema
-- `protect: true` in OpenAPI meta for auth-required routes
-- One router factory function per domain — injected with the service it needs
-- `ctx.user.id` is safe inside `protectedProcedure` (non-null guaranteed)
+
+- The contract imports NO middleware and NO request context. That is what lets the
+  client type against it without dragging the deep `GolfApiContext` chains into the
+  browser bundle.
+- Scopes are declared once in the contract and imported by the router. Never spell a
+  scope array twice.
+- Always `.input()` and `.output()` — never skip the output schema.
+- Handlers destructure `{ input, context }`. Resolve services with `getCradle(context)`
+  — never import a service instance directly.
+- `context.user.id` is non-null inside a session tier; `context.caller` is the
+  principal for machine/API-tier routes.
+- Map domain objects to responses with the `to{Entity}Response` helpers exported from
+  `@bokendell/golf-domains/{domain}` — routers never hand-build a response object.
+- List endpoints return the standard envelope via `createListResponseSchema(...)` →
+  `{ data, total, limit, offset }`, built with `listHandler`.
 
 ---
 
@@ -353,12 +403,12 @@ This is declared in `BASE_ERRORS` on every procedure via `createBaseOrpc`. Clien
 
 ---
 
-### AppError → TRPCError mapping (hive / portfolio / swarm)
+### AppError → ORPCError mapping (hive / portfolio / swarm)
 
-Apps still using tRPC catch `AppError` in a global middleware:
+Apps still using oRPC catch `AppError` in a global middleware:
 
 ```typescript
-// packages/api/trpc.ts
+// packages/api/orpc.ts
 const errorHandling = t.middleware(async ({ next }) => {
   const result = await next();
   if (result.ok) return result;
@@ -367,8 +417,8 @@ const errorHandling = t.middleware(async ({ next }) => {
   const appError = error.cause instanceof AppError ? error.cause : null;
 
   if (error.code === "INTERNAL_SERVER_ERROR" && appError) {
-    throw new TRPCError({
-      code: mapStatusToTRPCCode(appError.statusCode),
+    throw new ORPCError({
+      code: mapStatusToOrpcCode(appError.statusCode),
       message: appError.message,
       cause: error.cause,
     });
@@ -381,8 +431,8 @@ const errorHandling = t.middleware(async ({ next }) => {
   throw error;
 });
 
-function mapStatusToTRPCCode(statusCode: number): TRPC_ERROR_CODE_KEY {
-  const map: Record<number, TRPC_ERROR_CODE_KEY> = {
+function mapStatusToOrpcCode(statusCode: number): ORPCErrorCode {
+  const map: Record<number, ORPCErrorCode> = {
     400: "BAD_REQUEST",
     401: "UNAUTHORIZED",
     403: "FORBIDDEN",
@@ -410,12 +460,12 @@ function mapStatusToTRPCCode(statusCode: number): TRPC_ERROR_CODE_KEY {
 }
 ```
 
-### In tRPC routes (hive / portfolio / swarm)
+### In oRPC routes (hive / portfolio / swarm)
 
 ```typescript
-// Throw TRPCError directly in routes when needed
+// Throw ORPCError directly in routes when needed
 if (!result) {
-  throw new TRPCError({ code: "NOT_FOUND", message: "Run not found" });
+  throw new ORPCError({ code: "NOT_FOUND", message: "Run not found" });
 }
 
 // For domain business logic errors — throw AppError in the service,
@@ -426,7 +476,7 @@ if (!result) {
 
 ## Auth in Hono REST routes
 
-For non-tRPC routes (SSE, webhooks), apply `requireAuth` middleware directly:
+For non-oRPC routes (SSE, webhooks), apply `requireAuth` middleware directly:
 
 ```typescript
 import { requireAuth, requireAdmin } from "@bokendell/{app}-domains/auth";
@@ -477,13 +527,13 @@ aiStreamRouter.post("/", async (c) => {
 });
 ```
 
-Register in the router **before** the catch-all tRPC handler:
+Register in the router **before** the catch-all oRPC handler:
 
 ```typescript
 // packages/api/v1/router.ts
 routerV1.route("/api/v1/ai/chat/stream", aiStreamRouter);
 routerV1.route("/api/v1/ai/transcribe", aiTranscribeRouter);
-routerV1.all("/api/v1/*", trpcHandler); // tRPC catch-all last
+routerV1.all("/api/v1/*", orpcHandler); // oRPC catch-all last
 ```
 
 ---
@@ -535,7 +585,7 @@ export function create{Domain}WebhookRouter(deps: { secret: string | undefined }
 **Phase 6 (2026-04-30): per-domain `*.service-factory.ts` files were collapsed into a single Awilix-wired `container.ts` per app.** The previous `lib/services/` pattern is gone; services now live in the composition package and resolve via the cradle.
 
 ```typescript
-// packages/{app}/composition/src/container.ts
+// packages/composition/src/container.ts
 import { InjectionMode, asFunction, createContainer } from "awilix";
 import { createRoundRepository, createRoundService } from "@bokendell/{app}-domains/rounds";
 import { db } from "@bokendell/{app}-db";
@@ -557,7 +607,7 @@ container.register({
 Route files reach the cradle via the request scope:
 
 ```typescript
-// {domain}.trpc.router.ts
+// {domain}.orpc.router.ts
 .query(async ({ ctx }) => {
   const { roundService } = ctx.scope.cradle;   // sync — services already constructed
   return roundService.getById(input.id, ctx.user.id);
@@ -591,7 +641,7 @@ export const paginationQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).default(0),
 });
 
-// In tRPC route
+// In oRPC route
 .input(paginationQuerySchema.optional())
 .output(roundListResponseSchema)
 .query(async ({ input }) => {
@@ -664,7 +714,7 @@ export type Config = typeof config;
 
 ## Special-purpose Hono routes
 
-For routes that don't fit tRPC (Apple AASA, OG images, shareable preview pages):
+For routes that don't fit oRPC (Apple AASA, OG images, shareable preview pages):
 
 ```typescript
 // packages/well-known/well-known.router.ts
@@ -688,14 +738,14 @@ shareRouter.get("/round/:id", async (c) => {
 });
 ```
 
-Register before the tRPC catch-all:
+Register before the oRPC catch-all:
 
 ```typescript
 // packages/api/router.ts
 router.route("/.well-known", wellKnownRouter);
 router.route("/share", shareRouter);
 router.route("/og", ogRouter);
-router.route("/", routerV1); // tRPC lives here
+router.route("/", routerV1); // oRPC lives here
 ```
 
 ---
@@ -735,43 +785,100 @@ Web-only apps can use a simple origin array instead.
 
 ---
 
-## Router file structure
+## Repo structure (golf is canonical)
+
+Each app is its own repo in the sibling-clone workspace — there is no `apps/golf/`
+prefix. Inside the repo:
 
 ```
-apps/{app}/api/src/
-├── app.ts                          # createApiApp() setup
-├── index.ts                        # serve() + graceful shutdown
+golf/
+├── apps/
+│   ├── api/src/
+│   │   ├── lib/{auth,context,middleware}/
+│   │   └── packages/
+│   │       ├── api/                          # the oRPC kernel
+│   │       │   ├── contract.ts               # apiContractV1 — every contract merged
+│   │       │   ├── orpc.ts                   # getCradle, listHandler, idempotency barrel
+│   │       │   ├── idempotency.ts
+│   │       │   ├── list-handler.ts
+│   │       │   ├── openapi-meta.ts
+│   │       │   ├── openapi-tags.ts           # OPENAPI_TAGS constant
+│   │       │   ├── procedures/
+│   │       │   │   ├── base.ts               # GolfApiContext + os.$context<GolfApiContext>()
+│   │       │   │   ├── contract-tiers.ts     # sessionContract() / apiContract()
+│   │       │   │   ├── tier-middleware.ts    # sessionTierMw() / apiTierMw()
+│   │       │   │   ├── ratelimiters.ts
+│   │       │   │   ├── route-security.ts
+│   │       │   │   └── scoped.ts
+│   │       │   ├── root/orpc.router.ts       # mounted at "/" — permalinks, no version
+│   │       │   └── v1/orpc.router.ts         # mounted at "/api/v1"
+│   │       └── {domain}/                     # ~45 feature packages
+│   │           ├── {domain}.contract.ts
+│   │           ├── {domain}.orpc.router.ts
+│   │           ├── {domain}.orpc.router.test.ts
+│   │           ├── {domain}.orpc.router.utils.ts
+│   │           └── {domain}.admin.contract.ts + .admin.orpc.router.ts   # if it has an admin surface
+│   ├── admin/      # Refine admin
+│   ├── design/     # design studio
+│   ├── inngest/    # async jobs + crons
+│   ├── marketing/  # marketing site
+│   ├── mobile/     # Expo
+│   └── workers/    # standalone Hono worker server (src/server.ts)
 └── packages/
-    ├── api/
-    │   ├── openapi-tags.ts         # OPENAPI_TAGS constant
-    │   ├── trpc.ts                 # createBaseTrpc() setup
-    │   ├── trpc.router.ts          # AppRouter type
-    │   ├── router.ts               # Top-level Hono router
-    │   └── v1/
-    │       ├── router.ts           # SSE routes + tRPC catch-all
-    │       └── trpc.router.ts      # router({...}) composition
-    └── {domain}/
-        ├── {domain}.trpc.router.ts # tRPC procedures
-        ├── {domain}.sse.router.ts  # SSE (if needed)
-        └── index.ts
+    ├── client/       # oRPC client + the canonical `q` query builders
+    ├── composition/  # Awilix container, env, app factory
+    ├── domains/      # all business logic (DDD)
+    ├── config/ db/ e2e/ emails/ performance/ public-assets/ render/ surfaces/ tokens/ ui/
 ```
 
-And:
+### Two mounted surfaces, plus root
+
+`createGolfApp` serves the **REST** surface at `/api/v1` (paths come from each
+contract's `.route({ method, path })`) and the **RPC** surface at `/api/rpc`. The
+version is a route prefix on the version's router, so `{ v1, v2 }` serve at
+`/api/v1/...` and `/api/v2/...`.
+
+`root/orpc.router.ts` mounts on a **second** `OpenAPIHandler` at prefix `/` with no
+version — OG images, share redirects, `.well-known`. These are permalinks that
+crawlers, email proxies, and OS deep-link handlers embed in long-lived places;
+versioning them would break cached links.
+
+### packages/composition — the composition root
 
 ```
-lib/
-├── config.ts                       # Zod env schema + parse
-├── context/
-│   ├── types.ts                    # AppContextVariables, AppContext
-│   └── utils.ts                    # getContext(), requireUserId()
-└── services/
-    ├── {domain}.service-factory.ts # One file per service, single instance
-    └── index.ts                    # Barrel export
+packages/composition/src/
+├── app.ts                # createGolfApp(opts) — mounts the handlers, CORS, middleware
+├── container.ts          # AppCradle, container, runInScope(), withTransaction(), warmGolfCradle()
+├── functions.ts          # createGolfFunctions() — the Inngest registry
+├── env.ts                # zod-validated env (+ env-infisical / env-required / env-test-defaults)
+├── openapi-contract.ts   # the published contract shape
+└── hono.d.ts
 ```
+
+### packages/domains — one directory per domain
+
+```
+packages/domains/src/packages/{domain}/
+├── domain/          # pure logic — entities, guards, constants, types, utils. No I/O.
+├── application/     # services: orchestration + transactions
+├── infrastructure/  # repositories, renderers, vendor adapters
+├── presentation/    # response schemas + to{Entity}Response mappers
+├── integration/     # cross-domain wiring
+├── client.ts        # BROWSER-SAFE public surface
+├── internal.ts      # SERVER-ONLY surface
+└── index.ts         # barrel
+```
+
+The `client.ts` / `internal.ts` split is load-bearing, not cosmetic. Anything a
+browser bundle can import goes in `client.ts`; anything that reaches for
+`node:async_hooks`, the DB, or a vendor SDK stays behind `internal.ts`. Importing a
+server-only subpath from the admin or studio bundle is how you break the build.
+
+---
 
 ## AI execution
 
-All AI calls flow through `aiService` (`packages/golf/domains/src/packages/ai/application/ai.service.ts`):
+All AI calls flow through `aiService` (`packages/domains/src/packages/ai/application/ai.service.ts`):
 
 - `aiService.generate({...})` — one-shot generations
 - `aiService.stream({...})` — streaming chat
@@ -791,7 +898,7 @@ Spec: `docs/superpowers/specs/2026-04-25-ai-service-unification-design.md`
 
 ## Composition lazy-load (test + cold-start optimization)
 
-**Status (2026-05-07): applied to all three apps via `scripts/lazify-container.mjs`.** Most of what's below is the architecture and how to maintain it; the original "future work" framing is preserved for the per-tRPC-router refactor that's still optional.
+**Status (2026-05-07): applied to all three apps via `scripts/lazify-container.mjs`.** Most of what's below is the architecture and how to maintain it; the original "future work" framing is preserved for the per-oRPC-router refactor that's still optional.
 
 ### Current state — what's already lazy
 
@@ -800,7 +907,7 @@ Spec: `docs/superpowers/specs/2026-04-25-ai-service-unification-design.md`
 - Logger init in each app's `app.ts` uses `createLazyAppLogger(...)` from `@bokendell/observability/log` — pino + sentry + otel transports only initialize on first log call.
 - `warmGolfCradle()` / `warmHiveCradle()` / `warmPortfolioCradle()` are exported from each container; production `server.ts` calls them when `NODE_ENV === "production"` to flip the lazy graph into "all warm" mode before serving requests. Tests/dev stay lazy.
 - Vitest config in `@bokendell/testing` uses `pool: "threads"` with `isolate: false` by default — modules cache across files in the same worker. Set `VITEST_ISOLATE=1` to opt out.
-- Architecture rule `no-eager-service-imports` (in `packages/swarm/domains/src/packages/check/.../no-eager-service-imports-rule.ts`) flags any new static value import in a `container.ts` that would re-introduce eager loading. Run via `pnpm swarm check arch`.
+- Architecture rule `no-eager-service-imports` (in `packages/domains/src/packages/check/.../no-eager-service-imports-rule.ts`) flags any new static value import in a `container.ts` that would re-introduce eager loading. Run via `pnpm swarm check arch`.
 - Smoke benchmarks in `packages/{golf,hive,portfolio}/composition/__bench__/composition-load.bench.ts` track regression of the cold container load time.
 
 > ⚠ **REVERSED 2026-05-13.** Lazy `require()` inside `asFunction` bodies + `warmCradle()` on production boot caused `MODULE_NOT_FOUND` crash loops because tsup left the lazy requires as runtime calls and Node can't resolve `.ts` subpath exports at runtime. All four containers now use top-level `import { … } from "@bokendell/<app>-domains/<sub>"` statements. The `no-eager-service-imports` arch rule + `scripts/lazify-container.mjs` codemod were removed. Sections below are kept for historical context; do not follow them.
@@ -810,7 +917,7 @@ Spec: `docs/superpowers/specs/2026-04-25-ai-service-unification-design.md`
 Don't hand-edit container.ts to lazify a new import. Add the static `import { createXService } from "@bokendell/X-domains/Y"` normally, then re-run:
 
 ```bash
-node scripts/lazify-container.mjs packages/golf/composition/src/container.ts \
+node scripts/lazify-container.mjs packages/composition/src/container.ts \
   '^@bokendell/(golf-domains|analytics|emails|events|redis|realtime|storage|push-notifications)'
 ```
 
@@ -818,9 +925,9 @@ The script (idempotent; safe to re-run) finds every named import whose symbols a
 
 The `no-eager-service-imports` arch rule fails CI if you forget to run the codemod after adding a new import.
 
-### Pre-existing "future work" — per-tRPC-router lazy chunks
+### Pre-existing "future work" — per-oRPC-router lazy chunks
 
-Each app's v1 tRPC router still statically imports ~30 sub-routers. Worth doing for cold-start if a deploy target uses serverless-with-scale-to-zero; not material for always-on Fly machines.
+Each app's v1 oRPC router still statically imports ~30 sub-routers. Worth doing for cold-start if a deploy target uses serverless-with-scale-to-zero; not material for always-on Fly machines.
 
 The pattern matches the swarm-cli optimizations in `docs/context/patterns/cli.md`. Two refactors compound; do them in order.
 
@@ -831,7 +938,7 @@ The pattern matches the swarm-cli optimizations in `docs/context/patterns/cli.md
 **The shape:**
 
 ```typescript
-// packages/golf/composition/src/container.ts — AFTER
+// packages/composition/src/container.ts — AFTER
 import { InjectionMode, asFunction, createContainer } from "awilix";
 // All service-factory imports become dynamic — no static `import { createRoundService }`.
 
@@ -866,14 +973,14 @@ A codemod across the ~200 router files in golf+hive+portfolio is the bulk of the
 **Pre-warm in production.** Add a `composition.warm()` that resolves every cradle key in parallel; production deploys call it on boot to keep "everything ready before first request" semantics:
 
 ```typescript
-// packages/golf/composition/src/container.ts
+// packages/composition/src/container.ts
 export async function warmCradle(): Promise<void> {
   await Promise.all(Object.keys(container.registrations).map((k) => container.cradle[k]));
 }
 ```
 
 ```typescript
-// apps/golf/api/src/server.ts
+// apps/api/src/server.ts
 await warmCradle();   // optional — production: yes; tests: skip
 startHonoServer({ /* ... */ });
 ```
@@ -886,51 +993,51 @@ This flips A from "lazy on first request" to "explicit eager but parallel" in on
 - Steady-state production: identical (services already warm).
 - CLI `swarm admin create --app=golf`: ~16s → ~3–5s (only `usersService` chain loads).
 
-### B. Per-tRPC-router lazy chunks
+### B. Per-oRPC-router lazy chunks
 
-**The bottleneck:** the v1 tRPC router statically imports ~30 sub-routers. tRPC walks all of them at server build time to construct its dispatch table. This adds to cold-start; per-request is unaffected (dispatch is already a hashmap).
+**The bottleneck:** the v1 oRPC router statically imports ~30 sub-routers. oRPC walks all of them at server build time to construct its dispatch table. This adds to cold-start; per-request is unaffected (dispatch is already a hashmap).
 
 **The shape** (only worth doing if you also do A or if the v1-router build time is profiled as a meaningful cold-start cost):
 
 ```typescript
-// apps/{app}/api/src/packages/api/v1/trpc.router.ts — AFTER
-import { router } from "../trpc";
+// apps/api/src/packages/api/v1/orpc.router.ts — AFTER
+import { router } from "../orpc";
 
-const TRPC_TOPIC_LOADERS = {
+const ORPC_TOPIC_LOADERS = {
   ai:        () => import("../../ai").then(m => m.aiRouter),
   courses:   () => import("../../courses").then(m => m.coursesRouter),
   rounds:    () => import("../../rounds").then(m => m.roundsRouter),
   // ... 30 entries
 } as const;
 
-export async function buildTrpcRouterV1() {
+export async function buildOrpcRouterV1() {
   const entries = await Promise.all(
-    Object.entries(TRPC_TOPIC_LOADERS).map(async ([id, load]) => [id, await load()] as const),
+    Object.entries(ORPC_TOPIC_LOADERS).map(async ([id, load]) => [id, await load()] as const),
   );
   return router(Object.fromEntries(entries));
 }
 ```
 
 ```typescript
-// apps/{app}/api/src/app.ts — AFTER
-const trpcRouter = await buildTrpcRouterV1();
-export const app = createApiApp({ trpcRouter, /* ... */ });
+// apps/api/src/app.ts — AFTER
+const orpcRouter = await buildOrpcRouterV1();
+export const app = createApiApp({ orpcRouter, /* ... */ });
 ```
 
 Each topic becomes its own chunk. Combined with A, only the topic + services hit by the current request actually load.
 
-This is roughly the same shape as the swarm-cli per-topic split, just adapted for the API's single tRPC tree (no `firstPositional`-based slimming — the API needs the full tree to dispatch any request, but loads the chunks in parallel rather than statically).
+This is roughly the same shape as the swarm-cli per-topic split, just adapted for the API's single oRPC tree (no `firstPositional`-based slimming — the API needs the full tree to dispatch any request, but loads the chunks in parallel rather than statically).
 
 ### What about plain Hono routes?
 
-Don't bother. Hono's per-request work is already a trie lookup against the registered route table — there's no eager evaluation of route handler *bodies*. Lazy-loading SSE / webhook / OG handlers would only save boot time, and they're a much smaller part of the graph than the tRPC subtree. Skip it.
+Don't bother. Hono's per-request work is already a trie lookup against the registered route table — there's no eager evaluation of route handler *bodies*. Lazy-loading SSE / webhook / OG handlers would only save boot time, and they're a much smaller part of the graph than the oRPC subtree. Skip it.
 
 ### Shared schema-only barrels for CLI consumers
 
 **Background:** when the CLI uses an app's domain (e.g. `swarm admin create` reaches into `golf-domains` for `createAdmin`), it shouldn't drag the whole barrel — services + better-auth + everything. The swarm-domains pattern of `<group>/cli` schema-only sub-paths solves this:
 
 ```jsonc
-// packages/{app}/domains/package.json
+// packages/domains/package.json
 {
   "exports": {
     "./users": "./src/packages/users/index.ts",            // full barrel — pulls drizzle, better-auth
@@ -940,7 +1047,7 @@ Don't bother. Hono's per-request work is already a trie lookup against the regis
 ```
 
 ```typescript
-// packages/{app}/domains/src/packages/users/cli.ts
+// packages/domains/src/packages/users/cli.ts
 export * from "./presentation/schemas/users.input.schema";
 export * from "./presentation/schemas/users.output.schema";
 ```
@@ -954,9 +1061,9 @@ Once services are lazy (refactor A), add a `services` filter to `createApiApp`:
 ```typescript
 // Test:
 const app = createGolfApp({
-  // Only register these tRPC routers — others get a 404 at /api/v1/<other>/*
+  // Only register these oRPC routers — others get a 404 at /api/v1/<other>/*
   services: ["users", "auth"],
-  trpcRouter: pick(trpcRouterV1, ["users", "auth"]),
+  orpcRouter: pick(orpcRouterV1, ["users", "auth"]),
   /* ... */
 });
 ```
@@ -969,7 +1076,7 @@ Each test file declares which subgraph it needs. With per-service lazy + skinny 
 2. `golf-composition` (biggest, 93 services): A only — codemod handler call sites for the await.
 3. `hive-composition` + `portfolio-composition`: apply the codemod from step 2.
 4. `createGolfApp` / `createHiveApp` / `createPortfolioApp` skinny-mode for tests.
-5. `apps/{app}/api` per-tRPC-router lazy: only if cold-start is still painful.
+5. `apps/api` per-oRPC-router lazy: only if cold-start is still painful.
 6. Add `<group>/cli` schema barrels in domains packages on-demand, when the CLI reaches in.
 
 Roughly a week of focused work for steps 2–4. The biggest user-visible win is integration-test runtime; production behavior is essentially unchanged.

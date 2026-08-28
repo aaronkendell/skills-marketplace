@@ -7,7 +7,7 @@
 
 ## Surface area — the 6 files
 
-For each new API at `apps/<app>/api/`, you need exactly six configuration
+For each new API at `apps/api/`, you need exactly six configuration
 files. Each has a specific job; together they wire into the standard
 build → deploy → observe pipeline.
 
@@ -22,7 +22,7 @@ build → deploy → observe pipeline.
 
 Plus the shared infrastructure:
 - `infrastructure/docker/api.Dockerfile` — already exists; takes build-args `APP_DIR`, `APP_FILTER`, `APP_SERVICE_NAME`
-- `packages/<app>/db/`, `packages/<app>/domains/`, `packages/<app>/composition/`, `packages/<app>/client/` — domain layer per `docs/context/patterns/ddd.md`
+- `packages/db/`, `packages/domains/`, `packages/composition/`, `packages/client/` — domain layer per `docs/context/patterns/ddd.md`
 
 ## Externalization — the bundle bug to avoid
 
@@ -31,7 +31,7 @@ have a `.js` compiled output that lives in `node_modules/` at runtime.
 
 The failure mode (caught in production 2026-05-12):
 - tsup externalizes `@bokendell/hive-domains/users` → leaves it as a runtime `require()` in `dist/server.js`
-- `packages/hive/domains/package.json` exports `./users → ./src/packages/users/index.ts`
+- `packages/domains/package.json` exports `./users → ./src/packages/users/index.ts`
 - Node at runtime tries to `require('@bokendell/hive-domains/users')`, can't load a `.ts` file → `MODULE_NOT_FOUND` crash on every boot
 
 Two ways to be safe:
@@ -58,7 +58,7 @@ export default defineConfig({
 
 **Option A is the default.** When you add a new API or pull in a new `@bokendell/*`
 dep, verify the build with `pnpm --filter '@bokendell/<app>-api' build` then
-`node apps/<app>/api/dist/server.js` (with env stubs). It should boot and serve
+`node apps/api/dist/server.js` (with env stubs). It should boot and serve
 without resolution errors.
 
 ## `.cicd.yml` template
@@ -290,7 +290,7 @@ scaffold <name>` command above), not a YAML template loader.
 
 ## See also
 
-- `docs/context/patterns/api.md` — Hono + tRPC routing patterns
+- `docs/context/patterns/api.md` — Hono + oRPC routing patterns
 - `docs/context/patterns/ddd.md` — domain layer that sits behind the API
 - `docs/context/patterns/ci-costs.md` — deploy workflow + cost shape
 - `infrastructure/docker/api.Dockerfile` — the shared build image

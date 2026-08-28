@@ -3,7 +3,7 @@ name: design-verify
 description: >
   Visual verifier for design studios. Captures rendered screenshots + DOM
   + computed styles per artboard via the playwright-cli skill, then audits
-  each one against the flow's `decisions.md`, `packages/<app>/ui/HARD-RULES.md`,
+  each one against the flow's `decisions.md`, `packages/ui/HARD-RULES.md`,
   and the design tokens. Findings POST to swarm-api as annotations tagged
   `origin: "agent:verify"`. Triggers when the user says: "verify the
   studio", "check this flow's design", "run the visual verifier", "make
@@ -30,7 +30,7 @@ checks. `design-review` (the F′ skill) composes verify with `/taste-skill`,
 
 1. **Resolve target flow + app.** Required args: an app (`golf` / `hive` /
    `portfolio`) and a flow slug. If the user didn't supply one, list the
-   available flows under `apps/<app>/design/flows/` and ask.
+   available flows under `apps/design/flows/` and ask.
 
 2. **Authenticate as `Claude` (agent identity).** Every request wraps
    in `infisical run --path=/apps/swarm/agents -- ...` so the
@@ -54,14 +54,14 @@ checks. `design-review` (the F′ skill) composes verify with `/taste-skill`,
    - Capture a full-page screenshot pinned to the artboard's bounding box
    - Dump the artboard's inner HTML
    - Dump computed styles for the root + first N children (depth 3)
-   - Save into `apps/<app>/design/.annotations/cache/<flow>/<artboard>.{png,html,styles.json}`
+   - Save into `apps/design/.annotations/cache/<flow>/<artboard>.{png,html,styles.json}`
      (`.annotations/cache/` is gitignored — these are agent artifacts)
 
 5. **Read the flow's intent** so findings land scoped to the design brief:
-   - `apps/<app>/design/flows/<flow>/decisions.md`
-   - `apps/<app>/design/flows/<flow>/meta.json`
-   - `packages/<app>/ui/HARD-RULES.md`
-   - `packages/<app>/ui/.impeccable.md` (if present)
+   - `apps/design/flows/<flow>/decisions.md`
+   - `apps/design/flows/<flow>/meta.json`
+   - `packages/ui/HARD-RULES.md`
+   - `packages/ui/.impeccable.md` (if present)
    - The flow's `main.tsx` — only the artboard definitions (skip imports)
 
 6. **Audit each artboard.** For each one, hold the screenshot + DOM +

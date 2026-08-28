@@ -4,9 +4,9 @@ Worked examples of what a good review looks like end-to-end. Read this when you 
 
 ---
 
-## Example 1 — single tRPC router
+## Example 1 — single oRPC router
 
-**User**: `/review apps/api/src/packages/projects/projects.trpc.router.ts`
+**User**: `/review apps/api/src/packages/projects/projects.orpc.router.ts`
 
 **Resolution**: one file, matches `apps/*/api/**/*.ts` → `api.md`, `hono-api-anatomy.md`, `auth-and-scopes.md`.
 
@@ -39,13 +39,13 @@ export const projectsRouter = router({
 ```markdown
 ## Review: 1 file against api.md (+ hono-api-anatomy.md, auth-and-scopes.md)
 
-### apps/api/src/packages/projects/projects.trpc.router.ts
+### apps/api/src/packages/projects/projects.orpc.router.ts
 - ✗ BLOCKING — Service instantiated (`new ProjectService(db)`) → fixed: now `ctx.scope.cradle.projectService`
 - ✗ BLOCKING — `list` missing input schema → fixed: added `.input(z.object({}))`
 - ✗ BLOCKING — `get` missing output schema → fixed: added `.output(projectSchema)`
 - ✗ BLOCKING — `publicProcedure` on data-reading routes → fixed: switched to `protectedProcedure`
 - ⚠ IMPORTANT — Missing OpenAPI tags → fixed: added `.meta({ openapi: { method: "GET", path: "/projects", tags: ["projects"] } })`
-- ⚠ IMPORTANT — Not-found handling missing on `get` → fixed: service returns null, mapped to `TRPCError({ code: "NOT_FOUND" })`
+- ⚠ IMPORTANT — Not-found handling missing on `get` → fixed: service returns null, mapped to `ORPCError({ code: "NOT_FOUND" })`
 
 ## Summary
 - 1 file reviewed
@@ -65,13 +65,13 @@ export const projectsRouter = router({
 ```
  M packages/domains/src/packages/projects/application/project.service.ts
  M apps/app/src/packages/projects/components/project-card.tsx
-?? apps/api/src/packages/projects/projects.trpc.router.test.ts
+?? apps/api/src/packages/projects/projects.orpc.router.test.ts
 ```
 
 Three files, two pattern groups:
 - `project.service.ts` → `ddd.md`
 - `project-card.tsx` → `frontend.md`, `per-app-ui.md`
-- `projects.trpc.router.test.ts` → `testing.md`
+- `projects.orpc.router.test.ts` → `testing.md`
 
 **Loaded**: all four pattern docs (each only once).
 
@@ -88,7 +88,7 @@ Three files, two pattern groups:
 - ⚠ IMPORTANT — Imports `useProjectStore` directly → fixed: removed import; container now reads from store and passes selected slice as prop
 - ℹ ADVISORY — Inline `interface ProjectCardProps` instead of `./types.ts` (not fixed; mention for next pass)
 
-### apps/api/src/packages/projects/projects.trpc.router.test.ts
+### apps/api/src/packages/projects/projects.orpc.router.test.ts
 - ✗ BLOCKING — Test imports real `db` instead of using cradle.register to substitute mock → fixed: uses `scope.register({ db: asValue(mockDb) })` pattern
 - ⚠ IMPORTANT — Missing 401 case for protected route → fixed: added test that asserts UNAUTHORIZED when no auth context
 - ⚠ IMPORTANT — Test factory not used, raw insert calls → fixed: replaced with `projectFactory.create()`

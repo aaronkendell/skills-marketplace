@@ -1,20 +1,20 @@
 {
-	"name": "dev",
-	"version": "1.6.4",
-	"description": "Full SDLC: research, plan, build, ship. Linear integration, TDD, automated testing, code review. Works for golf, portfolio, and hive apps.",
-	"author": {
-		"name": "bokendell"
-	},
-	"keywords": [
-		"sdlc",
-		"linear",
-		"tdd",
-		"testing",
-		"planning",
-		"code-review",
-		"implementation",
-		"infisical",
-		"provisioning",
-		"scaffold"
-	]
+  "name": "dev",
+  "version": "1.8.0",
+  "description": "Full SDLC: research, plan, build, ship. Linear integration, TDD, automated testing, code review. Works for golf, portfolio, and hive apps.",
+  "author": {
+    "name": "bokendell"
+  },
+  "keywords": [
+    "sdlc",
+    "linear",
+    "tdd",
+    "testing",
+    "planning",
+    "code-review",
+    "implementation",
+    "infisical",
+    "provisioning",
+    "scaffold"
+  ]
 }

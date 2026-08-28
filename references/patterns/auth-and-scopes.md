@@ -280,7 +280,7 @@ question.
 ## Cross-app note
 
 Hive and portfolio still use the earlier `CallerContext` + `scopedProcedure`
-tRPC model (factories `createXCallerContext`, helpers `requireAnyScope` /
+oRPC model (factories `createXCallerContext`, helpers `requireAnyScope` /
 `requireCallerUserId`). The conceptual move is the same — caller threaded
 explicitly, scopes at the route, capability checks in the service — but golf is
 the first app on the `Principal` + audited-`Policy` shape above. Don't

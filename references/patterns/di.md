@@ -8,9 +8,9 @@ Every backend app (golf, portfolio, hive) uses [Awilix](https://github.com/jeffi
 
 ## TL;DR
 
-- **One container per app** at `packages/{app}/composition/src/container.ts` — registers every service via `asFunction(...).singleton()`.
+- **One container per app** at `packages/composition/src/container.ts` — registers every service via `asFunction(...).singleton()`.
 - **Domain code never imports vendor SDKs.** Shared packages (`@bokendell/realtime`, `@bokendell/events`, `@bokendell/redis`, etc.) own the ports + adapters.
-- **Routers consume services from `ctx.scope.cradle.serviceName`** — per-request Awilix child scope on tRPC ctx.
+- **Routers consume services from `ctx.scope.cradle.serviceName`** — per-request Awilix child scope on oRPC ctx.
 - **Tests substitute services via `scope.register({ X: asValue(mock as any) })`** — not `vi.mock` of the composition barrel.
 
 ---
@@ -18,10 +18,10 @@ Every backend app (golf, portfolio, hive) uses [Awilix](https://github.com/jeffi
 ## File layout
 
 ```
-packages/{app}/composition/src/
+packages/composition/src/
 ├── container.ts          # SINGLE source of truth — Awilix registrations
 ├── functions.ts          # Inngest function wiring (resolves from container.cradle)
-├── app.ts                # createXApp() — wires HTTP app, injects scope into tRPC ctx
+├── app.ts                # createXApp() — wires HTTP app, injects scope into oRPC ctx
 ├── env.ts                # zod-validated env config
 └── services/
     └── index.ts          # Optional back-compat re-export barrel (golf + portfolio still have one; hive deleted theirs)
@@ -34,7 +34,7 @@ The `*.service-factory.ts` files that used to live in `services/` are gone. All 
 ## Building a container
 
 ```typescript
-// packages/{app}/composition/src/container.ts
+// packages/composition/src/container.ts
 import { asFunction, asValue, createContainer, type InferCradleFromResolvers } from "awilix";
 import { db } from "@bokendell/{app}-db";
 import { config } from "./env";
@@ -98,16 +98,16 @@ export const container = createContainer<AppCradle>().register(resolvers);
 
 ---
 
-## Wiring tRPC ctx
+## Wiring oRPC ctx
 
-Each app's tRPC ctx gains a `scope: AwilixContainer<AppCradle>` field. Created per-request, inherited from root container.
+Each app's oRPC ctx gains a `scope: AwilixContainer<AppCradle>` field. Created per-request, inherited from root container.
 
 ```typescript
-// apps/{app}/api/src/packages/api/trpc.ts
+// apps/api/src/packages/api/orpc.ts
 import type { AppCradle } from "@bokendell/{app}-composition/container";
 import type { AwilixContainer } from "awilix";
 
-export interface TRPCContext {
+export interface ApiContext {
   user: BetterAuthSession["user"] | null;
   session: BetterAuthSession["session"] | null;
   requestId: string;
@@ -119,7 +119,7 @@ export interface TRPCContext {
 Then wire `extendContext` in the app builder:
 
 ```typescript
-// packages/{app}/composition/src/app.ts
+// packages/composition/src/app.ts
 import { container } from "./container";
 
 return createApiApp({
@@ -131,7 +131,7 @@ return createApiApp({
 For OpenAPI fetch handlers (golf has one), wire scope in the manual `createContext`:
 
 ```typescript
-// apps/{app}/api/src/packages/api/v1/router.ts
+// apps/api/src/packages/api/v1/router.ts
 import { container } from "@bokendell/{app}-composition/container";
 
 routerV1.all("/api/v1/*", async (c) =>
@@ -148,10 +148,10 @@ routerV1.all("/api/v1/*", async (c) =>
 
 ### Hive variant: `getCradle(ctx)` helper
 
-Hive uses the shared `createBaseTrpc()` from `@bokendell/api/trpc`, which has its own typed BaseApiContext. Rather than redefining the whole tRPC instance per-app, hive uses a `getCradle(ctx)` accessor:
+Hive uses the shared `createBaseOrpc()` from `@bokendell/api/orpc`, which has its own typed BaseApiContext. Rather than redefining the whole oRPC instance per-app, hive uses a `getCradle(ctx)` accessor:
 
 ```typescript
-// apps/hive/api/src/packages/api/trpc.ts
+// apps/api/src/packages/api/orpc.ts
 import type { AppCradle } from "@bokendell/hive-composition/container";
 
 export function getCradle(ctx: any): AppCradle {
@@ -174,13 +174,13 @@ Inside each procedure, destructure services from the cradle:
   return sideBetService.createSideBet(context.caller, input);
 })
 
-// Portfolio (tRPC) — ctx.scope.cradle
+// Portfolio (oRPC) — ctx.scope.cradle
 .mutation(async ({ input, ctx }) => {
   const { roundService } = ctx.scope.cradle;
   return roundService.create(input);
 })
 
-// Hive (tRPC) — getCradle(ctx) helper
+// Hive (oRPC) — getCradle(ctx) helper
 .mutation(async ({ input, ctx }) => {
   const { contactService } = getCradle(ctx);
   return contactService.create(input);
@@ -205,7 +205,7 @@ If a router has a module-level helper that needs services, refactor it to take s
 // Before
 async function assertRoundMember(roundId: string, userId: string) {
   try { await roundService.getRoundById(roundId, userId); }
-  catch { throw new TRPCError({ code: "FORBIDDEN", message: "..." }); }
+  catch { throw new ORPCError({ code: "FORBIDDEN", message: "..." }); }
 }
 
 // After
@@ -213,7 +213,7 @@ import type { RoundService } from "@bokendell/golf-domains/rounds";
 
 async function assertRoundMember(roundService: RoundService, roundId: string, userId: string) {
   try { await roundService.getRoundById(roundId, userId); }
-  catch { throw new TRPCError({ code: "FORBIDDEN", message: "..." }); }
+  catch { throw new ORPCError({ code: "FORBIDDEN", message: "..." }); }
 }
 
 // Caller (inside procedure):
@@ -243,7 +243,7 @@ Services that need atomic multi-write operations use a `withTransaction` helper 
 ```
 HTTP request
   ↓
-tRPC base middleware: runInScope(ctx.scope, () => next())
+oRPC base middleware: runInScope(ctx.scope, () => next())
                          ↑
                          AsyncLocalStorage binds the scope as "current"
   ↓
@@ -279,7 +279,7 @@ Inside the callback: txScope.cradle.{roundRepository,scoringService} are tx-boun
    }
    ```
 
-   But — this is a circular import (domains can't import composition). Pattern used in golf today: pass `runInTransaction` as a service dep with the same shape, have container.ts wire it to `withTransaction`. See `roundService` registration in `packages/golf/composition/src/container.ts` for the template.
+   But — this is a circular import (domains can't import composition). Pattern used in golf today: pass `runInTransaction` as a service dep with the same shape, have container.ts wire it to `withTransaction`. See `roundService` registration in `packages/composition/src/container.ts` for the template.
 
 ### Transactions outside HTTP requests (Inngest functions, scripts)
 
@@ -315,13 +315,13 @@ await runInScope(container, async () => {
 ### Pitfall: `withTransaction` throws if no scope is bound
 
 If you see `[golf-composition] No scope bound — getCurrentScope/withTransaction called outside a request context`, you called the helper outside `runInScope`. Either:
-- The tRPC middleware isn't wrapping requests (broken setup)
+- The oRPC middleware isn't wrapping requests (broken setup)
 - You're calling from an Inngest function / script without `runInScope(container, ...)`
 - You're calling from a Hono module-load helper that runs before any request
 
 ### Status across apps
 
-- **Golf** ✅ — `withTransaction` + `runInScope` + ALS implemented. tRPC middleware binds scope per request. roundService uses Awilix-native runInTransaction.
+- **Golf** ✅ — `withTransaction` + `runInScope` + ALS implemented. oRPC middleware binds scope per request. roundService uses Awilix-native runInTransaction.
 - **Portfolio** — no transactional services today, helper not implemented (add when needed; copy from golf)
 - **Hive** — no transactional services today, helper not implemented (add when needed; copy from golf)
 
@@ -332,7 +332,7 @@ If you see `[golf-composition] No scope bound — getCurrentScope/withTransactio
 Inngest function executions aren't request-scoped. Resolve from the root container:
 
 ```typescript
-// packages/{app}/composition/src/functions.ts
+// packages/composition/src/functions.ts
 import { container } from "./container";
 
 export function create{App}Functions() {
@@ -362,7 +362,7 @@ Use `scope.register({ X: asValue(mock as any) })` instead of `vi.mock` of the co
 import type { AppCradle } from "@bokendell/{app}-composition/container";
 import { asValue, createContainer } from "awilix";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { someRouter } from "./some.trpc.router";
+import { someRouter } from "./some.orpc.router";
 
 // Define mocks directly — not in vi.mock factory
 const someService = {
@@ -370,14 +370,14 @@ const someService = {
   otherThing: vi.fn(),
 };
 
-function makeCtx(overrides: Partial<TRPCContext> = {}): TRPCContext {
+function makeCtx(overrides: Partial<ApiContext> = {}): ApiContext {
   const scope = createContainer<AppCradle>().register({
     // biome-ignore lint/suspicious/noExplicitAny: test-only mock substitution
     someService: asValue(someService as any),
   });
   return {
     user: { id: "user-1", email: "test@example.com", role: "user" } as never,
-    session: { id: "session-id" } as TRPCContext["session"],
+    session: { id: "session-id" } as ApiContext["session"],
     requestId: "req-id",
     headers: new Headers(),
     scope,
@@ -453,8 +453,8 @@ Composition uses fallback for production. Tests use NoOp. This separation preven
 
 - **CLI tools** (`apps/cli/`) — no runtime composition needed; module imports are fine.
 - **One-off scripts** that import a single service from composition — use the back-compat barrel (golf + portfolio) or import the container directly (hive).
-- **Inngest function bodies themselves** (`packages/{app}/domains/.../infrastructure/inngest/*.function.ts`) — these take their service deps as factory args; composition wires them up. Inside the function body, use the deps directly. No cradle access.
-- **Error conversion** — `AppError` → `ORPCError` (or `TRPCError`) bridging is NOT Awilix's concern. The container registers services and lets them throw `AppError` subclasses freely. Error conversion happens in **procedure middleware** (golf: `appErrorBridgeFn` in `procedures/base.ts`; hive/portfolio: tRPC's global `errorHandling` middleware). Never add error-shape logic to an `asFunction` resolver.
+- **Inngest function bodies themselves** (`packages/domains/.../infrastructure/inngest/*.function.ts`) — these take their service deps as factory args; composition wires them up. Inside the function body, use the deps directly. No cradle access.
+- **Error conversion** — `AppError` → `ORPCError` (or `ORPCError`) bridging is NOT Awilix's concern. The container registers services and lets them throw `AppError` subclasses freely. Error conversion happens in **procedure middleware** (golf: `appErrorBridgeFn` in `procedures/base.ts`; hive/portfolio: oRPC's global `errorHandling` middleware). Never add error-shape logic to an `asFunction` resolver.
 
 ---
 

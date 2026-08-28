@@ -1,13 +1,13 @@
 ---
 name: review
-description: Review files against the project's pattern docs (DDD service/repo, Hono+tRPC API, Awilix DI, testing layers, frontend container/component split, mobile, design app, design studio annotations, CLI, barrels, container-images, AI/Mastra, remote tunnels, etc.) and fix violations so the code follows the patterns exactly. Use this skill whenever the user says "review", "check against patterns", "make this follow the patterns", "review this PR", "fix pattern violations", "audit this against our conventions", "is this DDD-compliant", "does this match the api.md pattern", "review my changes", or invokes a `/review` style command — even if they don't name a specific pattern doc. Trigger when the conversation mentions specific files to audit OR when the user describes a code-quality / convention-compliance pass with no specific framework named (the skill maps file globs → pattern docs automatically). Use this *instead* of the patterns-reviewer agent for fast, on-demand, interactive review (the agent is for batch/background review during the build phase).
+description: Review files against the project's pattern docs (DDD service/repo, Hono+oRPC API, Awilix DI, testing layers, frontend container/component split, mobile, design app, design studio annotations, CLI, barrels, container-images, AI/Mastra, remote tunnels, etc.) and fix violations so the code follows the patterns exactly. Use this skill whenever the user says "review", "check against patterns", "make this follow the patterns", "review this PR", "fix pattern violations", "audit this against our conventions", "is this DDD-compliant", "does this match the api.md pattern", "review my changes", or invokes a `/review` style command — even if they don't name a specific pattern doc. Trigger when the conversation mentions specific files to audit OR when the user describes a code-quality / convention-compliance pass with no specific framework named (the skill maps file globs → pattern docs automatically). Use this *instead* of the patterns-reviewer agent for fast, on-demand, interactive review (the agent is for batch/background review during the build phase).
 version: 1.0.0
 author: bokendell
 ---
 
 # Review
 
-Audit code against the project's pattern documentation and fix violations. The patterns describe how this codebase actually wants to be written — DDD service/repository structure, Hono+tRPC routing, Awilix DI, testing layers with Testcontainers, mobile + frontend container/component splits, design studio framework, barrels, container images, AI/Mastra wiring, remote dev tunnels, and more. Drift from these patterns shows up as inconsistencies the team has to chase later; catching it at the moment of authorship is cheap.
+Audit code against the project's pattern documentation and fix violations. The patterns describe how this codebase actually wants to be written — DDD service/repository structure, Hono+oRPC routing, Awilix DI, testing layers with Testcontainers, mobile + frontend container/component splits, design studio framework, barrels, container images, AI/Mastra wiring, remote dev tunnels, and more. Drift from these patterns shows up as inconsistencies the team has to chase later; catching it at the moment of authorship is cheap.
 
 This skill is the **lightweight, on-demand** half of the review system. The `patterns-reviewer` agent in this plugin handles batch review during automated build phases — use this skill when the user is at the keyboard asking for a quick pass.
 
@@ -91,8 +91,8 @@ The 18 canonical pattern files (each loads on demand — don't read them all upf
 | File | When it applies |
 |---|---|
 | `ddd.md` | Any `packages/*/domains/src/**` change — service/repository structure, mapper layer, error model |
-| `api.md` | `apps/*/api/**` — Hono+tRPC composition, routing, error handling, response shape |
-| `hono-api-anatomy.md` | Deeper Hono+tRPC anatomy — startup vs request perf, middleware ordering |
+| `api.md` | `apps/*/api/**` — Hono+oRPC composition, routing, error handling, response shape |
+| `hono-api-anatomy.md` | Deeper Hono+oRPC anatomy — startup vs request perf, middleware ordering |
 | `auth-and-scopes.md` | API + domains touching auth — Better Auth, scopes, OAuth client creds |
 | `frontend.md` | `apps/*/app/**`, `apps/*/admin/**` — Next.js patterns, container/component split |
 | `per-app-ui.md` | `apps/*/{app,admin,mobile,design}/**` — per-app UI package, token contract |
@@ -124,7 +124,7 @@ For each file:
 1. **Read the file fully.** Don't review snippets in isolation — pattern compliance often depends on what's already in the file (e.g., whether a service is injected vs. instantiated).
 2. **Cross-check against the loaded pattern doc(s).** The shorter `references/review-criteria/<domain>.md` checklists give the "what to check" surface; the full `references/patterns/<doc>.md` gives the "how to fix it" detail. Load review-criteria first when available — it's tighter.
 3. **Classify findings:**
-   - **BLOCKING** — violates a core architectural rule (e.g., tRPC procedure queries DB directly, component uses a store hook). Must be fixed before commit.
+   - **BLOCKING** — violates a core architectural rule (e.g., oRPC procedure queries DB directly, component uses a store hook). Must be fixed before commit.
    - **IMPORTANT** — meaningful drift from the pattern (missing schema, wrong error mapping, missing test). Should be fixed.
    - **ADVISORY** — minor or stylistic deviation. Note in the report; only fix if cheap.
 4. **Fix in place** for BLOCKING + IMPORTANT findings. Use the `Edit` tool with the exact rewrite the pattern doc describes. For ADVISORY findings, mention them in the report but don't touch the file.
@@ -166,17 +166,17 @@ If a fix requires a decision the user has to make (e.g., "this looks like it sho
 If the user runs:
 
 ```
-/review apps/api/src/packages/projects/projects.trpc.router.ts
+/review apps/api/src/packages/projects/projects.orpc.router.ts
 ```
 
-1. **Resolve files**: `apps/api/src/packages/projects/projects.trpc.router.ts` (one file).
+1. **Resolve files**: `apps/api/src/packages/projects/projects.orpc.router.ts` (one file).
 2. **Map to patterns**: `apps/*/api/**` glob → `api.md` + `hono-api-anatomy.md` + `auth-and-scopes.md`.
 3. **Load**: `references/review-criteria/api.md` for the checklist, `references/patterns/api.md` for the full reference. Skip `auth-and-scopes.md` initially unless the file shows auth-related code on a first read.
 4. **Read** the router file. Check each item:
    - Has `.input()` / `.output()` schemas? (BLOCKING if no)
    - Uses `protectedProcedure` for auth-required? (BLOCKING if mismatched)
    - Calls service from cradle (not instantiated)? (BLOCKING if instantiated)
-   - Maps domain errors to TRPCError correctly? (IMPORTANT)
+   - Maps domain errors to ORPCError correctly? (IMPORTANT)
    - OpenAPI meta tags present? (IMPORTANT)
 5. **Fix** the violations in place via `Edit`. If, say, the router instantiates `new ProjectService()` instead of getting it from cradle, rewrite to `ctx.scope.cradle.projectService`.
 6. **Report** in the structure above.

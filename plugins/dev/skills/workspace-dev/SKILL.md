@@ -138,9 +138,9 @@ PORT=$(jq -r '.ports."golf-api"' .workspace.json)
 # Health
 curl -sf http://localhost:$PORT/health | jq
 
-# Authenticated tRPC query
-curl -s "http://localhost:$PORT/api/trpc/workspaces.list" \
-  -H "Authorization: Bearer $(infisical secrets get TEST_API_KEY_ADMIN --path=/apps/golf/api --env=development --plain --silent)" | jq
+# Authenticated oRPC query
+curl -s "http://localhost:$PORT/api/v1/workspaces" \
+  -H "Authorization: Bearer $(infisical secrets get TEST_API_KEY_ADMIN --path=/apps/api --env=development --plain --silent)" | jq
 ```
 
 ### Inngest events

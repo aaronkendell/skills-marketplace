@@ -6,15 +6,15 @@
 
 - [ ] BLOCKING: Route handlers contain no business logic — only: get auth context, call service, map to DTO, return response
 - [ ] BLOCKING: Route handlers use injected service (from `@/core/services`) — never instantiate service or repository directly
-- [ ] BLOCKING: All request bodies validated with Zod schema via `createRoute` / tRPC input schema
+- [ ] BLOCKING: All request bodies validated with Zod schema via `createRoute` / oRPC input schema
 - [ ] BLOCKING: All protected routes have `requireAuth` middleware applied
 - [ ] BLOCKING: User context extracted via `requireUserId(c)` — never trust raw user input for user ID
 
-## tRPC vs Hono
+## oRPC vs Hono
 
-- [ ] IMPORTANT: Standard CRUD uses tRPC procedures (`publicProcedure`, `protectedProcedure`, `internalProcedure`)
+- [ ] IMPORTANT: Standard CRUD uses oRPC procedures (`publicProcedure`, `protectedProcedure`, `internalProcedure`)
 - [ ] IMPORTANT: Streaming (SSE, AI responses) and inbound webhooks use plain Hono routes
-- [ ] IMPORTANT: New tRPC routers registered in the root tRPC router
+- [ ] IMPORTANT: New oRPC routers registered in the root oRPC router
 
 ## OpenAPI (Hono REST routes only)
 
@@ -45,7 +45,7 @@
 
 ## Testing
 
-- [ ] BLOCKING: Route test file exists (`*.routes.test.ts` or `*.trpc.router.test.ts`)
+- [ ] BLOCKING: Route test file exists (`*.routes.test.ts` or `*.orpc.router.test.ts`)
 - [ ] BLOCKING: Tests use mocked service — not real DB
 - [ ] IMPORTANT: 200/201 happy path covered
 - [ ] IMPORTANT: 401/403/404 error cases covered

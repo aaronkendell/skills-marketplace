@@ -31,14 +31,14 @@ Tools that need application services (e.g. `submit_hole_scores` needs `roundServ
 
 ### Why late-bind
 
-`apps/golf/api/src/lib/services/round.service-factory.ts` depends on `aiService.threads` (for thread injection on round events). `ai.service-factory.ts` therefore **cannot** import `round.service-factory.ts` directly — it would form an import cycle.
+`apps/api/src/lib/services/round.service-factory.ts` depends on `aiService.threads` (for thread injection on round events). `ai.service-factory.ts` therefore **cannot** import `round.service-factory.ts` directly — it would form an import cycle.
 
 But the orchestrator agent's `submit_hole_scores` and `correct_hole_score` tools require `roundService` to function. If `getMastra` is called without `agentDeps.roundService`, `createGolfAssistant` falls into the base-tools branch and those action tools are never registered.
 
 ### How it works
 
 ```ts
-// apps/golf/api/src/lib/services/ai.service-factory.ts
+// apps/api/src/lib/services/ai.service-factory.ts
 let lateBoundRoundService: RoundService | undefined;
 export function bindRoundServiceForAi(rs: RoundService): void {
   lateBoundRoundService = rs;
@@ -53,7 +53,7 @@ export const aiService = createAiService({
   // ...
 });
 
-// apps/golf/api/src/lib/services/round.service-factory.ts
+// apps/api/src/lib/services/round.service-factory.ts
 import { bindRoundServiceForAi } from "./ai.service-factory";
 export const roundService = createRoundService({ /* ... */ });
 bindRoundServiceForAi(roundService);  // ← runs at module load
@@ -70,8 +70,8 @@ The order of operations:
 Mastra **still emits `tool-input-start` events** for the missing tools (the schema reaches the model through some other path). The streaming response shows `toolName: "submit_hole_scores"` and the args being assembled. Then `tool-output-error: {"name":"ToolNotFoundError"}` fires, but the parser collapses tool-call records to `chat_tool_calls` and (before the fix in `ai.service.ts`) defaulted to `status="success"` when no matching tool result existed. So `chat_tool_calls` showed `submit_hole_scores | success` while `hole_scores` was empty. **The only signal that anything was wrong was a downstream consistency check.**
 
 Two regression tests pin the fix:
-- `packages/golf/domains/src/packages/ai/infrastructure/mastra/agents/golf-assistant.test.ts` — domain contract: `roundService` controls tool registration
-- `apps/golf/api/src/lib/services/ai-service-factory.wiring.test.ts` — composition-root contract: importing `round.service-factory.ts` triggers the bind
+- `packages/domains/src/packages/ai/infrastructure/mastra/agents/golf-assistant.test.ts` — domain contract: `roundService` controls tool registration
+- `apps/api/src/lib/services/ai-service-factory.wiring.test.ts` — composition-root contract: importing `round.service-factory.ts` triggers the bind
 
 If you ever add another tool that depends on a service which depends back on `aiService`, use the same pattern: late-bound setter exposed by `ai.service-factory.ts`, called from the dependency's factory module.
 
@@ -79,7 +79,7 @@ If you ever add another tool that depends on a service which depends back on `ai
 
 ## Tools — `createMeteredTool` is mandatory
 
-Every tool in the AI surface MUST go through `createMeteredTool` (in `packages/golf/domains/src/packages/ai/infrastructure/mastra/metered-tool.ts`). It's a thin wrapper over Mastra's `createTool` that:
+Every tool in the AI surface MUST go through `createMeteredTool` (in `packages/domains/src/packages/ai/infrastructure/mastra/metered-tool.ts`). It's a thin wrapper over Mastra's `createTool` that:
 
 - Pulls `userId` from `RequestContext` (set by the parent runner) so tools never have to know the context-key string
 - Will eventually wire metering (currently metering happens in the output processor — see "Metering" below)
@@ -87,7 +87,7 @@ Every tool in the AI surface MUST go through `createMeteredTool` (in `packages/g
 **Banned by lint:** `import { createTool } from "@mastra/core/tools"` outside the `metered-tool.ts` module itself.
 
 ```ts
-// packages/golf/domains/.../tools/action-tools/submit-hole-scores.tool.ts
+// packages/domains/.../tools/action-tools/submit-hole-scores.tool.ts
 export function createSubmitHoleScoresTool(roundService: RoundService) {
   return createMeteredTool({
     id: "submit_hole_scores",
@@ -123,13 +123,13 @@ The system is a single orchestrator (`golf-assistant`) with a flat tool set, plu
 
 | Agent | Role | Model | Invoked by |
 |---|---|---|---|
-| `golf-assistant` | Single orchestrator. All in-round chat (text + voice). | Conversational role (DB-resolved) | Chat stream, chat tRPC, 4 Inngest jobs |
-| `rules-compiler-agent` | Compile golf-rules questions into structured answers. | Conversational | `ai.trpc.router.ts` rules-compile route |
+| `golf-assistant` | Single orchestrator. All in-round chat (text + voice). | Conversational role (DB-resolved) | Chat stream, chat oRPC, 4 Inngest jobs |
+| `rules-compiler-agent` | Compile golf-rules questions into structured answers. | Conversational | `ai.orpc.router.ts` rules-compile route |
 | `dispute-mediator-agent` | Score dispute resolution. | Conversational | `ai-dispute-mediator.function.ts` Inngest job |
 
 **No nested sub-agents.** Until 2026-04-25 the orchestrator delegated to four sub-agents (`caddie`, `stats`, `scorekeeper`, `gameSetup`) wired via Mastra's `agents:` map. That created synthetic `agent-*` tools whose execute body invoked another LLM. The pattern caused round-context loss across the LLM hop (the sub-agent only saw the parent's prompt string, not the pre-loaded round system message), and was responsible for the `hole_scores=0` defect documented above. We collapsed it: every tool that used to live on a sub-agent now lives on the orchestrator directly.
 
-The two remaining standalone agents (`rules-compiler-agent`, `dispute-mediator-agent`) are NOT nested in the orchestrator's `agents:` map — they're called via `aiService.generate({ agentId: AGENT_IDS.x })` from Inngest/tRPC entry points. That's the correct pattern for "the parent decides it needs another LLM call": the parent calls `aiService.generate` directly from application code, NOT from inside a tool.
+The two remaining standalone agents (`rules-compiler-agent`, `dispute-mediator-agent`) are NOT nested in the orchestrator's `agents:` map — they're called via `aiService.generate({ agentId: AGENT_IDS.x })` from Inngest/oRPC entry points. That's the correct pattern for "the parent decides it needs another LLM call": the parent calls `aiService.generate` directly from application code, NOT from inside a tool.
 
 ### Where to add things
 
@@ -149,7 +149,7 @@ The orchestrator currently has ~17 tools. Frontier models handle this comfortabl
 
 ## Round-context injection
 
-When a chat request includes a `roundId`, `apps/golf/api/src/packages/ai/ai.stream.router.ts` pre-loads the round context and injects it as a system message at the **top level** of agent options:
+When a chat request includes a `roundId`, `apps/api/src/packages/ai/ai.stream.router.ts` pre-loads the round context and injects it as a system message at the **top level** of agent options:
 
 ```ts
 body.context = [{ role: "system", content: contextMessage + voiceFlag }];
@@ -183,7 +183,7 @@ type ThreadRef =
 | Source | Use for | Example callers |
 |---|---|---|
 | `round` | Chat in a specific round, per-(round, player) memory | `aiService.stream` from chat-stream router; all 5 Inngest jobs (caddy/hole-summary/pre-round/round-recap/dispute) injecting into the round thread |
-| `general` | Chat outside any round, per-user-with-explicit-thread-id | Chat tRPC route (lazily creates UUID) |
+| `general` | Chat outside any round, per-user-with-explicit-thread-id | Chat oRPC route (lazily creates UUID) |
 | `ephemeral` | One-shot calls with no memory continuity | Voice transcribe, rules-compiler, classifiers, structured-output one-shots |
 
 **Adding a new surface** (post-round chat, future Discord, public coaching) is a one-line addition to the union; TypeScript flags every call site that needs a new switch arm. **Don't pull `roundId` / `discordThreadId` style fields onto every method** — that pattern grows combinatorially. Add a variant.
@@ -216,7 +216,7 @@ The discriminator flows through `AiContext.threadSource` → metering processor 
 
 ### DB enum + drizzle schema
 
-`ai_thread_type` enum: `round | general | ephemeral`. Mirrored in `packages/golf/db/src/models/enums.ts` and `application/types/thread-ref.ts`. **Keep these three in sync** — they all describe the same thing from three angles (DB column, drizzle types, application discriminator).
+`ai_thread_type` enum: `round | general | ephemeral`. Mirrored in `packages/db/src/models/enums.ts` and `application/types/thread-ref.ts`. **Keep these three in sync** — they all describe the same thing from three angles (DB column, drizzle types, application discriminator).
 
 ### Common pattern: `thread` + `memoryWindow`
 

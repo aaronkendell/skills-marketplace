@@ -14,7 +14,7 @@
 | Layer | Technology |
 |-------|-----------|
 | Frontend | {Next.js 16 / Expo} |
-| Backend | Hono + tRPC + Zod |
+| Backend | Hono + oRPC + Zod |
 | Database | Neon PostgreSQL via Drizzle ORM |
 | Auth | Better Auth |
 | {Other} | {e.g. Ably realtime, Inngest background jobs} |
@@ -22,7 +22,7 @@
 ## Sub-apps
 | Sub-app | Path | What it does |
 |---------|------|-------------|
-| `api` | `apps/{app}/api/` | Hono + tRPC backend |
+| `api` | `apps/{app}/api/` | Hono + oRPC backend |
 | `app` / `mobile` | `apps/{app}/app/` | {Next.js web / Expo mobile} |
 | `admin` | `apps/{app}/admin/` | Refine admin dashboard |
 
@@ -31,7 +31,7 @@
 |---------|------|------|
 | `@bokendell/{app}-domains` | `packages/{app}/domains/` | Business logic (DDD) |
 | `@bokendell/{app}-db` | `packages/{app}/db/` | Schema + migrations |
-| `@bokendell/{app}-client` | `packages/{app}/client/` | tRPC client + React Query |
+| `@bokendell/{app}-client` | `packages/{app}/client/` | oRPC client + React Query |
 
 ## Key links
 - Production: {URL}

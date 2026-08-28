@@ -49,7 +49,7 @@ What now? [a]ddress one · [b]atch all · [d]rop one · [q]uit
 
 Address one annotation. The skill:
 1. Fetches the thread via `${swarmApiUrl}/api/v1/annotations/<id>/thread`
-2. Reads the artboard's source (`apps/<app>/design/flows/<flow>/main.tsx`)
+2. Reads the artboard's source (`apps/design/flows/<flow>/main.tsx`)
 3. Reads decisions.md + HARD-RULES
 4. Decides the fix (uses Edit on the source file)
 5. POSTs a reply: "addressed in <commit ref / file path>"
@@ -128,9 +128,9 @@ Me:
    Addressed 5 of 12. Remaining 7 — run /design-comments again or
    /design-address <id> for individual handling.
    Staged files:
-     apps/golf/design/flows/round/sections/06-skins-light.tsx
-     apps/golf/design/flows/round/sections/06-greenies-light.tsx
-     packages/golf/ui/src/components/Bar/Bar.variants.ts
+     apps/design/flows/round/sections/06-skins-light.tsx
+     apps/design/flows/round/sections/06-greenies-light.tsx
+     packages/ui/src/components/Bar/Bar.variants.ts
    Commit when ready.
    ```
 

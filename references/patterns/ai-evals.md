@@ -21,7 +21,7 @@ How the eval harness, live scorers, and observability fit together. One pattern 
 
 ## Architecture in one paragraph
 
-Three scorers live in `packages/golf/domains/src/packages/ai/evals/scorers/`. The agent (`golf-assistant.ts`) wires the **`relevancy`** scorer at 5% sampling on production traffic via Mastra's `agent.scorers` config. Mastra runs the scorer asynchronously after every sampled generation, writes the result to its `mastra_scorers` Postgres table, AND calls each registered observability exporter's `addScoreToTrace()` — including the Langfuse exporter wired in `mastra.client.ts`. So **scorer results flow to two places automatically: the `mastra_scorers` table and Langfuse as native trace scores**. No glue code is needed.
+Three scorers live in `packages/domains/src/packages/ai/evals/scorers/`. The agent (`golf-assistant.ts`) wires the **`relevancy`** scorer at 5% sampling on production traffic via Mastra's `agent.scorers` config. Mastra runs the scorer asynchronously after every sampled generation, writes the result to its `mastra_scorers` Postgres table, AND calls each registered observability exporter's `addScoreToTrace()` — including the Langfuse exporter wired in `mastra.client.ts`. So **scorer results flow to two places automatically: the `mastra_scorers` table and Langfuse as native trace scores**. No glue code is needed.
 
 The other two scorers (`tool-selection`, `intent-recognition`) are dataset-only — they need ground truth (`expectedTrajectory` / `expectedIntent`) that doesn't exist on live traffic. They run via `swarm evals run`.
 
@@ -31,7 +31,7 @@ The other two scorers (`tool-selection`, `intent-recognition`) are dataset-only 
 
 ### What's attached today
 
-In `packages/golf/domains/src/packages/ai/infrastructure/mastra/agents/golf-assistant.ts`:
+In `packages/domains/src/packages/ai/infrastructure/mastra/agents/golf-assistant.ts`:
 
 ```ts
 scorers: {
@@ -180,7 +180,7 @@ swarm evals list
 
 Generic across apps. Triggers on:
 
-1. **Pull request** — when paths under `packages/<app>/domains/src/packages/ai/**` change (per-app glob in the `paths` filter).
+1. **Pull request** — when paths under `packages/domains/src/packages/ai/**` change (per-app glob in the `paths` filter).
 2. **Nightly cron** at 09:00 UTC against the default branch.
 3. **`workflow_dispatch`** with optional `suite` / `model` / `role` / `environment` overrides.
 
@@ -191,11 +191,11 @@ matrix:
   include:
     - app: golf
       suite: golf-assistant
-      infisical-path: /apps/golf/api
+      infisical-path: /apps/api
     # New entry:
     - app: hive
       suite: chat-classifier
-      infisical-path: /apps/hive/api
+      infisical-path: /apps/api
 ```
 
 Plus the path glob in the `pull_request.paths` list. No new GitHub secrets — Infisical loads `DATABASE_URL` and `ANTHROPIC_API_KEY` from the per-app secret path. The reusable composite action lives at `.github/actions/testing/run-evals/`.
@@ -213,7 +213,7 @@ Everything else loads at run time from each app's Infisical path. The eval defau
 
 ## Adding evals for a new app
 
-1. **Build the suite** under `packages/<app>/domains/src/packages/ai/evals/` following golf's structure (`types.ts`, `runner/`, `suites/`, `fixtures/`, `scorers/`). The runner code in golf is generic enough to copy verbatim — only fixtures + scorers are app-specific.
+1. **Build the suite** under `packages/domains/src/packages/ai/evals/` following golf's structure (`types.ts`, `runner/`, `suites/`, `fixtures/`, `scorers/`). The runner code in golf is generic enough to copy verbatim — only fixtures + scorers are app-specific.
 2. **Add `aiModelResolver` + `usageService.validateModel`** to the app's Awilix cradle if they don't exist yet (golf already has both; portfolio + hive currently don't have `validateModel` — adding it is a small lift to each app's `usage.service.ts`).
 3. **Wire a CLI adapter** in `apps/cli/src/packages/evals/cradle-for.ts` — one case statement per app.
 4. **Re-export suites** from the app's `<app>-domains/ai/evals` barrel so the CLI registry picks them up.
@@ -225,7 +225,7 @@ Everything else loads at run time from each app's Infisical path. The eval defau
 
 ## Adding a new dataset prompt
 
-1. Edit `packages/golf/domains/src/packages/ai/evals/datasets/golf-assistant.json`.
+1. Edit `packages/domains/src/packages/ai/evals/datasets/golf-assistant.json`.
 2. Add an item with the schema declared by `golfAssistantItemSchema` (validated at load time).
 3. Run `swarm evals run golf:golf-assistant` locally to confirm the new prompt scores at expected level.
 4. Open the PR — the GH workflow re-runs the suite against the changed dataset.
@@ -266,10 +266,10 @@ Wire those as Grafana panels with threshold alerts. The Grafana MCP can build th
 - Showing live + dataset trends side-by-side per intent bucket
 - Filtering by app-domain concepts Langfuse doesn't know about (e.g. `roundId` joined to a real round)
 
-When the time comes, mirror the existing dashboard pattern in `apps/portfolio/admin/src/packages/dashboard/`:
+When the time comes, mirror the existing dashboard pattern in `apps/admin/src/packages/dashboard/`:
 
 ```
-apps/golf/admin/src/packages/ai-quality/
+apps/admin/src/packages/ai-quality/
 ├── containers/ai-quality-container.tsx
 ├── components/
 │   ├── score-trend-chart.tsx        # line: relevancy p50/p95 by day, last 30d
@@ -287,7 +287,7 @@ Three queries (the SQL in [§ Reading scorer results](#3-sql-on-mastra_scorers))
 ## File map
 
 ```
-packages/golf/domains/src/packages/ai/evals/
+packages/domains/src/packages/ai/evals/
 ├── types.ts                       # EvalSuite contract
 ├── constants.ts                   # DEFAULT_JUDGE_ROLE
 ├── datasets/golf-assistant.json

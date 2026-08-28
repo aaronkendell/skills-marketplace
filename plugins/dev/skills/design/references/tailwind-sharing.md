@@ -27,7 +27,7 @@ export default {
 ## Mobile (NativeWind)
 
 Mobile apps use NativeWind (Tailwind for React Native). The config is different:
-- Lives in `apps/<app>/mobile/tailwind.config.ts`
+- Lives in `apps/mobile/tailwind.config.ts`
 - Content includes mobile-ui: `"../../packages/shared/mobile-ui/src/**/*.{ts,tsx}"`
 - Same token VALUES as web, different config FORMAT
 
@@ -49,7 +49,7 @@ packages/shared/design-tokens/
 Each app imports and extends with its brand:
 
 ```typescript
-// apps/golf/admin/tailwind.config.ts
+// apps/admin/tailwind.config.ts
 import { baseTokens } from "@bokendell/design-tokens";
 
 export default {

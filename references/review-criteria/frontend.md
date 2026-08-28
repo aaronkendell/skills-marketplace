@@ -24,8 +24,10 @@
 
 ## Queries and mutations
 
-- [ ] BLOCKING: All data fetching uses tRPC via `useTRPC()` — no raw fetch calls
-- [ ] IMPORTANT: Cache invalidation uses `trpc.{router}.{procedure}.queryKey()` — not manual string keys
+- [ ] BLOCKING: All data fetching uses oRPC — no raw fetch calls
+- [ ] BLOCKING: Reads use a `q.{domain}.{entry}()` builder; no `orpc.<proc>.queryOptions({ input })`
+      spelled at a call site (structurally-keyed duplicates split the cache)
+- [ ] IMPORTANT: Cache invalidation uses `orpc.<path>.key({ input })` — not manual string keys
 
 ## Schemas
 

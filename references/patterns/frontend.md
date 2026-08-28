@@ -15,8 +15,10 @@ Web frontend follows the **exact same architecture as mobile** — containers, s
 - All types in `types.ts`, all constants in `constants.ts`
 - One component per file
 - Business logic → `utils/` with tests
-- tRPC via `useTRPC()` for all queries and mutations
-- Query invalidation via `trpc.{router}.{procedure}.queryKey()`
+- Reads go through the `q` query builders (`useQuery(q.{domain}.{entry}())`) — never
+  `orpc.<proc>.queryOptions({ input })` at a call site
+- Mutations via `orpc.<path>.mutationOptions()`
+- Query invalidation via `orpc.<path>.key({ input })` — never hardcoded strings
 
 ---
 
@@ -107,7 +109,7 @@ export default async function RoundsLayout({ children }: { children: React.React
 }
 ```
 
-**Rule:** Default to client components with tRPC for feature data. Use server components only for layouts or static data that doesn't need React Query's caching, refetching, or optimistic updates.
+**Rule:** Default to client components with oRPC for feature data. Use server components only for layouts or static data that doesn't need React Query's caching, refetching, or optimistic updates.
 
 Mark client components explicitly:
 
@@ -115,8 +117,7 @@ Mark client components explicitly:
 "use client";
 
 export function RoundsContainer() {
-  // tRPC hooks require client context
-  const trpc = useTRPC();
+  // oRPC hooks require client context
   // ...
 }
 ```
@@ -218,29 +219,34 @@ export const generateMetadata = generateBlogPostMetadata;
 
 ---
 
-## tRPC client setup (Next.js)
+## oRPC client setup (Next.js)
+
+There is **no provider and no hook.** Each app builds its client once at module scope
+and exports `orpc` (the query utils) and `q` (the canonical query builders):
 
 ```typescript
-// packages/{app}/client/src/trpc.ts
-import { createTRPCContext } from "@trpc/tanstack-react-query";
-import type { AppRouter } from "@bokendell/portfolio-api";
+// apps/{app}/src/lib/api/orpc.ts
+import { createGolfClient } from "@bokendell/golf-client/orpc";
+import { createGolfQueries } from "@bokendell/golf-client/queries";
 
-export const { TRPCProvider, useTRPC, useTRPCClient } = createTRPCContext<AppRouter>();
+export const { orpcClient, orpc } = createGolfClient({ url: env.NEXT_PUBLIC_API_URL });
+export const q = createGolfQueries(orpc);
 ```
 
-Usage is identical to mobile:
+Usage is identical to mobile — import the singletons, don't reach for a context:
 
 ```typescript
 "use client";
 
+import { orpc, q } from "@lib/api/orpc";
+
 export function useRounds() {
-  const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const roundsQuery = useQuery(trpc.rounds.list.queryOptions());
+  const roundsQuery = useQuery(q.rounds.list());
   const createMutation = useMutation(
-    trpc.rounds.create.mutationOptions({
-      onSuccess: () => queryClient.invalidateQueries({ queryKey: trpc.rounds.list.queryKey() }),
+    orpc.rounds.create.mutationOptions({
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: orpc.rounds.list.key() }),
     }),
   );
 

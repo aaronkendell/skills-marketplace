@@ -74,7 +74,7 @@ graph TD
 |---------|------|
 | `@bokendell/{app}-domains` | Business logic (DDD services + repositories) |
 | `@bokendell/{app}-db` | Drizzle schema + migrations + test factories |
-| `@bokendell/{app}-client` | tRPC client + React Query hooks + query keys |
+| `@bokendell/{app}-client` | oRPC client + React Query hooks + query keys |
 | `@bokendell/{app}-auth` | Better Auth configuration |
 
 ## Authentication

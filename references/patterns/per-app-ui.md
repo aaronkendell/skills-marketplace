@@ -100,7 +100,7 @@ they're not brand colors, they're product semantics.
 ## Per-app `tokens.css` template
 
 ```css
-/* packages/<app>/ui/src/tokens/tokens.css */
+/* packages/ui/src/tokens/tokens.css */
 
 @import "tailwindcss";
 
@@ -181,7 +181,7 @@ as the underlying tokens — **numeric for the standard Tailwind scale**,
 **semantic for brand-bigger sizes**.
 
 ```ts
-// packages/<app>/ui/src/components/Stack/Stack.variants.ts
+// packages/ui/src/components/Stack/Stack.variants.ts
 gap: {
   "0": "gap-0",
   "1": "gap-1",       // 4px  — Tailwind default
@@ -227,7 +227,7 @@ studio.
 
 The migration:
 
-1. **Tokens:** dropped numeric `--spacing-N` from `packages/golf/ui/src/tokens/tokens.css`; added `--spacing-xl`, `--spacing-2xl`, `--spacing-3xl` semantically named.
+1. **Tokens:** dropped numeric `--spacing-N` from `packages/ui/src/tokens/tokens.css`; added `--spacing-xl`, `--spacing-2xl`, `--spacing-3xl` semantically named.
 2. **Variants:** `Stack`, `Spacer`, `Sheet`, `BottomSheet`, `ScoreStepper` rewired so `gap="7" / size="7"` etc. became `gap="xl" / size="xl"`. Numeric variants 0–6 remain.
 3. **Call sites in the design studio:** `mb-7` → `mb-xl`, `p-9` → `p-3xl`, `w-7` → `w-xl`, etc. (~70 sites swept).
 4. **Mobile app:** call sites left at the standard Tailwind values they were always silently rendering against. No visible change since most usages (`h-9 w-9` icon containers) were probably accidentally rendering brand-too-big anyway.
@@ -245,4 +245,4 @@ once another app adopts the contract.
 - `docs/context/patterns/design-studio.md` — studio framework consumer of these tokens
 - `docs/context/patterns/mobile.md` — mobile app consumer
 - `docs/context/patterns/frontend.md` — web app consumer
-- `packages/golf/ui/SIZING.md` — typed-enum surface for golf's primitives
+- `packages/ui/SIZING.md` — typed-enum surface for golf's primitives

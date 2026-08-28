@@ -16,15 +16,15 @@ graph TD
         Admin["{App} Admin\nRefine"]
     end
 
-    subgraph API ["apps/{app}/api — Hono + tRPC"]
-        Router[tRPC Router]
+    subgraph API ["apps/{app}/api — Hono + oRPC"]
+        Router[oRPC Router]
         Auth[Better Auth]
     end
 
     subgraph Packages ["packages/{app}/"]
         Domains["domains/\nBusiness logic (DDD)"]
         DB["db/\nDrizzle schema"]
-        Client["client/\ntRPC client"]
+        Client["client/\noRPC client"]
     end
 
     subgraph Infra
@@ -60,7 +60,7 @@ sequenceDiagram
     participant R as Repository
     participant DB as Neon DB
 
-    C->>API: tRPC call
+    C->>API: oRPC call
     API->>S: service.method()
     S->>R: repository.find()
     R->>DB: Drizzle query

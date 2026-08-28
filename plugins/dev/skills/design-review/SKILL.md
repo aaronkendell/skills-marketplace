@@ -59,7 +59,7 @@ is fail-closed.
    agent gets:
    - The artboard's screenshot path + DOM dump path + computed styles
    - The flow's `decisions.md` + `meta.json`
-   - `packages/<app>/ui/HARD-RULES.md`
+   - `packages/ui/HARD-RULES.md`
    - The relevant tokens file
    - A focused prompt for the agent's specialty:
 
@@ -109,7 +109,7 @@ is fail-closed.
    **Claude · &lt;name&gt;** with a small agent tag, distinct from human
    comments which show the email's local part.
 
-6. **Write a summary** to `apps/<app>/design/flows/<flow>/REVIEW-<date>.md`
+6. **Write a summary** to `apps/design/flows/<flow>/REVIEW-<date>.md`
    committing:
    - Total findings by agent
    - Top 10 prioritized by severity
@@ -178,6 +178,6 @@ Me:
      1. [merged] sg-skins-light Bar — wrong color token
      2. [impeccable] sc-greenies-light spacing breaks the 8-pt grid
      ...
-   Summary: apps/golf/design/flows/round/REVIEW-2026-05-11.md
+   Summary: apps/design/flows/round/REVIEW-2026-05-11.md
    Live threads: https://golf-design.vercel.app/flows/round/?pins=1
    ```

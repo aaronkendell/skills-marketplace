@@ -24,7 +24,7 @@ Given an **app name** (golf, portfolio, or hive), scan these areas:
 - Note any recent migrations or schema changes
 
 ### 3. API Surface
-- Read tRPC router files in `apps/<app>/api/src/packages/`
+- Read oRPC router files in `apps/<app>/api/src/packages/`
 - List all endpoints with method, path, auth level
 - Note which services each router depends on
 

@@ -36,8 +36,8 @@ When scope creep is detected, present to the user:
 ```
 Scope check: I'm about to modify files outside this issue's planned scope.
 
-Planned: packages/golf/domains/src/packages/rounds/
-Touching: packages/golf/domains/src/packages/scoring/
+Planned: packages/domains/src/packages/rounds/
+Touching: packages/domains/src/packages/scoring/
 
 This change is needed because: [reason]
 

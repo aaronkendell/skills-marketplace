@@ -1,6 +1,6 @@
 # Design App Pattern (Next.js + packages)
 
-> Cross-app pattern for the per-app design studios at `apps/<app>/design/`.
+> Cross-app pattern for the per-app design studios at `apps/design/`.
 > Owned by `@bokendell/design`. Applies identically to golf, hive, portfolio,
 > and any future app — swap `@bokendell/<app>-ui` and the per-app `site`
 > package, the rest stays the same.
@@ -25,13 +25,13 @@
   canvas / devices / hooks / annotations
   shell / layouts / routing / page-meta / sketches
 
-apps/<app>/design/src/lib/core/            ← local stash for framework modules
+apps/design/src/lib/core/            ← local stash for framework modules
   (during development; promoted into @bokendell/design once stable)
 
-apps/<app>/design/src/lib/                 ← truly app-specific shared
+apps/design/src/lib/                 ← truly app-specific shared
   providers/ auth/ studio.css env*.ts ...
 
-apps/<app>/design/src/packages/            ← feature/surface packages
+apps/design/src/packages/            ← feature/surface packages
   site/     ← studio shell, discovery, layouts, errors (golf-skinned)
   mobile/   ← surface group: 1 dir per product domain
   admin/    ← surface group
@@ -47,7 +47,7 @@ The studio is a pure consumer: `studio.css` imports `@bokendell/<app>-ui/tokens.
 ## Top-level layout
 
 ```
-apps/<app>/design/
+apps/design/
 ├── next.config.ts, tailwind.config.ts, postcss.config.mjs
 ├── package.json                 # Next.js 15 App Router; @bokendell/<app>-ui workspace dep
 ├── tsconfig.json                # extends @bokendell/tsconfig/next.json + path aliases
@@ -70,7 +70,7 @@ apps/<app>/design/
     │
     ├── lib/                     # truly shared, app-only
     │   ├── core/                # local stash for future @bokendell/design modules
-    │   ├── providers/           # RootProviders (Query + tRPC + Tooltip)
+    │   ├── providers/           # RootProviders (Query + oRPC + Tooltip)
     │   ├── auth/                # better-auth wiring (when needed)
     │   ├── studio.css           # imports @<app>-ui/tokens.css + fonts.css
     │   ├── studio-frame.tsx     # StudioFrame helper (ios-host + IOSDevice wrapper)
@@ -370,7 +370,7 @@ Mirrors `apps/admin/` exactly — one is infrastructure, the other is design sur
 ## Brand assets — promotion ladder
 
 ```
-apps/<app>/design/public/brand/   ← WIP / studio-only mocks / breeding ground
+apps/design/public/brand/   ← WIP / studio-only mocks / breeding ground
         │
         ▼ when shipped as production code
 packages/<app>-ui/src/assets/     ← imported as JS modules (icons, brand marks)
@@ -404,27 +404,28 @@ The `(surface)` route group keeps the file system tidy but doesn't appear in URL
 DesignCanvas + annotations transitively require:
 
 - `QueryClientProvider` (React Query) — annotations cache
-- `TRPCProvider` from `@bokendell/swarm-client/trpc` — annotations API
+- `SwarmOrpcProvider` from `@bokendell/swarm-client/orpc` — annotations API
 - `TooltipProvider` from `@bokendell/ui` — toolbar tooltips
 
 The site's `RootLayoutContainer` wraps the tree in all three. Without them, any `<DesignCanvas>` throws on first hook call.
 
 ```tsx
 "use client";
-import { TRPCProvider, createSwarmTRPCClient } from "@bokendell/swarm-client/trpc";
+import { SwarmOrpcProvider } from "@bokendell/design/mount";
+import { createSwarmClient } from "@bokendell/swarm-client/orpc";
 import { TooltipProvider } from "@bokendell/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-const SWARM_API_URL = process.env.NEXT_PUBLIC_SWARM_API_URL ?? "http://127.0.0.1:3500/api/trpc";
+const SWARM_API_URL = process.env.NEXT_PUBLIC_SWARM_API_URL ?? "http://127.0.0.1:3500";
 
 export function RootProviders({ children }) {
   const [queryClient] = useState(() => new QueryClient({ /* defaults */ }));
-  const [{ trpcClient }] = useState(() => createSwarmTRPCClient({ url: SWARM_API_URL }));
+  const [{ orpc, queryClient }] = useState(() => createSwarmClient({ url: SWARM_API_URL }));
   return (
     <QueryClientProvider client={queryClient}>
-      <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+      <SwarmOrpcProvider value={orpc}>
         <TooltipProvider>{children}</TooltipProvider>
-      </TRPCProvider>
+      </SwarmOrpcProvider>
     </QueryClientProvider>
   );
 }
@@ -462,7 +463,7 @@ export default createVitestConfig({
 
 ## Plug-and-play for new design apps
 
-A new design app (e.g. `apps/hive/design/`) is:
+A new design app (e.g. `apps/design/`) is:
 
 1. Copy the layout of `apps/<existing-app>/design/`.
 2. Replace `@<existing-app>-ui` imports with the new app's UI package.

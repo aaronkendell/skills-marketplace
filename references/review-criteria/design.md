@@ -55,7 +55,7 @@
 
 ## Providers
 
-- [ ] BLOCKING: `src/lib/providers/root-providers.tsx` wraps the tree in `QueryClientProvider` + `TRPCProvider` (from `@bokendell/swarm-client/trpc`) + `TooltipProvider` (from `@bokendell/ui`)
+- [ ] BLOCKING: `src/lib/providers/root-providers.tsx` wraps the tree in `QueryClientProvider` + `SwarmOrpcProvider` (from `@bokendell/swarm-client/orpc`) + `TooltipProvider` (from `@bokendell/ui`)
 - [ ] BLOCKING: Swarm-api URL read from `process.env.NEXT_PUBLIC_SWARM_API_URL` (with sensible fallback), NOT hardcoded in containers
 - [ ] IMPORTANT: `RootProviders` is a `"use client"` component mounted by `RootLayoutContainer`
 

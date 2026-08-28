@@ -52,7 +52,7 @@ Is this an App Store / Play Store launch asset?
 
 Is this a dynamic OG / Twitter / social-share card image?
 └── No new tool — use `@vercel/og` (Satori) directly inside the relevant Next.js app.
-    apps/golf/admin or any portfolio site can ship dynamic OG with one route file.
+    apps/admin or any portfolio site can ship dynamic OG with one route file.
 ```
 
 ## Preflight · check what's installed, prompt the user only if missing
@@ -129,7 +129,7 @@ emoji icons", and constrain seed if doing tile variants.
 
 ### Promotion rule (per-app → core)
 
-A static asset starts in `apps/<app>/design/assets/`. When the same asset would be needed
+A static asset starts in `apps/design/assets/`. When the same asset would be needed
 in two or more apps (golf + portfolio + hive), promote to
 `core/packages/shared/design/src/packages/marks/` (or `glyphs/`, `textures/`) and ship
 through a subpath export, same model as `@bokendell/design/motion`.

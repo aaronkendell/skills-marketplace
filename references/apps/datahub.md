@@ -1,6 +1,6 @@
 # Datahub — Agent Context
 
-**Status:** Planned | **Linear:** DATAHUB | **Stack:** Hono + tRPC, Drizzle, Neon, MCP server, HealthKit, Stripe
+**Status:** Planned | **Linear:** DATAHUB | **Stack:** Hono + oRPC, Drizzle, Neon, MCP server, HealthKit, Stripe
 
 ## What it does
 Personal data aggregation API and MCP server. Pulls data from HealthKit (health + activity), Google Calendar, location history, and Stripe subscriptions into a unified personal data store. Exposes a typed API and an MCP server so agents (and Claude) can query personal context — health trends, schedule, finances — in real time.
@@ -15,11 +15,11 @@ Personal data aggregation API and MCP server. Pulls data from HealthKit (health 
 ## Key packages
 - `@bokendell/datahub-domains` — DDD domains (health, location, calendar, finance)
 - `@bokendell/datahub-db` — Drizzle schema + Neon
-- `@bokendell/datahub-client` — tRPC client
+- `@bokendell/datahub-client` — oRPC client
 
 ## Patterns used
 - Full DDD (see `context/patterns/ddd.md`)
-- tRPC for API (see `context/patterns/api.md`)
+- oRPC for API (see `context/patterns/api.md`)
 - MCP server for agent access to personal data
 - Inngest for scheduled sync jobs (HealthKit pull, Calendar sync, Stripe webhooks)
 - Stripe subscriptions for service tier gating

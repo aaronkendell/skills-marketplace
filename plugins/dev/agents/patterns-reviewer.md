@@ -16,7 +16,7 @@ You are a code reviewer focused on pattern compliance. Your job is to review a d
    skill: `${CLAUDE_PLUGIN_ROOT}/../../references/patterns/`), one or more of:
    - `ddd.md` — DDD service/repository patterns
    - `testing.md` — test types, Testcontainers, factories
-   - `api.md` — Hono, tRPC, OpenAPI patterns
+   - `api.md` — Hono, oRPC, OpenAPI patterns
    - `frontend.md` — component patterns
    - `mobile.md` — Expo, RN, hooks/stores/containers
 3. **Issue spec** — what was being implemented, acceptance criteria
@@ -25,7 +25,7 @@ You are a code reviewer focused on pattern compliance. Your job is to review a d
 ## What to Check
 
 ### DDD Compliance (from ddd.md)
-- No tRPC procedure directly queries the database (must go through service)
+- No oRPC procedure directly queries the database (must go through service)
 - No Inngest function directly queries the database (must go through service)
 - No cross-domain repository imports (cross-domain must use injected service)
 - ORM mapper used in repository (toDomain, toORM)
@@ -35,15 +35,15 @@ You are a code reviewer focused on pattern compliance. Your job is to review a d
 - Service instantiated via factory function with dependency injection
 
 ### API Compliance (from api.md)
-- Every tRPC route has .input() and .output() schemas
+- Every oRPC route has .input() and .output() schemas
 - protectedProcedure used for auth-required endpoints
 - OpenAPI meta tags present with correct tags
-- Error handling follows AppError → TRPCError mapping pattern
+- Error handling follows AppError → ORPCError mapping pattern
 
 ### Testing Compliance (from testing.md)
 - New business logic has unit tests
 - New repository methods have integration tests
-- New tRPC routes have route tests
+- New oRPC routes have route tests
 - Test factories used for test data (not raw inserts)
 - Integration tests use connectToTestDatabase pattern
 
@@ -57,7 +57,7 @@ You are a code reviewer focused on pattern compliance. Your job is to review a d
 - Container delegates to page/screen — no inline visual JSX
 - Page/screen has no hooks (only containers import hooks)
 - Form hooks in hooks/forms/ — separate from domain hooks
-- Zustand store contains only UI state (no API data, no tRPC)
+- Zustand store contains only UI state (no API data, no oRPC)
 - Form hooks call onSubmit callback from domain hook, not mutations directly
 - Haptic feedback on user interactions
 
