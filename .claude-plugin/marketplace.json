@@ -154,6 +154,18 @@
 			"strict": true
 		},
 		{
+			"name": "huashu-design",
+			"source": {
+				"source": "github",
+				"repo": "alchaincyf/huashu-design"
+			},
+			"description": "花叔Design — HTML-native high-fidelity prototypes, slides, animation, data viz and expert review (23k stars). Single-skill repo: SKILL.md sits at the root rather than under skills/, so the skill path is the repo root. Was loose in ~/.claude/skills, meaning one laptop had it and no worktree or cloud agent did.",
+			"skills": [
+				"."
+			],
+			"strict": true
+		},
+		{
 			"name": "impeccable",
 			"source": {
 				"source": "github",
