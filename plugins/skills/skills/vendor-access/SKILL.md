@@ -259,3 +259,45 @@ worked first time, every time.
 
 The one exception is `oura`, which has no CLI and no third-party API, and is
 served from the gateway at `mcp.bokendell.com/oura`.
+
+## Enumerating secrets without leaking them
+
+`infisical secrets` with **no output flag renders a table with every value in plaintext**.
+Never run it bare in a session whose transcript you would not want to hold credentials.
+There is no `--json` flag (that errors with `unknown flag: --json` on 0.43.x); the flag is
+`-o/--output`:
+
+```bash
+# names only — the safe default for "what is in this folder?"
+INFISICAL_TOKEN="$TOK" infisical secrets \
+  --projectId="$PID" --path=/infrastructure/<vendor> --env=production \
+  -o json --silent | jq -r '.[].secretKey'
+
+# which /infrastructure folders exist at all
+INFISICAL_TOKEN="$TOK" infisical secrets folders get \
+  --projectId="$PID" --path=/infrastructure --env=production -o json --silent
+
+# one known value, when you actually need it (never echo it)
+INFISICAL_TOKEN="$TOK" infisical secrets get NAME \
+  --projectId="$PID" --path=/infrastructure/<vendor> --env=production --plain --silent
+```
+
+The `-o json` shape is `[{ "secretKey": ..., "secretValue": ... }]`, so `.[].secretKey` is
+the names-only projection. `--recursive` walks sub-folders when you want the whole tree.
+
+**Environment slugs differ by interface**: the REST API wants `environment=production`, the
+CLI wants `--env=prod` in some versions and `--env=production` in others — check with a
+folder listing before assuming an empty result means "no secrets".
+
+## Which Fly token to use
+
+`/infrastructure/fly` holds four keys, and they are not interchangeable:
+
+| Key | Use |
+|---|---|
+| `FLY_API_TOKEN` | **the default** — org deploy token, and the name every swarm surface reads (composition env, deploy adapter, fly client, runner controller) |
+| `FLY_CICD_ORG_TOKEN` | CI's token. Leave it to CI; revoking it breaks deploys |
+| `FLY_ORG_TOKEN` | the older org token, kept for compatibility |
+| `FLY_ORG_SLUG` | not a credential — the `--org` argument. Note flyctl reports this value as the org *name* and a shorter string as the slug; both are accepted by `--org` |
+
+For any read-only query (`fly apps list`, `fly status`, `fly logs`) use `FLY_API_TOKEN`.
