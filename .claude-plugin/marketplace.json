@@ -109,6 +109,34 @@
 			"description": "Bundle of MCP servers (Neon, Grafana, Mapbox docs+DevKit, Proxyman) that follow you across every repo and superset worktree when enabled at user scope. Secrets via shell env vars."
 		},
 		{
+			"name": "openrouter",
+			"source": {
+				"source": "github",
+				"repo": "OpenRouterTeam/skills"
+			},
+			"description": "OpenRouter's own skills — models, generations, analytics, OAuth, the TypeScript SDK, and speech/image/video endpoints. Credentials at /infrastructure/openrouter.",
+			"skills": [
+				"./skills/create-agent-tui",
+				"./skills/create-headless-agent",
+				"./skills/install-ori-harness",
+				"./skills/openrouter-agent-migration",
+				"./skills/openrouter-analytics-query",
+				"./skills/openrouter-analytics-schema",
+				"./skills/openrouter-analytics",
+				"./skills/openrouter-benchmarks",
+				"./skills/openrouter-generations",
+				"./skills/openrouter-images",
+				"./skills/openrouter-models",
+				"./skills/openrouter-oauth",
+				"./skills/openrouter-stt",
+				"./skills/openrouter-tts",
+				"./skills/openrouter-typescript-sdk",
+				"./skills/openrouter-video",
+				"./skills/spawn-ori-eval"
+			],
+			"strict": true
+		},
+		{
 			"name": "ponytail",
 			"source": {
 				"source": "github",
@@ -116,6 +144,28 @@
 			},
 			"description": "External overengineering/debt pressure skill. Use as a signal for skill-watch and review; bokendell DDD/API/mobile/design standards remain owned by the local dev and skill-watch plugins.",
 			"strict": false
+		},
+		{
+			"name": "posthog",
+			"source": {
+				"source": "github",
+				"repo": "PostHog/skills"
+			},
+			"description": "PostHog's own skills. Marked under construction upstream, so treat it as a moving target; golf and portfolio both use PostHog and its credentials sit at /infrastructure/posthog.",
+			"skills": [
+				"./skills/posthog/README.md",
+				"./skills/posthog/all",
+				"./skills/posthog/cutting-costs",
+				"./skills/posthog/error-tracking",
+				"./skills/posthog/feature-flags",
+				"./skills/posthog/integration",
+				"./skills/posthog/llm-analytics",
+				"./skills/posthog/logs",
+				"./skills/posthog/migrations",
+				"./skills/posthog/product-analytics",
+				"./skills/posthog/tools-and-features"
+			],
+			"strict": true
 		},
 		{
 			"name": "resend",
@@ -268,6 +318,28 @@
 				"repo": "nextlevelbuilder/ui-ux-pro-max-skill"
 			},
 			"description": "UI/UX reference database: styles, palettes, font pairings, product types, UX guidelines, chart types across 22 stacks. Required by dev:design as the heuristics layer."
+		},
+		{
+			"name": "upstash",
+			"source": {
+				"source": "github",
+				"repo": "upstash/skills"
+			},
+			"description": "Upstash's own skills — Redis, QStash, Workflow, Vector, Search and the CLI. Every product here uses Upstash; credentials are at /infrastructure/upstash in each Infisical project.",
+			"skills": [
+				"./skills/upstash-box-js",
+				"./skills/upstash-box-py",
+				"./skills/upstash-cli",
+				"./skills/upstash-qstash-js",
+				"./skills/upstash-ratelimit-js",
+				"./skills/upstash-redis-js",
+				"./skills/upstash-redis-start",
+				"./skills/upstash-search-js",
+				"./skills/upstash-vector-js",
+				"./skills/upstash-workflow-js",
+				"./skills/upstash"
+			],
+			"strict": true
 		}
 	]
 }
