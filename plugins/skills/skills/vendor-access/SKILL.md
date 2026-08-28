@@ -59,21 +59,26 @@ Skills for most of these are installed from the vendors' own repos:
 `cloudflare/skills`, `getsentry/skills`, `grafana/skills`, `langfuse/skills`,
 `resend/resend-skills`. Prefer them over improvising against the API.
 
-## Identifiers
+## Identifiers — read them from the repo
 
-**They live in `registry.md`, next to this file.** Read it rather than guessing:
-Fly org slugs, Cloudflare account and zone ids, Sentry orgs, Grafana stacks, the
-three Langfuse projects, the two Resend accounts, and which Infisical project
-owns each.
+**Every repo carries its own `.claude/vendors.md`.** Read that file before doing
+anything vendor-specific: it names which Fly org, Sentry org, Cloudflare account,
+Grafana stack, Langfuse project and Resend account *that* repo uses, and which
+Infisical project owns the credentials.
 
-It sits here rather than in the workspace root because this marketplace is
-installed at user scope and auto-updates, so it is present in every worktree and
-every cloud agent — a workspace file would be missing exactly where an agent
-needs it most. Other playbooks should reference this same path.
+    cat .claude/vendors.md
 
-Nothing in it is secret. Identifiers are visible to anyone already holding the
-matching credential, which is why it is a plain checked-in file and not an
-Infisical round trip.
+Per-repo rather than one shared registry, because the answers genuinely differ —
+golf is on the bagman Cloudflare account and the bagman Sentry org while hive,
+portfolio and swarm share bokendell; hive, portfolio and swarm share one Grafana
+stack while golf has its own; keepings has a Resend key that is empty in every
+environment. A single table would be a list of exceptions.
+
+It also puts the file where the work is: a repo's `.claude/` is present in every
+worktree and every cloud agent checkout, which a workspace-root file is not.
+
+If `.claude/vendors.md` is missing, say so rather than guessing an org slug — a
+wrong one fails with a message that reads like a permissions problem.
 
 ## Scoping tokens
 
