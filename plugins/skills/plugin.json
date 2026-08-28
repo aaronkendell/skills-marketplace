@@ -1,0 +1,8 @@
+{
+  "name": "skills",
+  "version": "1.7.0",
+  "description": "Cross-cutting skill bundle: framework references (Mastra, Shadcn, Neon, Inngest, Remotion), motion + video (motion-stack, rive, higgsfield-cli, remotion-best-practices), AI tooling (langfuse, mermaid), GitHub helpers (gh-fix-ci, gh-address-comments), code/docs review (codebase-summarizer, doc, sentry-inspector, linear-implement), and Expo helpers (expo-*, building-native-ui, native-data-fetching, upgrading-expo, use-dom). Reference docs live under references/ for the dev plugin's review/build agents to consume.",
+  "author": {
+    "name": "bokendell"
+  }
+}
