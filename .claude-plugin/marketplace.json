@@ -8,167 +8,12 @@
 	"description": "Bokendell's personal marketplace: SDLC workflow (dev), design taste (taste), a cross-cutting skills bundle (skills) covering framework references + motion/video stack (motion-stack, higgsfield-cli, plus the official remotion-best-practices), AI tooling, GitHub helpers, and Expo helpers. For Rive/Lottie/Framer Motion + 3D, additionally add the upstream `freshtechbro/claudedesignskills` marketplace — the `motion-stack` skill documents the integration.",
 	"plugins": [
 		{
-			"name": "dev",
-			"source": "./plugins/dev",
-			"description": "Full SDLC: research → plan → build → ship. Linear integration, TDD, automated testing, code review. Includes the workspace, design, and copy (voice/microcopy) skills."
-		},
-		{
-			"name": "skill-watch",
-			"source": "./plugins/skill-watch",
-			"description": "Claude Code + Codex hook loop for skill activation, standards drift, swarm/arch-check review signals, and reviewable auto-rewrites into this marketplace working tree."
-		},
-		{
-			"name": "session-bridge",
-			"source": "./plugins/session-bridge",
-			"description": "Inspect, resume, and hand off agent sessions across Codex CLI and Claude Code. `session-bridge` CLI reads both session stores; resume-session (read) + handoff-session (switch tools) skills."
-		},
-		{
-			"name": "ponytail",
-			"source": {
-				"source": "github",
-				"repo": "DietrichGebert/ponytail"
-			},
-			"description": "External overengineering/debt pressure skill. Use as a signal for skill-watch and review; bokendell DDD/API/mobile/design standards remain owned by the local dev and skill-watch plugins.",
-			"strict": false
-		},
-		{
-			"name": "taste",
-			"source": {
-				"source": "github",
-				"repo": "Leonxlnx/taste-skill"
-			},
-			"description": "Premium frontend design taste — sourced live from Leonxlnx/taste-skill. strict:true because upstream's plugin.json also declares components; with strict, this entry's `skills` list is authoritative and the two stop conflicting. `skills` must list each skill DIRECTORY (one containing a SKILL.md) — pointing at the bare ./skills container registers ZERO skills.",
-			"skills": [
-				"./skills/taste-skill",
-				"./skills/taste-skill-v1",
-				"./skills/redesign-skill",
-				"./skills/soft-skill",
-				"./skills/minimalist-skill",
-				"./skills/brutalist-skill",
-				"./skills/stitch-skill",
-				"./skills/output-skill",
-				"./skills/image-to-code-skill",
-				"./skills/imagegen-frontend-web",
-				"./skills/imagegen-frontend-mobile",
-				"./skills/brandkit",
-				"./skills/gpt-tasteskill"
-			],
-			"strict": true
-		},
-		{
-			"name": "skills",
-			"source": "./plugins/skills",
-			"description": "Cross-cutting skill bundle: framework references, AI tooling, GitHub helpers, code/docs review, Expo helpers."
-		},
-		{
-			"name": "mcp-pack",
-			"source": "./plugins/mcp-pack",
-			"description": "Bundle of MCP servers (Neon, Grafana, Mapbox docs+DevKit, Proxyman) that follow you across every repo and superset worktree when enabled at user scope. Secrets via shell env vars."
-		},
-		{
-			"name": "impeccable",
-			"source": {
-				"source": "github",
-				"repo": "pbakaus/impeccable"
-			},
-			"description": "Design finishing workflow: direction contract -> approved comp -> build -> finish review, with asset-producer/documenter/reviewer sub-agents. Required by dev:design."
-		},
-		{
-			"name": "ui-ux-pro-max",
-			"source": {
-				"source": "github",
-				"repo": "nextlevelbuilder/ui-ux-pro-max-skill"
-			},
-			"description": "UI/UX reference database: styles, palettes, font pairings, product types, UX guidelines, chart types across 22 stacks. Required by dev:design as the heuristics layer."
-		},
-		{
 			"name": "auth-skills",
 			"source": {
 				"source": "github",
 				"repo": "better-auth/skills"
 			},
 			"description": "Better Auth agent skills: create-auth scaffolding + best practices. Better Auth is a stack non-negotiable."
-		},
-		{
-			"name": "expo",
-			"source": {
-				"source": "git-subdir",
-				"url": "https://github.com/expo/skills.git",
-				"path": "plugins/expo"
-			},
-			"description": "Expo skills: app design, deployment/EAS, upgrades, router, native UI. Upstream exposes expo-app-design / expo-deployment / upgrading-expo as aliases of this one plugin."
-		},
-		{
-			"name": "rive-interactive",
-			"source": {
-				"source": "git-subdir",
-				"url": "https://github.com/freshtechbro/claudedesignskills.git",
-				"path": "plugins/individual/rive-interactive"
-			},
-			"description": "Rive interactive animation skill. Rive is in golf's real asset pipeline (assets:plates, the rive MCP) — the other four motion plugins were dropped 2026-08-27."
-		},
-		{
-			"name": "langfuse",
-			"source": {
-				"source": "github",
-				"repo": "langfuse/skills"
-			},
-			"description": "Official Langfuse skills — tracing, prompt management, datasets and evaluation for the LLM work in golf/hive/portfolio. Pairs with the langfuse/* routes on mcp.bokendell.com, which are the only way Claude can reach Langfuse's MCP server at all (it takes HTTP Basic, and claude.ai connectors accept OAuth only).",
-			"skills": [
-				"./skills/langfuse"
-			],
-			"strict": true
-		},
-		{
-			"name": "grafana",
-			"source": {
-				"source": "github",
-				"repo": "grafana/skills"
-			},
-			"description": "Official Grafana Labs skills for Grafana, Prometheus, Loki, Tempo and the wider LGTM stack. Upstream is itself a marketplace of several plugins rather than one, so each skill directory is listed explicitly and strict makes this list authoritative.",
-			"skills": [
-				"./skills/grafana-core",
-				"./skills/grafana-cloud",
-				"./skills/grafana-datasources",
-				"./skills/grafana-lgtm",
-				"./skills/grafana-plugins",
-				"./skills/grafana-app-sdk",
-				"./skills/grafana-k6"
-			],
-			"strict": true
-		},
-		{
-			"name": "sentry",
-			"source": {
-				"source": "github",
-				"repo": "getsentry/skills"
-			},
-			"description": "Sentry's own engineering skills — code review, find-bugs, commit and branch helpers, Django perf/access review. Not Sentry-product-specific, so it is useful beyond the sentry/* gateway routes; strict keeps this list authoritative against upstream churn.",
-			"skills": [
-				"./skills/code-review",
-				"./skills/find-bugs",
-				"./skills/code-simplifier",
-				"./skills/commit",
-				"./skills/create-branch",
-				"./skills/document-api-endpoint",
-				"./skills/django-perf-review",
-				"./skills/django-access-review",
-				"./skills/claude-settings-audit",
-				"./skills/agents-md"
-			],
-			"strict": true
-		},
-		{
-			"name": "fly",
-			"source": {
-				"source": "github",
-				"repo": "superfly/skills"
-			},
-			"description": "Fly.io's own skills repo. Only `sprites` today — no flyctl ops skill upstream, which is why the local `fly-ops` skill in the skills plugin covers deploys, machines, logs and token scoping. Watch this for an official one.",
-			"skills": [
-				"./skills/sprites"
-			],
-			"strict": true
 		},
 		{
 			"name": "cloudflare",
@@ -195,6 +40,84 @@
 			"strict": true
 		},
 		{
+			"name": "dev",
+			"source": "./plugins/dev",
+			"description": "Full SDLC: research → plan → build → ship. Linear integration, TDD, automated testing, code review. Includes the workspace, design, and copy (voice/microcopy) skills."
+		},
+		{
+			"name": "expo",
+			"source": {
+				"source": "git-subdir",
+				"url": "https://github.com/expo/skills.git",
+				"path": "plugins/expo"
+			},
+			"description": "Expo skills: app design, deployment/EAS, upgrades, router, native UI. Upstream exposes expo-app-design / expo-deployment / upgrading-expo as aliases of this one plugin."
+		},
+		{
+			"name": "fly",
+			"source": {
+				"source": "github",
+				"repo": "superfly/skills"
+			},
+			"description": "Fly.io's own skills repo. Only `sprites` today — no flyctl ops skill upstream, which is why the local `fly-ops` skill in the skills plugin covers deploys, machines, logs and token scoping. Watch this for an official one.",
+			"skills": [
+				"./skills/sprites"
+			],
+			"strict": true
+		},
+		{
+			"name": "grafana",
+			"source": {
+				"source": "github",
+				"repo": "grafana/skills"
+			},
+			"description": "Official Grafana Labs skills for Grafana, Prometheus, Loki, Tempo and the wider LGTM stack. Upstream is itself a marketplace of several plugins rather than one, so each skill directory is listed explicitly and strict makes this list authoritative.",
+			"skills": [
+				"./skills/grafana-core",
+				"./skills/grafana-cloud",
+				"./skills/grafana-datasources",
+				"./skills/grafana-lgtm",
+				"./skills/grafana-plugins",
+				"./skills/grafana-app-sdk",
+				"./skills/grafana-k6"
+			],
+			"strict": true
+		},
+		{
+			"name": "impeccable",
+			"source": {
+				"source": "github",
+				"repo": "pbakaus/impeccable"
+			},
+			"description": "Design finishing workflow: direction contract -> approved comp -> build -> finish review, with asset-producer/documenter/reviewer sub-agents. Required by dev:design."
+		},
+		{
+			"name": "langfuse",
+			"source": {
+				"source": "github",
+				"repo": "langfuse/skills"
+			},
+			"description": "Official Langfuse skills — tracing, prompt management, datasets and evaluation for the LLM work in golf/hive/portfolio. Pairs with the langfuse/* routes on mcp.bokendell.com, which are the only way Claude can reach Langfuse's MCP server at all (it takes HTTP Basic, and claude.ai connectors accept OAuth only).",
+			"skills": [
+				"./skills/langfuse"
+			],
+			"strict": true
+		},
+		{
+			"name": "mcp-pack",
+			"source": "./plugins/mcp-pack",
+			"description": "Bundle of MCP servers (Neon, Grafana, Mapbox docs+DevKit, Proxyman) that follow you across every repo and superset worktree when enabled at user scope. Secrets via shell env vars."
+		},
+		{
+			"name": "ponytail",
+			"source": {
+				"source": "github",
+				"repo": "DietrichGebert/ponytail"
+			},
+			"description": "External overengineering/debt pressure skill. Use as a signal for skill-watch and review; bokendell DDD/API/mobile/design standards remain owned by the local dev and skill-watch plugins.",
+			"strict": false
+		},
+		{
 			"name": "resend",
 			"source": {
 				"source": "github",
@@ -209,6 +132,142 @@
 				"./skills/agent-email-inbox"
 			],
 			"strict": true
+		},
+		{
+			"name": "revenuecat",
+			"source": {
+				"source": "github",
+				"repo": "RevenueCat/ai-toolkit"
+			},
+			"description": "RevenueCat's own AI toolkit: subscription setup, SDK integration, paywalls, purchase and restore flows, entitlement gating, testing, troubleshooting, charts and experiment analysis. NOTE — this plugin also ships a .mcp.json pointing at https://mcp.revenuecat.ai/mcp; the skills are the reason to install it, and the connector can be left disabled.",
+			"skills": [
+				"./revenuecat/skills/create-revenuecat-project",
+				"./revenuecat/skills/integrate-revenuecat",
+				"./revenuecat/skills/revenuecat-charts",
+				"./revenuecat/skills/revenuecat-cli",
+				"./revenuecat/skills/revenuecat-customer-center",
+				"./revenuecat/skills/revenuecat-entitlements-gate",
+				"./revenuecat/skills/revenuecat-experiment-analysis",
+				"./revenuecat/skills/revenuecat-identify-user",
+				"./revenuecat/skills/revenuecat-migrate",
+				"./revenuecat/skills/revenuecat-paywall",
+				"./revenuecat/skills/revenuecat-purchase-flow",
+				"./revenuecat/skills/revenuecat-sdk-compatibility",
+				"./revenuecat/skills/revenuecat-status",
+				"./revenuecat/skills/revenuecat-store-state",
+				"./revenuecat/skills/revenuecat-testing-setup",
+				"./revenuecat/skills/revenuecat-troubleshoot",
+				"./revenuecat/skills/revenuecat"
+			],
+			"strict": true
+		},
+		{
+			"name": "revenuecat-play-billing",
+			"source": {
+				"source": "github",
+				"repo": "RevenueCat/ai-toolkit"
+			},
+			"description": "RevenueCat's Google Play billing skills — subscription lifecycle, plan and price changes, payment recovery, webhooks and security. Only relevant to the Android side of golf and keepings.",
+			"skills": [
+				"./revenuecat-play-billing/skills/rc-alternative-billing",
+				"./revenuecat-play-billing/skills/rc-backend",
+				"./revenuecat-play-billing/skills/rc-cancellations-pauses-winback",
+				"./revenuecat-play-billing/skills/rc-catalog-management",
+				"./revenuecat-play-billing/skills/rc-configuring-the-sdk",
+				"./revenuecat-play-billing/skills/rc-error-handling",
+				"./revenuecat-play-billing/skills/rc-one-time-products",
+				"./revenuecat-play-billing/skills/rc-payment-recovery",
+				"./revenuecat-play-billing/skills/rc-plan-changes",
+				"./revenuecat-play-billing/skills/rc-price-changes",
+				"./revenuecat-play-billing/skills/rc-purchase-flow",
+				"./revenuecat-play-billing/skills/rc-revenuecat-api-quick-reference",
+				"./revenuecat-play-billing/skills/rc-revenuecat-vs-raw-billing",
+				"./revenuecat-play-billing/skills/rc-security",
+				"./revenuecat-play-billing/skills/rc-setup",
+				"./revenuecat-play-billing/skills/rc-subscription-states",
+				"./revenuecat-play-billing/skills/rc-subscriptions",
+				"./revenuecat-play-billing/skills/rc-testing",
+				"./revenuecat-play-billing/skills/rc-understanding-revenuecat",
+				"./revenuecat-play-billing/skills/rc-webhooks"
+			],
+			"strict": true
+		},
+		{
+			"name": "rive-interactive",
+			"source": {
+				"source": "git-subdir",
+				"url": "https://github.com/freshtechbro/claudedesignskills.git",
+				"path": "plugins/individual/rive-interactive"
+			},
+			"description": "Rive interactive animation skill. Rive is in golf's real asset pipeline (assets:plates, the rive MCP) — the other four motion plugins were dropped 2026-08-27."
+		},
+		{
+			"name": "sentry",
+			"source": {
+				"source": "github",
+				"repo": "getsentry/skills"
+			},
+			"description": "Sentry's own engineering skills — code review, find-bugs, commit and branch helpers, Django perf/access review. Not Sentry-product-specific, so it is useful beyond the sentry/* gateway routes; strict keeps this list authoritative against upstream churn.",
+			"skills": [
+				"./skills/code-review",
+				"./skills/find-bugs",
+				"./skills/code-simplifier",
+				"./skills/commit",
+				"./skills/create-branch",
+				"./skills/document-api-endpoint",
+				"./skills/django-perf-review",
+				"./skills/django-access-review",
+				"./skills/claude-settings-audit",
+				"./skills/agents-md"
+			],
+			"strict": true
+		},
+		{
+			"name": "session-bridge",
+			"source": "./plugins/session-bridge",
+			"description": "Inspect, resume, and hand off agent sessions across Codex CLI and Claude Code. `session-bridge` CLI reads both session stores; resume-session (read) + handoff-session (switch tools) skills."
+		},
+		{
+			"name": "skill-watch",
+			"source": "./plugins/skill-watch",
+			"description": "Claude Code + Codex hook loop for skill activation, standards drift, swarm/arch-check review signals, and reviewable auto-rewrites into this marketplace working tree."
+		},
+		{
+			"name": "skills",
+			"source": "./plugins/skills",
+			"description": "Cross-cutting skill bundle: framework references, AI tooling, GitHub helpers, code/docs review, Expo helpers."
+		},
+		{
+			"name": "taste",
+			"source": {
+				"source": "github",
+				"repo": "Leonxlnx/taste-skill"
+			},
+			"description": "Premium frontend design taste — sourced live from Leonxlnx/taste-skill. strict:true because upstream's plugin.json also declares components; with strict, this entry's `skills` list is authoritative and the two stop conflicting. `skills` must list each skill DIRECTORY (one containing a SKILL.md) — pointing at the bare ./skills container registers ZERO skills.",
+			"skills": [
+				"./skills/taste-skill",
+				"./skills/taste-skill-v1",
+				"./skills/redesign-skill",
+				"./skills/soft-skill",
+				"./skills/minimalist-skill",
+				"./skills/brutalist-skill",
+				"./skills/stitch-skill",
+				"./skills/output-skill",
+				"./skills/image-to-code-skill",
+				"./skills/imagegen-frontend-web",
+				"./skills/imagegen-frontend-mobile",
+				"./skills/brandkit",
+				"./skills/gpt-tasteskill"
+			],
+			"strict": true
+		},
+		{
+			"name": "ui-ux-pro-max",
+			"source": {
+				"source": "github",
+				"repo": "nextlevelbuilder/ui-ux-pro-max-skill"
+			},
+			"description": "UI/UX reference database: styles, palettes, font pairings, product types, UX guidelines, chart types across 22 stacks. Required by dev:design as the heuristics layer."
 		}
 	]
 }
