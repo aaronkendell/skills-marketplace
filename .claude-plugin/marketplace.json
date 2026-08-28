@@ -169,6 +169,30 @@
 				"./skills/sprites"
 			],
 			"strict": true
+		},
+		{
+			"name": "cloudflare",
+			"source": {
+				"source": "github",
+				"repo": "cloudflare/skills"
+			},
+			"description": "Cloudflare's own skills for Workers, KV, R2, D1, Durable Objects and the rest of the platform. The mcp-gateway itself is a Worker, so these cover the thing that hosts everything else. Preferred over the Cloudflare MCP connector, which reaches ~2,500 API endpoints and carries the schema on every request.",
+			"skills": [
+				"./skills/agents-sdk",
+				"./skills/cloudflare-email-service",
+				"./skills/cloudflare-one-migrations",
+				"./skills/cloudflare-one",
+				"./skills/cloudflare",
+				"./skills/durable-objects",
+				"./skills/sandbox-migrate-to-next",
+				"./skills/sandbox-next",
+				"./skills/sandbox-stable",
+				"./skills/turnstile-spin",
+				"./skills/web-perf",
+				"./skills/workers-best-practices",
+				"./skills/wrangler"
+			],
+			"strict": true
 		}
 	]
 }
