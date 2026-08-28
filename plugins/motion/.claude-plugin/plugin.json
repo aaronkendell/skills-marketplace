@@ -1,0 +1,6 @@
+{
+  "name": "motion",
+  "description": "Design taste and motion craft: the animation vocabulary lookup, Apple's interface and motion principles for the web, Emil Kowalski's UI polish philosophy, and the animation audit/review pair. These lived in .claude/skills at the repo root and were hand-copied into ~/.claude/skills, which meant they existed only on one laptop — no worktree and no cloud agent ever saw them. Packaged so they install like everything else.",
+  "version": "0.1.0",
+  "author": { "name": "bokendell" }
+}

@@ -231,6 +231,11 @@
 			"description": "Bundle of MCP servers (Neon, Grafana, Mapbox docs+DevKit, Proxyman) that follow you across every repo and superset worktree when enabled at user scope. Secrets via shell env vars."
 		},
 		{
+			"name": "motion",
+			"source": "./plugins/motion",
+			"description": "Design taste and motion craft — animation vocabulary, Apple interface/motion principles, Emil Kowalski's polish philosophy, and the animation audit/review pair. Previously loose in ~/.claude/skills, so present on one laptop and nowhere else."
+		},
+		{
 			"name": "neon",
 			"source": {
 				"source": "github",
@@ -453,10 +458,9 @@
 				"source": "github",
 				"repo": "Leonxlnx/taste-skill"
 			},
-			"description": "Premium frontend design taste — sourced live from Leonxlnx/taste-skill. strict:true because upstream's plugin.json also declares components; with strict, this entry's `skills` list is authoritative and the two stop conflicting. `skills` must list each skill DIRECTORY (one containing a SKILL.md) — pointing at the bare ./skills container registers ZERO skills.",
+			"description": "Premium frontend design taste — sourced live from Leonxlnx/taste-skill. strict:true because upstream's plugin.json also declares components; with strict, this entry's `skills` list is authoritative and the two stop conflicting. `skills` must list each skill DIRECTORY (one containing a SKILL.md) — pointing at the bare ./skills container registers ZERO skills. taste-skill-v1 is deliberately excluded: upstream keeps it only for projects pinned to its exact old behaviour, and carrying both means two skills competing to answer the same request.",
 			"skills": [
 				"./skills/taste-skill",
-				"./skills/taste-skill-v1",
 				"./skills/redesign-skill",
 				"./skills/soft-skill",
 				"./skills/minimalist-skill",
