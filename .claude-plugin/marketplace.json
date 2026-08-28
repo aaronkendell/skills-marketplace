@@ -308,6 +308,26 @@
 			"strict": true
 		},
 		{
+			"name": "proxyman",
+			"source": {
+				"source": "github",
+				"repo": "ProxymanApp/proxyman-SKILL.md"
+			},
+			"description": "Proxyman's official skills — install and setup, app settings, certificate lifecycle and recovery, HTTPS capture across devices and runtimes, the debugging tools (breakpoints, map local/remote, scripting, reverse proxy), licensing, and proxyman-cli. Note that unlike most vendors here the CLI does NOT replace the MCP: it covers proxy config, rules, certificates and logs, while live traffic inspection stays an MCP surface, which is why mcp-pack keeps the Proxyman server.",
+			"skills": [
+				"./skills/proxyman-app-settings",
+				"./skills/proxyman-certificates-recovery",
+				"./skills/proxyman-cli",
+				"./skills/proxyman-debugging-tools",
+				"./skills/proxyman-download-setup",
+				"./skills/proxyman-https-capture",
+				"./skills/proxyman-license-management",
+				"./skills/proxyman-mcp-setup",
+				"./skills/proxyman-traffic-debugging"
+			],
+			"strict": true
+		},
+		{
 			"name": "resend",
 			"source": {
 				"source": "github",
