@@ -301,3 +301,53 @@ folder listing before assuming an empty result means "no secrets".
 | `FLY_ORG_SLUG` | not a credential — the `--org` argument. Note flyctl reports this value as the org *name* and a shorter string as the slug; both are accepted by `--org` |
 
 For any read-only query (`fly apps list`, `fly status`, `fly logs`) use `FLY_API_TOKEN`.
+
+## Five things a live audit had to guess (fixed here 2026-08-28)
+
+**1. The `fetch` helper this skill keeps calling.** Examples below say `fetch <path> <NAME>`
+but never defined it. It is:
+
+```bash
+fetch() {  # fetch /infrastructure/<vendor> SECRET_NAME  -> value on stdout, nothing logged
+  INFISICAL_TOKEN="$TOK" infisical secrets get "$2" \
+    --projectId="$PID" --path="$1" --env="${INFISICAL_ENV:-production}" --plain --silent
+}
+```
+
+**2. Folder listing returns `folderName`, not `name`.** `secrets folders get -o json` yields
+objects keyed `folderId`, `folderName`, `folderPath` — `jq -r '.[].name'` gives a column of
+nulls:
+
+```bash
+INFISICAL_TOKEN="$TOK" infisical secrets folders get \
+  --projectId="$PID" --path=/infrastructure --env=production -o json --silent \
+  | jq -r '.[].folderName'
+```
+
+**3. Neon: use the REST API, not `neonctl`.** The CLI is not present in every environment
+(absent from Claude cloud sessions before toolchain v3.7). REST always works:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $NEON_API_KEY" \
+  "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID"      # 200
+```
+Listing all projects 404s by design — these keys are project-scoped.
+
+**4. Sentry has two tokens and the map row names the wrong one.** For *reading* issues use
+**`SENTRY_READ_TOKEN`**. `SENTRY_AUTH_TOKEN` is the CI token for releases and sourcemaps and
+returns **403** on the issues endpoint — that 403 is the control proving the two are not
+interchangeable, not a fault.
+
+**5. Grafana 503s on first contact.** Two consecutive 503s followed by clean 200s is normal
+edge behaviour, not a credential problem. **Retry up to three times before concluding
+anything**; a single-shot probe will mis-report a healthy stack as down:
+
+```bash
+for i in 1 2 3; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $GRAFANA_SA_TOKEN" \
+    "$GRAFANA_URL/api/search?limit=1")
+  [ "$code" = "503" ] || break
+  sleep 2
+done
+echo "$code"
+```
