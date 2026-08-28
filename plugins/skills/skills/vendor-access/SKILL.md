@@ -39,16 +39,21 @@ live in that product's own project.
 
 ## The map
 
-| Vendor | Use | Credential | Lives in |
-|---|---|---|---|
-| **Cloudflare** | `wrangler` (Workers/KV/R2/D1), REST for the rest | API token | `bokendell` `/infrastructure/cloudflare` |
-| **Fly** | `flyctl` | scoped token, see below | `bokendell` `/infrastructure/fly` |
-| **Sentry** | **REST** — `sentry-cli` cannot query issues | `SENTRY_AUTH_TOKEN` | each product `/apps/api` |
-| **Grafana** | **REST** — no first-party query CLI | service account token | `bokendell` `/infrastructure/grafana` |
-| **Langfuse** | CLI or REST | public + secret key pair | each product `/apps/api` |
-| **Resend** | `resend-cli` | `RESEND_API_KEY` | each product `/apps/api` |
-| **Neon** | `neonctl` | API key | each product `/infrastructure` |
-| **GitHub** | `gh` | `GITHUB_TOKEN` in the environment | — |
+Credentials live at **`/infrastructure/<vendor>`** in the Infisical project that
+owns them, named for the vendor and nothing else. The project already namespaces
+them, so there is no product prefix: `golf` `/infrastructure/fly` `FLY_ORG_TOKEN`
+says everything.
+
+| Vendor | Use | Secret name |
+|---|---|---|
+| **Cloudflare** | `wrangler` for Workers/KV/R2/D1, REST for the rest | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` |
+| **Fly** | `flyctl` | `FLY_ORG_TOKEN` |
+| **Sentry** | **REST** — `sentry-cli` cannot query issues | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` |
+| **Grafana** | **REST** — no first-party query CLI | `GRAFANA_URL`, `GRAFANA_SA_TOKEN` (Viewer) |
+| **Langfuse** | CLI or REST | `LANGFUSE_{BASE_URL,PUBLIC_KEY,SECRET_KEY}` |
+| **Resend** | `resend-cli` | `RESEND_API_KEY` |
+| **Neon** | `neonctl` | `NEON_API_KEY` |
+| **GitHub** | `gh` | `GITHUB_TOKEN` from the environment |
 
 Skills for most of these are installed from the vendors' own repos:
 `cloudflare/skills`, `getsentry/skills`, `grafana/skills`, `langfuse/skills`,
@@ -56,52 +61,19 @@ Skills for most of these are installed from the vendors' own repos:
 
 ## Identifiers
 
-Look them up here rather than guessing — a wrong org slug fails with a message
-that sounds like a permissions problem.
+**They live in `registry.md`, next to this file.** Read it rather than guessing:
+Fly org slugs, Cloudflare account and zone ids, Sentry orgs, Grafana stacks, the
+three Langfuse projects, the two Resend accounts, and which Infisical project
+owns each.
 
-### Fly — the slug is not the name
+It sits here rather than in the workspace root because this marketplace is
+installed at user scope and auto-updates, so it is present in every worktree and
+every cloud agent — a workspace file would be missing exactly where an agent
+needs it most. Other playbooks should reference this same path.
 
-`--org` wants the slug. Passing the name fails with
-`error getting organization: Could not find`.
-
-| Name | Slug |
-|---|---|
-| bagman | `bagman-538` |
-| hive | `hive-654` |
-| portfolio | `portfolio-646` |
-| swarm | `swarm-810` |
-
-### Cloudflare — two accounts
-
-| Account | ID |
-|---|---|
-| bokendell | `68d1d3c2007c97b6b380ccd3b1db73de` |
-| bagman | `b23508ceff6cb0ba5647e2cd568f41a7` |
-
-Zone `bokendell.com` is `ea87cf52f80ba0f227dd8f2d46f73a5e`.
-
-### Sentry — two orgs
-
-`bagman` (golf) and `bokendell` (shared by hive, portfolio and swarm). The org
-slug is in each project's `SENTRY_ORG`.
-
-### Grafana — stacks
-
-`https://bokendell.grafana.net`, OTLP region `prod-us-central-0`. A second stack
-exists for golf: OTLP `prod-us-east-3`, instance id `1729819`; its URL is not
-recorded here yet. `golf.grafana.net` is suspended and `keepings.grafana.net`
-does not exist.
-
-### Langfuse — three projects, one host
-
-`https://us.cloud.langfuse.com`. A key is scoped to **one project**, and golf,
-hive and portfolio are three separate projects. There is no key that spans them.
-
-### Resend — two accounts
-
-`bagman.io` (golf) and `bokendell.com` (swarm, hive and portfolio share it under
-different keys). Keepings has a `RESEND_API_KEY` entry but it is empty in every
-environment.
+Nothing in it is secret. Identifiers are visible to anyone already holding the
+matching credential, which is why it is a plain checked-in file and not an
+Infisical round trip.
 
 ## Scoping tokens
 
