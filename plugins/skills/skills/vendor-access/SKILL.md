@@ -41,13 +41,13 @@ live in that product's own project.
 
 Credentials live at **`/infrastructure/<vendor>`** in the Infisical project that
 owns them, named for the vendor and nothing else. The project already namespaces
-them, so there is no product prefix: `golf` `/infrastructure/fly` `FLY_ORG_TOKEN`
+them, so there is no product prefix: `golf` `/infrastructure/fly` `FLY_API_TOKEN`
 says everything.
 
 | Vendor | Use | Secret name |
 |---|---|---|
 | **Cloudflare** | `wrangler` for Workers/KV/R2/D1, REST for the rest | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` |
-| **Fly** | `flyctl` | `FLY_ORG_TOKEN` |
+| **Fly** | `flyctl` | `FLY_API_TOKEN` |
 | **Sentry** | **REST** — `sentry-cli` cannot query issues | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` |
 | **Grafana** | **REST** — no first-party query CLI | `GRAFANA_URL`, `GRAFANA_SA_TOKEN` (Viewer) |
 | **Langfuse** | CLI or REST | `LANGFUSE_{BASE_URL,PUBLIC_KEY,SECRET_KEY}` |
@@ -67,7 +67,7 @@ read gets both and the two cannot drift.
 
 | Vendor | Token | Identifier beside it |
 |---|---|---|
-| Fly | `FLY_ORG_TOKEN` | `FLY_ORG_SLUG` — the slug, **not** the name |
+| Fly | `FLY_API_TOKEN` | `FLY_ORG_SLUG` — the slug, **not** the name |
 | Sentry | `SENTRY_READ_TOKEN` (queries) · `SENTRY_AUTH_TOKEN` (CI) | `SENTRY_ORG`, `SENTRY_PROJECT_*` |
 | Cloudflare | `CLOUDFLARE_API_TOKEN` | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_ZONE_ID` |
 | Grafana | `GRAFANA_SA_TOKEN` (Viewer) | `GRAFANA_URL` |
@@ -338,12 +338,14 @@ Listing all projects 404s by design — these keys are project-scoped.
 returns **403** on the issues endpoint — that 403 is the control proving the two are not
 interchangeable, not a fault.
 
-**5. Grafana 503s on first contact.** Two consecutive 503s followed by clean 200s is normal
-edge behaviour, not a credential problem. **Retry up to three times before concluding
-anything**; a single-shot probe will mis-report a healthy stack as down:
+**5. Grafana 503s on first contact.** A run of 503s followed by clean 200s is normal edge
+behaviour, not a credential problem. **Retry up to eight times before concluding anything.**
+This was documented as three; two separate 2026-08-29 audits needed **five and six**
+attempts respectively, and one reported the stack down after three. A single-shot probe
+will always mis-report a healthy Grafana as broken:
 
 ```bash
-for i in 1 2 3; do
+for i in 1 2 3 4 5 6 7 8; do
   code=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $GRAFANA_SA_TOKEN" \
     "$GRAFANA_URL/api/search?limit=1")
   [ "$code" = "503" ] || break
