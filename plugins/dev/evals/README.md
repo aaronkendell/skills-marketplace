@@ -51,9 +51,18 @@ diff. Never commit agent transcripts.
 should-not (same words, different need). Run with skill-creator:
 
 ```
-python3 -m scripts.run_loop --skill-path <skill dir> --eval-set <skill>/evals/trigger.json --max-iterations 3
+PYTHONPATH=<skill-creator dir> python3 -m scripts.run_eval --eval-set <skill>/evals/trigger.json \
+  --skill-path <skill dir> --model sonnet
 ```
-(from `~/.claude/plugins/cache/claude-plugins-official/skill-creator/*/skills/skill-creator`; needs `pyyaml`).
+(from the skill-creator plugin dir; needs `pyyaml`).
+
+**Measured limitation (2026-08-31): this harness reads ~0% in this estate.** It marks a query
+triggered only if the session's FIRST tool call is Skill/Read naming the temp command — but with
+~120 user-scope skills loaded and sessions that orient first (hooks, git status), the first call
+is never the skill, even for `drive GOLF-640` from an empty project (sonnet probe: False). Treat
+trigger.json files as documentation of intended coverage; the working instrument for
+description-triggering is skill-watch's expected-skill telemetry from REAL sessions (a miss there
+is a real miss).
 
 ## When `plugin eval` opens
 
