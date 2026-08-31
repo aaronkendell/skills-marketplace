@@ -32,7 +32,7 @@ const CASES_SCHEMA = {
 	properties: {
 		skill: { type: 'string' },
 		cases: { type: 'array', items: { type: 'object', required: ['slug', 'name', 'prompt', 'graders'], properties: {
-			slug: { type: 'string' }, name: { type: 'string' }, prompt: { type: 'string' },
+			slug: { type: 'string' }, name: { type: 'string' }, prompt: { type: 'string' }, mode: { type: 'string', enum: ['planning', 'build'] },
 			allowedTools: { type: 'array', items: { type: 'string' } },
 			graders: { type: 'array', items: { type: 'object', required: ['name', 'type'], properties: {
 				name: { type: 'string' },
@@ -48,6 +48,7 @@ const ANSWER_SCHEMA = {
 	type: 'object', required: ['answer', 'toolCalls'],
 	properties: {
 		answer: { type: 'string', description: 'the complete final response to the task, verbatim' },
+		gitStatus: { type: 'string', description: 'build mode only: verbatim `git status --short` output at the end; empty string in planning mode' },
 		toolCalls: { type: 'array', description: 'every tool call made, in order', items: { type: 'object', required: ['tool', 'input'], properties: { tool: { type: 'string' }, input: { type: 'string', description: 'the command / file path / first 200 chars of input' } } } },
 	},
 }
@@ -88,7 +89,7 @@ const loaded = (await parallel(A.skills.map(skill => () => agent(
 	`A case is a directory containing prompt.md (YAML frontmatter with name/tags/runs/max_turns/allowed_tools, then the prompt body) ` +
 	`and graders/*.md (YAML frontmatter: type + fields, then a why-body). Return, via StructuredOutput, the skill name and every case with: ` +
 	`slug (the directory name), name (frontmatter name), prompt (the body text after the frontmatter, verbatim), allowedTools, and each grader's ` +
-	`frontmatter fields exactly as written (name = grader filename without .md; for llm graders put the full criteria text in "criteria"). ` +
+	`frontmatter fields exactly as written (name = grader filename without .md; for llm graders put the full criteria text in "criteria"); mode = the prompt frontmatter's mode field ('planning' if absent). ` +
 	`Ignore evals/evals.json and evals/cases/ (other formats). If there are no cases, return an empty cases array. Read only; write nothing.`,
 	{ label: `load:${skill}`, phase: 'Load', schema: CASES_SCHEMA, effort: 'low', model: 'haiku' },
 )))).filter(Boolean)
@@ -102,15 +103,18 @@ if (!work.length) return { results: [], note: 'no cases found' }
 const results = await pipeline(
 	work,
 	({ skill, c, arm, run }) => agent(
-		`Execute this task in the repository at ${REPO}. You may only READ (Read, Grep, Glob, and read-only Bash such as cat/ls/grep). ` +
-		`Do not create, write, edit, commit, run tests, start servers, or touch any remote.\n\n` +
+		`Execute this task in the repository at ${REPO}. ` +
+		(c.mode === 'build'
+			? `This is a BUILD task: implement it for real — Read/Grep/Glob/Bash, Write and Edit are allowed. Stage your files individually with git add <file> (NEVER -A/.). Do NOT commit, push, run migrations, start servers, or touch any remote. When done, run git status --short and report it verbatim as gitStatus. `
+			: `You may only READ (Read, Grep, Glob, and read-only Bash such as cat/ls/grep). Do not create, write, edit, commit, run tests, start servers, or touch any remote. `) +
+		`\n\n` +
 		(arm === 'with_skill'
 			? `Skill path: ${A.skillsDir}/${skill}/SKILL.md — read it first and follow it. `
 			: `Constraint for this run: do NOT use the Skill tool and do NOT open anything under ${A.skillsDir}/. Work from the codebase itself. `) +
 		`\n\nTask:\n${c.prompt}\n\n` +
 		`When done, return via StructuredOutput: "answer" = your complete final response to the task, verbatim, as you would give it to the user; ` +
 		`"toolCalls" = every tool call you made in order (tool name + command/path/first 200 chars of input). Report tool calls honestly — they are graded.`,
-		{ label: `${skill}/${c.slug}#${arm}${RUNS > 1 ? '#' + run : ''}`, phase: 'Answer', schema: ANSWER_SCHEMA, model: ANSWER_MODEL },
+		{ label: `${skill}/${c.slug}#${arm}${RUNS > 1 ? '#' + run : ''}`, phase: 'Answer', schema: ANSWER_SCHEMA, model: ANSWER_MODEL, ...(c.mode === 'build' ? { isolation: 'worktree' } : {}) },
 	),
 	async (answered, { skill, c, arm, run }) => {
 		if (!answered) return null
@@ -125,7 +129,8 @@ const results = await pipeline(
 				`You are grading one response against fixed criteria. Do not invent criteria. For each criterion return passed=true only with specific evidence quoted from the response; when uncertain, fail it — the burden of proof is on the response. ` +
 				`You may READ files in ${REPO} to verify factual claims the response makes (paths, line numbers, helper names); never modify anything.\n\n` +
 				`Criteria:\n${llm.map(g => `- [${g.name}] ${g.criteria}`).join('\n')}\n\n` +
-				`--- RESPONSE UNDER TEST ---\n${answered.answer}\n--- END ---\n\n` +
+				`--- RESPONSE UNDER TEST ---\n${answered.answer}\n--- END ---\n` +
+				(c.mode === 'build' ? `--- GIT STATUS AT END (self-reported) ---\n${answered.gitStatus ?? '(none reported)'}\n--- END ---\n` : '') + `\n` +
 				`Return one verdict per criterion, name = the bracketed grader name.`,
 				{ label: `judge:${skill}/${c.slug}#${arm}`, phase: 'Judge', schema: VERDICTS_SCHEMA, model: JUDGE_MODEL },
 			)
