@@ -1,0 +1,14 @@
+{
+  "skill_name": "consult-knowledge",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Run `consult-knowledge \"rate limiting for spectator reactions\"`. Assume you have searched docs/MAP.md, docs/decisions, the repo skills and memory and found nothing that mentions rate limiting, reactions, or spectator write paths.",
+      "expected_output": "consult-knowledge: A topic with no governing record is reported as unspecified, not invented",
+      "expectations": [
+        "The response states that the topic is unspecified / has no recorded constraints. It does NOT present 'best practice' rate-limiting guidance, generic advice, or model priors as if they were recorded constraints of this repo.",
+        "The final response does contain text matching /(?i)unspecified|no recorded|nothing governs|no record/."
+      ]
+    }
+  ]
+}

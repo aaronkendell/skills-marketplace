@@ -26,7 +26,7 @@ If no initiative path given, list available initiatives at `docs/planning/` (act
 
 1. Read `.claude/planner.local.md` for app config
 2. Read the design document at `<initiative-path>/design.md`
-3. Read `ddd.md` and `testing.md` from the marketplace pattern docs (resolve via the context-patterns skill: `${CLAUDE_PLUGIN_ROOT}/../../references/patterns/`) — the issue breakdown must align with DDD domain boundaries
+3. Read `ddd.md` and `testing.md` from the marketplace pattern docs (resolve via the context-patterns skill: `~/.claude/plugins/marketplaces/bokendell-skills/references/patterns/`) — the issue breakdown must align with DDD domain boundaries
 4. Check existing Linear projects for this app to avoid duplicates
 
 ### 2. Break Into Projects

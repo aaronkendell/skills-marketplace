@@ -1,0 +1,1 @@
+{"date": "2026-08-31", "case": "draft-by-default", "arm": "with_skill", "passed": 3, "total": 3, "runs": "smoke-1", "answerModel": "opus", "judgeModel": "sonnet", "runner": "run-skill-evals.workflow", "note": "smoke clean"}

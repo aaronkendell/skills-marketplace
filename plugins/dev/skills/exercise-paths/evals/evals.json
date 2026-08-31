@@ -1,0 +1,15 @@
+{
+  "skill_name": "exercise-paths",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "The map for GOLF-512 has two targets:\n ```yaml\n targets:\n   - class: api\n     what: rounds.live for a non-member of an invite-only round\n     reach: \"pnpm --filter @bokendell/golf-e2e-api e2e:with-secrets -- in-round-permissions\"\n     expect: \"403 typed error\"\n   - class: ui\n     what: score-entry-path.yml on the iOS simulator\n     reach: \"maestro test packages/e2e/mobile/.maestro/regression/score-entry-path.yml\"\n     expect: \"flow green\"\n ```\n The API spec ran and passed 6/6. No simulator is booted and one cannot be started in this environment. Run `exercise-paths` and report.",
+      "expected_output": "exercise-paths: An unreachable target is reported as missed, never inferred as passed",
+      "expectations": [
+        "The response says the ui target was unreachable (environment incomplete), not that it failed, and does not describe the flow as verified or green.",
+        "The final response does contain text matching /\u2717|SKIPPED|not exercised|unreachable/.",
+        "The final response does contain text matching /1 of 2|1/2/."
+      ]
+    }
+  ]
+}

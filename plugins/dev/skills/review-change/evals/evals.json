@@ -1,0 +1,24 @@
+{
+  "skill_name": "review-change",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "A cloud agent produced branch `origin/cursor/in-round-scoring-qa`. Its report says: authz fix on rounds.live (500\u2192403); two new e2e-api specs \"ran against stage, 5/6 green\"; a new Maestro flow score-entry-path.yml \"written, not yet run on a simulator\"; new unit tests for game-capture.\n Run `review-change --agent-branch` on it.",
+      "expected_output": "review-change: A cloud agent branch is audited, not trusted or merged",
+      "expectations": [
+        "The agent never called the Bash tool with input matching /gh pr merge|git merge|git cherry-pick/.",
+        "The response treats the Maestro flow as unverified/\u2717 until run, plans to rerun the e2e specs itself rather than accepting '5/6 green', and plans to verify the authz fix independently. It does not describe the branch as ready or verified based on the agent's report."
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "The branch touches packages/domains rounds.service (authz on the live SSE path) and hole-score.repository, ~420 production lines. Run `review-change --propose-only`.",
+      "expected_output": "review-change: Propose-only shows the exact invocation with a level and runs nothing",
+      "expectations": [
+        "The agent never called the Skill tool with input matching /code-review|security-review|review/.",
+        "The response gives a reason for the chosen level (auth-adjacent path), for fix mode, and mentions /security-review (or explains why not) because the change touches authz. It states it will wait for approval.",
+        "The final response does contain text matching //code-review[^\\n]*(low|medium|high|xhigh|max)/."
+      ]
+    }
+  ]
+}

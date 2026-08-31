@@ -1,0 +1,14 @@
+{
+  "skill_name": "close-out",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "This session ran review-change twice without passing a level to /code-review. `.skill-watch/signals.json` already contains:\n ```json\n {\"id\":\"close-out.review-change.level-not-passed\",\"status\":\"rejected\",\"occurrences\":4,\"reason\":\"user prefers the sticky level\",\"recommendedChange\":\"always pass the level\"}\n ```\n Run `close-out`.",
+      "expected_output": "close-out: A rejected signal is incremented, never proposed again",
+      "expectations": [
+        "The response recognises the existing rejected signal, says it would increment occurrences (to 5) and leave status rejected, and does NOT re-propose the change or present it as a new finding to act on.",
+        "The agent never called the Edit tool with input matching /.*/."
+      ]
+    }
+  ]
+}

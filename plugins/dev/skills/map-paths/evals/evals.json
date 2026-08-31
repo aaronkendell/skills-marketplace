@@ -1,0 +1,14 @@
+{
+  "skill_name": "map-paths",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "This repo is a backend-only Hono API. Its `.claude/skills/testing` skill lists unit, integration (Testcontainers) and api-e2e lanes only; there is no Maestro, Playwright, or frontend playbook. The change adds a `notifications.prefs.update` oRPC procedure with an authz check.\n Run `map-paths`.",
+      "expected_output": "map-paths: No UI target is emitted for a repo with no UI e2e lane",
+      "expectations": [
+        "The map contains NO ui/Maestro/Playwright target (it may say UI does not apply and why). It DOES include an authz target tested from both a permitted and a denied principal (both directions), and an api contract target. Every target has a reach and an expect.",
+        "The agent never called the Bash tool with input matching /vitest|pnpm (test|e2e)|maestro|playwright|curl/."
+      ]
+    }
+  ]
+}

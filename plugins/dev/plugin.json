@@ -1,7 +1,9 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "dev",
-  "description": "Full SDLC dev skills (research, plan, build, ship) plus Cloud Agent environment + run/verify guidance. Agent Plugins manifest so Cursor loads the plugin's skills from ./skills alongside the existing Claude/Codex manifests.",
-  "version": "1.6.3",
-  "author": { "name": "bokendell" }
+  "description": "The dev loop (drive + single-purpose primitives, dev-loop naming) plus Cloud Agent environment + run/verify guidance. Agent Plugins manifest so Cursor loads the plugin's skills from ./skills alongside the existing Claude/Codex manifests.",
+  "version": "2.0.0",
+  "author": {
+    "name": "bokendell"
+  }
 }

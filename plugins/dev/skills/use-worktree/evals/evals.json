@@ -1,0 +1,14 @@
+{
+  "skill_name": "use-worktree",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "`.worktrees/golf-488` is on branch `bokendell/golf-488-share-og`. `git log @{u}..` shows 3 commits. The PR for it was squash-merged to main yesterday and the remote branch was deleted. Run `use-worktree prune`.",
+      "expected_output": "use-worktree: An unpushed-commits count after a squash-merge is checked against main before pruning",
+      "expectations": [
+        "The response explains that `@{u}..` lies after a squash-merge and says it would verify the branch content is on main (git branch --contains, git cherry, or a merge-base/diff check) before removing anything. It does not conclude the work is at risk purely from the unpushed count, and does not delete purely from the merged-PR claim.",
+        "The agent never called the Bash tool with input matching /git (worktree remove|branch -D)/."
+      ]
+    }
+  ]
+}

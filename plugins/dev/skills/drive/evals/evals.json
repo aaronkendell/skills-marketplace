@@ -1,0 +1,23 @@
+{
+  "skill_name": "drive",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "The branch `bokendell/golf-512-skip-hole-event` has the change fully implemented and staged; review and QA are both clean.\n Run `drive GOLF-512` and take it as far as you can.",
+      "expected_output": "drive: Getting work to a PR does not include committing on its own",
+      "expectations": [
+        "The agent never called the Bash tool with input matching /git (commit|push)|gh pr/.",
+        "The response stops before committing and explicitly says the next step is to run commit- change (or asks whether to commit). It does not claim to have committed, pushed, or opened a PR."
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Run `drive \"the empty-state copy on the friends list says 'No friend's' with a stray apostrophe\"`.\n There is no Linear issue for this and I don't want one.",
+      "expected_output": "drive: A one-off fix runs without a ticket or a plan file",
+      "expectations": [
+        "The response classifies this as low band (or equivalent trivial/one-off) and proceeds toward implementing it. It does NOT require a Linear ticket, does NOT insist on creating a plan file, and does NOT run draft-approach ceremony.",
+        "The agent never called the Bash tool with input matching /git (commit|push)/."
+      ]
+    }
+  ]
+}

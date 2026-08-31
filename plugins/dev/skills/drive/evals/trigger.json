@@ -1,0 +1,20 @@
+[
+  {"query": "GOLF-512 is assigned to me, can you pick it up and get it to a PR", "should_trigger": true},
+  {"query": "ok so the friends list empty state says No friend's with a stray apostrophe, just fix it", "should_trigger": true},
+  {"query": "where are we on the skip-hole event work? I think the plan was locked yesterday", "should_trigger": true},
+  {"query": "a cloud agent pushed origin/cursor/in-round-scoring-qa — take it from here", "should_trigger": true},
+  {"query": "start on the reactions feature, docs/planning/round-social-polish/design.md has the spec", "should_trigger": true},
+  {"query": "implement the settlement rounding fix and take it through review and qa", "should_trigger": true},
+  {"query": "what's the next step for this branch, I lost track", "should_trigger": true},
+  {"query": "drive GOLF-640", "should_trigger": true},
+  {"query": "/dev build GOLF-701", "should_trigger": true},
+  {"query": "explain how round_events projection works", "should_trigger": false},
+  {"query": "review packages/domains/src/packages/rounds/application/round/round.service.ts against our patterns", "should_trigger": false},
+  {"query": "start the api and mobile dev servers for this worktree", "should_trigger": false},
+  {"query": "commit what's staged", "should_trigger": false},
+  {"query": "why is bagman-api 502ing on stage", "should_trigger": false},
+  {"query": "break docs/planning/temporal-round-model/design.md into Linear issues", "should_trigger": false},
+  {"query": "brainstorm how spectators could react to live scores, no code yet", "should_trigger": false},
+  {"query": "make the scorecard header look less flat", "should_trigger": false},
+  {"query": "write an integration test proving updateJoinSettings leaves seated players alone", "should_trigger": false}
+]

@@ -16,7 +16,7 @@ Automatically determines which pattern docs to load based on the work being done
 
 Pattern docs are part of the skills-marketplace, NOT the consumer repo:
 
-1. Preferred: `${CLAUDE_PLUGIN_ROOT}/../../references/patterns/` (plugin lives at `marketplace/plugins/dev`)
+1. Preferred: `~/.claude/plugins/marketplaces/bokendell-skills/references/patterns/` (the marketplace clone Claude Code keeps for every registered marketplace — present wherever the plugin is, including cloud sessions; `${CLAUDE_PLUGIN_ROOT}/../../` does NOT reach it from the versioned cache) (plugin lives at `marketplace/plugins/dev`)
 2. If `CLAUDE_PLUGIN_ROOT` is unset: search upward from cwd for a directory containing both
    `references/patterns/` and `.claude-plugin/marketplace.json` (the marketplace repo has both)
 3. Last resort: `~/repos/bokendell/skills-marketplace/references/patterns/`

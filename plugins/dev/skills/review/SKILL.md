@@ -79,7 +79,7 @@ Pattern docs ship with this marketplace at:
 In a Claude Code plugin install, the marketplace root is exposed via the `${CLAUDE_PLUGIN_ROOT}` env var, so prefer:
 
 ```
-${CLAUDE_PLUGIN_ROOT}/../../references/patterns/      # plugin lives at marketplace/plugins/dev
+~/.claude/plugins/marketplaces/bokendell-skills/references/patterns/      # plugin lives at marketplace/plugins/dev
 ```
 
 If `CLAUDE_PLUGIN_ROOT` isn't set (running ad-hoc, not as installed plugin), search upward from cwd for a directory containing `references/patterns/` AND `.claude-plugin/marketplace.json`. The bokendell marketplace repo always has both.

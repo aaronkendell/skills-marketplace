@@ -1,0 +1,14 @@
+{
+  "skill_name": "draft-approach",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "GOLF-701: \"Spectators should be able to react to a live hole score.\" Acceptance criteria say only that. Nothing in the repo or docs says whether reactions persist, whether the scorer is notified, or whether spectators need an account.\n Run `draft-approach GOLF-701` and write the plan file.",
+      "expected_output": "draft-approach: A plan with unresolved questions stays draft",
+      "expectations": [
+        "The response asks the user at least two substantive product questions (e.g. persistence, notification, account requirement) in one batch, rather than only implementation-preference questions.",
+        "The response leaves the plan at status draft (or explicitly says it is not locked) because open questions remain. It does NOT set status locked, and does NOT resolve the persistence / notification / account questions by assuming answers and presenting them as decided."
+      ]
+    }
+  ]
+}

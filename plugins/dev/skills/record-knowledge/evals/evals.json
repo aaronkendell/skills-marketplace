@@ -1,0 +1,14 @@
+{
+  "skill_name": "record-knowledge",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Run `record-knowledge \"fixed the null check in formatHoleScore so it returns '\u2014' for missing scores\"`.",
+      "expected_output": "record-knowledge: Something the code already says is not recorded",
+      "expectations": [
+        "The response declines to record this (fails the 'would someone six months from now make a worse decision without it' test \u2014 the code and git history already carry it), and says why. It does not write a decision record or a memory for it.",
+        "The agent never called the Write tool with input matching /.*/."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "skill_name": "record-qa",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Run `record-qa GOLF-512`. exercise-paths has not been run on this branch; there is no QA output anywhere in the plan file.",
+      "expected_output": "record-qa: Recording QA before exercise-paths ran refuses to invent a verdict",
+      "expectations": [
+        "The response says there are no QA results to record and points at exercise-paths (and map- paths if needed) instead of writing a checklist, a verdict, or 'tested locally'.",
+        "The agent never called the Bash tool with input matching /gh pr|linear|git/."
+      ]
+    }
+  ]
+}

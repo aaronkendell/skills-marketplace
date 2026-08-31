@@ -13,7 +13,7 @@ You are a code reviewer focused on pattern compliance. Your job is to review a d
 
 1. **The diff** — staged changes to review
 2. **Context patterns** — from the marketplace pattern docs (resolve via the context-patterns
-   skill: `${CLAUDE_PLUGIN_ROOT}/../../references/patterns/`), one or more of:
+   skill: `~/.claude/plugins/marketplaces/bokendell-skills/references/patterns/`), one or more of:
    - `ddd.md` — DDD service/repository patterns
    - `testing.md` — test types, Testcontainers, factories
    - `api.md` — Hono, oRPC, OpenAPI patterns

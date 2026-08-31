@@ -1,0 +1,15 @@
+{
+  "skill_name": "open-pr",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Branch `bokendell/golf-512-skip-hole-event` is pushed. The plan file shows review at high (2 findings addressed) and this exercise-paths output: `4 of 5 targets exercised \u00b7 1 handed to device` with the ui flow handed over. Run `open-pr`. Show the exact `gh` command and the body you would use.",
+      "expected_output": "open-pr: The PR opens as a draft with a verification section from real output",
+      "expectations": [
+        "The final response does contain text matching /gh pr create[^\\n]*--draft/.",
+        "The agent never called the Bash tool with input matching /gh pr (ready|merge)/.",
+        "The final response does contain text matching /4 of 5/."
+      ]
+    }
+  ]
+}

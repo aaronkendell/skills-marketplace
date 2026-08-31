@@ -29,7 +29,7 @@ Can also start from:
 
 1. Read `.claude/planner.local.md` for app config (team key, work path)
 2. Read `docs/MAP.md` (retrieval contract) and the app overview it points at (`docs/architecture/overview.md`) for condensed app context
-3. Read relevant pattern docs from the marketplace (resolve via the context-patterns skill: `${CLAUDE_PLUGIN_ROOT}/../../references/patterns/`):
+3. Read relevant pattern docs from the marketplace (resolve via the context-patterns skill: `~/.claude/plugins/marketplaces/bokendell-skills/references/patterns/`):
    - Always: `testing.md`
    - If backend: `ddd.md`, `api.md`
    - If frontend: `frontend.md`
