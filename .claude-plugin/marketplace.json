@@ -112,7 +112,7 @@
 		{
 			"name": "dev",
 			"source": "./plugins/dev",
-			"description": "Full SDLC: research → plan → build → ship. Linear integration, TDD, automated testing, code review. Includes the workspace, design, and copy (voice/microcopy) skills."
+			"description": "The dev loop: /drive routes any ticket, idea or agent branch through draft-approach → implement → review-change → map-paths/exercise-paths → commit-change → open-pr (draft). Solo-shaped: Linear + GitHub, local gate = lefthook/CI-equivalent, no teammate/chat machinery. Includes workspace, design, copy, docs, ci-local. Every primitive has refusal evals."
 		},
 		{
 			"name": "expo",
@@ -516,6 +516,42 @@
 				"./skills/upstash"
 			],
 			"strict": true
+		},
+		{
+			"name": "skill-creator",
+			"source": {
+				"source": "git-subdir",
+				"url": "https://github.com/anthropics/claude-plugins-official.git",
+				"path": "plugins/skill-creator"
+			},
+			"description": "Anthropic's skill-creator — create/iterate skills, run with-vs-without evals through subagents, benchmark, and the trigger-eval loop (scripts/run_loop.py). Passed through so it resolves from this marketplace everywhere, not only where the official marketplace is registered."
+		},
+		{
+			"name": "plugin-dev",
+			"source": {
+				"source": "git-subdir",
+				"url": "https://github.com/anthropics/claude-plugins-official.git",
+				"path": "plugins/plugin-dev"
+			},
+			"description": "Anthropic's plugin-dev — plugin structure/manifest/hook/agent authoring guidance plus the plugin-validator, skill-reviewer and agent-creator agents and hook-linter scripts."
+		},
+		{
+			"name": "hookify",
+			"source": {
+				"source": "git-subdir",
+				"url": "https://github.com/anthropics/claude-plugins-official.git",
+				"path": "plugins/hookify"
+			},
+			"description": "Anthropic's hookify — author deterministic PreToolUse/PostToolUse/Stop rules from conversation analysis. Deterministic blocks are the hardest enforcement layer; use it for what a regex can decide."
+		},
+		{
+			"name": "typescript-lsp",
+			"source": {
+				"source": "git-subdir",
+				"url": "https://github.com/anthropics/claude-plugins-official.git",
+				"path": "plugins/typescript-lsp"
+			},
+			"description": "Anthropic's TypeScript language-server plugin — diagnostics and go-to-definition inside sessions."
 		}
 	]
 }

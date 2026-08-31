@@ -1,2 +1,6 @@
 .skill-watch/events.jsonl
 .skill-watch/*.tmp
+
+# claude plugin eval output
+**/evals/results/
+plugins/dev/skills/results/
