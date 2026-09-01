@@ -36,7 +36,7 @@ All four sub-agents come from upstream resources. See
 ls ~/.claude/plugins/cache/bokendell-skills/taste/*/skills/ 2>/dev/null
 ls ~/.claude/plugins/cache/impeccable/impeccable/*/         2>/dev/null
 ls ~/.claude/plugins/cache/ui-ux-pro-max-skill/*/*/         2>/dev/null
-ls ~/.claude/skills/huashu-design/SKILL.md                  2>/dev/null
+ls ~/.claude/plugins/cache/bokendell-skills/huashu-design/*/ 2>/dev/null
 ```
 
 If any returns nothing, **stop and ask the user to install** before

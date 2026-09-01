@@ -44,6 +44,18 @@
 			"strict": true
 		},
 		{
+			"name": "app-store-screenshots",
+			"source": {
+				"source": "github",
+				"repo": "ParthJadhav/app-store-screenshots"
+			},
+			"description": "App Store / Play Store screenshot generation — relevant to golf's launch surfaces. Bare skills repo, so each skill DIRECTORY is listed. static-stack used to tell the user to `npx skills add` it.",
+			"skills": [
+				"./skills/app-store-screenshots"
+			],
+			"strict": true
+		},
+		{
 			"name": "apple-dev",
 			"source": {
 				"source": "github",
@@ -110,6 +122,30 @@
 			"strict": true
 		},
 		{
+			"name": "codebase-summarizer",
+			"source": {
+				"source": "github",
+				"repo": "patricio0312rev/skills"
+			},
+			"description": "Codebase summarisation. Upstream groups skills by category, so the path is ./foundation/<skill>, not ./skills/<skill>. Replaces a byte-identical hand copy inside the local `skills` plugin.",
+			"skills": [
+				"./foundation/codebase-summarizer"
+			],
+			"strict": true
+		},
+		{
+			"name": "color-expert",
+			"source": {
+				"source": "github",
+				"repo": "meodai/skill.color-expert"
+			},
+			"description": "Colour theory and palette construction from the maintainer of the `color-names` corpus. Single-skill repo — SKILL.md sits at the root, so the skill path is the repo root. static-stack used to tell the user to `npx skills add` it.",
+			"skills": [
+				"."
+			],
+			"strict": true
+		},
+		{
 			"name": "dev",
 			"source": "./plugins/dev",
 			"description": "The dev loop: /drive routes any ticket, idea or agent branch through draft-approach → implement → review-change → map-paths/exercise-paths → commit-change → open-pr (draft). Solo-shaped: Linear + GitHub, local gate = lefthook/CI-equivalent, no teammate/chat machinery. Includes workspace, design, copy, docs, ci-local. Every primitive has refusal evals."
@@ -141,17 +177,39 @@
 				"source": "github",
 				"repo": "grafana/skills"
 			},
-			"description": "Official Grafana Labs skills for Grafana, Prometheus, Loki, Tempo and the wider LGTM stack. Upstream is itself a marketplace of several plugins rather than one, so each skill directory is listed explicitly and strict makes this list authoritative.",
+			"description": "Grafana's official skills — sourced live. The previous entry listed `./skills/grafana-core` and its siblings, but those are CONTAINERS, not skills: the real SKILL.md files sit one level deeper (skills/grafana-core/promql/…), so the entry registered ZERO skills — the exact trap the taste entry warns about. Curated to the three containers matching how these apps are actually observed: grafana-core (dashboards, alerting, OTel, PromQL), grafana-lgtm (Loki/Mimir/Tempo/Pyroscope — the logs and traces the observability skill points at) and grafana-k6 (the performance lane). grafana-cloud (Cloud billing/admin), grafana-plugins (authoring Grafana plugins) and grafana-app-sdk are deliberately excluded — we consume Grafana, we don't build for it.",
 			"skills": [
-				"./skills/grafana-core",
-				"./skills/grafana-cloud",
-				"./skills/grafana-datasources",
-				"./skills/grafana-lgtm",
-				"./skills/grafana-plugins",
-				"./skills/grafana-app-sdk",
-				"./skills/grafana-k6"
+				"./skills/grafana-core/alerting-irm",
+				"./skills/grafana-core/alloy",
+				"./skills/grafana-core/beyla",
+				"./skills/grafana-core/dashboarding",
+				"./skills/grafana-core/grafana-oss",
+				"./skills/grafana-core/opentelemetry",
+				"./skills/grafana-core/promql",
+				"./skills/grafana-lgtm/loki",
+				"./skills/grafana-lgtm/mimir",
+				"./skills/grafana-lgtm/prometheus",
+				"./skills/grafana-lgtm/tempo",
+				"./skills/grafana-lgtm/pyroscope",
+				"./skills/grafana-lgtm/profilecli-insights",
+				"./skills/grafana-k6/k6",
+				"./skills/grafana-k6/k6-docs",
+				"./skills/grafana-k6/k6-manage",
+				"./skills/grafana-k6/k6-perf-test-website",
+				"./skills/grafana-k6/k6-test-maintenance",
+				"./skills/grafana-k6/k6-trend-analysis",
+				"./skills/grafana-k6/k6-cloud-investigate-test"
 			],
 			"strict": true
+		},
+		{
+			"name": "hookify",
+			"source": {
+				"source": "git-subdir",
+				"url": "https://github.com/anthropics/claude-plugins-official.git",
+				"path": "plugins/hookify"
+			},
+			"description": "Anthropic's hookify — author deterministic PreToolUse/PostToolUse/Stop rules from conversation analysis. Deterministic blocks are the hardest enforcement layer; use it for what a regex can decide."
 		},
 		{
 			"name": "huashu-design",
@@ -243,9 +301,37 @@
 			"description": "Bundle of MCP servers (Neon, Grafana, Mapbox docs+DevKit, Proxyman) that follow you across every repo and superset worktree when enabled at user scope. Secrets via shell env vars."
 		},
 		{
+			"name": "mermaid-diagram-specialist",
+			"source": {
+				"source": "github",
+				"repo": "davila7/claude-code-templates"
+			},
+			"description": "Mermaid diagrams — flowcharts, sequence diagrams, ERDs, architecture views. Upstream is a big template repo, so the path is deep (cli-tool/components/skills/development/...), not ./skills/<name>. Was a loose skills.sh install at user scope with no marketplace entry, so only one laptop had it.",
+			"skills": [
+				"./cli-tool/components/skills/development/mermaid-diagram-specialist"
+			],
+			"strict": true
+		},
+		{
 			"name": "motion",
-			"source": "./plugins/motion",
-			"description": "Design taste and motion craft — animation vocabulary, Apple interface/motion principles, Emil Kowalski's polish philosophy, and the animation audit/review pair. Previously loose in ~/.claude/skills, so present on one laptop and nowhere else."
+			"source": {
+				"source": "github",
+				"repo": "emilkowalski/skill"
+			},
+			"description": "Design taste and motion craft — sourced live from emilkowalski/skill instead of vendored. Was a local ./plugins/motion holding hand-copied SKILL.md files; they had already gone stale (upstream moved the popover transform-origin guidance from the Radix variable to Base UI's, and the copies still carried the old row), which is the whole argument for a pass-through. Plugin name deliberately unchanged so existing `motion@bokendell-skills` enablements keep working. `skills` lists each skill DIRECTORY — pointing at the bare ./skills container registers ZERO skills. Curated, not the whole repo: `ask-sonner` is a web toast library we don't use (golf-ui ships its own toast) and `pick-ui-library` recommends third-party components, which fights the golf-ui-primitives-only rule in packages/ui/HARD-RULES.md — both deliberately excluded.",
+			"skills": [
+				"./skills/emil-design-eng",
+				"./skills/apple-design",
+				"./skills/animate",
+				"./skills/animate-expo",
+				"./skills/prototype",
+				"./skills/improve-animations",
+				"./skills/review-animations",
+				"./skills/find-animation-opportunities",
+				"./skills/animation-vocabulary",
+				"./skills/write-swift"
+			],
+			"strict": true
 		},
 		{
 			"name": "neon",
@@ -294,6 +380,15 @@
 			"strict": true
 		},
 		{
+			"name": "plugin-dev",
+			"source": {
+				"source": "git-subdir",
+				"url": "https://github.com/anthropics/claude-plugins-official.git",
+				"path": "plugins/plugin-dev"
+			},
+			"description": "Anthropic's plugin-dev — plugin structure/manifest/hook/agent authoring guidance plus the plugin-validator, skill-reviewer and agent-creator agents and hook-linter scripts."
+		},
+		{
 			"name": "ponytail",
 			"source": {
 				"source": "github",
@@ -305,24 +400,11 @@
 		{
 			"name": "posthog",
 			"source": {
-				"source": "github",
-				"repo": "PostHog/skills"
+				"source": "git-subdir",
+				"url": "https://github.com/PostHog/skills.git",
+				"path": "skills/posthog/all"
 			},
-			"description": "PostHog's own skills. Marked under construction upstream, so treat it as a moving target; golf and portfolio both use PostHog and its credentials sit at /infrastructure/posthog.",
-			"skills": [
-				"./skills/posthog/README.md",
-				"./skills/posthog/all",
-				"./skills/posthog/cutting-costs",
-				"./skills/posthog/error-tracking",
-				"./skills/posthog/feature-flags",
-				"./skills/posthog/integration",
-				"./skills/posthog/llm-analytics",
-				"./skills/posthog/logs",
-				"./skills/posthog/migrations",
-				"./skills/posthog/product-analytics",
-				"./skills/posthog/tools-and-features"
-			],
-			"strict": true
+			"description": "PostHog's official skills — sourced live. `skills/posthog/all` is itself a plugin upstream (it ships its own .claude-plugin manifest plus hooks), so this is a git-subdir source rather than a `skills` list; the old entry pointed at paths inside it — including ./skills/posthog/README.md — which is not a skill. `all` is the full variant: product analytics, error tracking, feature flags, LLM analytics and logs, all of which this stack uses."
 		},
 		{
 			"name": "proxyman",
@@ -341,6 +423,29 @@
 				"./skills/proxyman-license-management",
 				"./skills/proxyman-mcp-setup",
 				"./skills/proxyman-traffic-debugging"
+			],
+			"strict": true
+		},
+		{
+			"name": "remotion",
+			"source": {
+				"source": "github",
+				"repo": "remotion-dev/skills"
+			},
+			"description": "Remotion's official skill set — programmatic video in React, which is how Wrapped/recap renders are built (see the motion-stack skill). Passed through whole, the same way the other vendor sets are. Replaces a hand-copied remotion-best-practices that sat inside the local `skills` plugin and could not track upstream.",
+			"skills": [
+				"./skills/remotion-best-practices",
+				"./skills/remotion-captions",
+				"./skills/remotion-create",
+				"./skills/remotion-docs",
+				"./skills/remotion-interactivity",
+				"./skills/remotion-maps",
+				"./skills/remotion-markup",
+				"./skills/remotion-multimedia",
+				"./skills/remotion-render",
+				"./skills/remotion-saas",
+				"./skills/remotion-studio",
+				"./skills/remotion-upgrade"
 			],
 			"strict": true
 		},
@@ -455,6 +560,15 @@
 			"description": "Inspect, resume, and hand off agent sessions across Codex CLI and Claude Code. `session-bridge` CLI reads both session stores; resume-session (read) + handoff-session (switch tools) skills."
 		},
 		{
+			"name": "skill-creator",
+			"source": {
+				"source": "git-subdir",
+				"url": "https://github.com/anthropics/claude-plugins-official.git",
+				"path": "plugins/skill-creator"
+			},
+			"description": "Anthropic's skill-creator — create/iterate skills, run with-vs-without evals through subagents, benchmark, and the trigger-eval loop (scripts/run_loop.py). Passed through so it resolves from this marketplace everywhere, not only where the official marketplace is registered."
+		},
+		{
 			"name": "skill-watch",
 			"source": "./plugins/skill-watch",
 			"description": "Claude Code + Codex hook loop for skill activation, standards drift, swarm/arch-check review signals, and reviewable auto-rewrites into this marketplace working tree."
@@ -488,6 +602,15 @@
 			"strict": true
 		},
 		{
+			"name": "typescript-lsp",
+			"source": {
+				"source": "git-subdir",
+				"url": "https://github.com/anthropics/claude-plugins-official.git",
+				"path": "plugins/typescript-lsp"
+			},
+			"description": "Anthropic's TypeScript language-server plugin — diagnostics and go-to-definition inside sessions."
+		},
+		{
 			"name": "ui-ux-pro-max",
 			"source": {
 				"source": "github",
@@ -516,42 +639,6 @@
 				"./skills/upstash"
 			],
 			"strict": true
-		},
-		{
-			"name": "skill-creator",
-			"source": {
-				"source": "git-subdir",
-				"url": "https://github.com/anthropics/claude-plugins-official.git",
-				"path": "plugins/skill-creator"
-			},
-			"description": "Anthropic's skill-creator — create/iterate skills, run with-vs-without evals through subagents, benchmark, and the trigger-eval loop (scripts/run_loop.py). Passed through so it resolves from this marketplace everywhere, not only where the official marketplace is registered."
-		},
-		{
-			"name": "plugin-dev",
-			"source": {
-				"source": "git-subdir",
-				"url": "https://github.com/anthropics/claude-plugins-official.git",
-				"path": "plugins/plugin-dev"
-			},
-			"description": "Anthropic's plugin-dev — plugin structure/manifest/hook/agent authoring guidance plus the plugin-validator, skill-reviewer and agent-creator agents and hook-linter scripts."
-		},
-		{
-			"name": "hookify",
-			"source": {
-				"source": "git-subdir",
-				"url": "https://github.com/anthropics/claude-plugins-official.git",
-				"path": "plugins/hookify"
-			},
-			"description": "Anthropic's hookify — author deterministic PreToolUse/PostToolUse/Stop rules from conversation analysis. Deterministic blocks are the hardest enforcement layer; use it for what a regex can decide."
-		},
-		{
-			"name": "typescript-lsp",
-			"source": {
-				"source": "git-subdir",
-				"url": "https://github.com/anthropics/claude-plugins-official.git",
-				"path": "plugins/typescript-lsp"
-			},
-			"description": "Anthropic's TypeScript language-server plugin — diagnostics and go-to-definition inside sessions."
 		}
 	]
 }

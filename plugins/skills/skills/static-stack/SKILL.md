@@ -80,15 +80,16 @@ Run these checks silently before doing static-asset work. **Don't install anythi
      to point at an Infisical-wrapped command.
 
 3. For the color-expert skill:
-   - Check: `ls ~/.claude/skills/color-expert` (or wherever the user installs skills)
-   - If missing: ask user to run `npx skills add meodai/skill.color-expert`
+   - Check: it is in the session's available-skills list (`color-expert`)
+   - If missing: `/plugin install color-expert@bokendell-skills` — a pass-through to meodai/skill.color-expert
 
 4. For Figma MCP (only when user mentions Figma):
    - Setup is OAuth-based via the official Figma plugin. Point user to
      https://help.figma.com/hc/en-us/articles/39888612464151
 
 5. For App Store Screenshots:
-   - Check: skill installed via `npx skills add ParthJadhav/app-store-screenshots`
+   - Check: it is in the session's available-skills list (`app-store-screenshots`); install with
+     `/plugin install app-store-screenshots@bokendell-skills` — a pass-through to ParthJadhav/app-store-screenshots
      (or however the user installs community skills)
 ```
 

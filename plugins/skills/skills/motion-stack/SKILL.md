@@ -40,8 +40,9 @@ Before doing motion work, **silently check what's available and prompt the user 
 
 ```
 1. For Remotion work:
-   - Check: `ls ~/.agents/skills/remotion-best-practices` (or the project's .agents/skills/)
-   - If missing: ask user to run `npx skills add remotion-dev/skills`
+   - Check: it is in the session's available-skills list (`remotion-best-practices`)
+   - If missing: `/plugin install remotion@bokendell-skills` — a pass-through to remotion-dev/skills.
+     Do NOT `npx skills add` it: that installs a second, hand-updated copy.
 
 2. For Rive / Lottie / Motion-Framer work:
    - Check user's ~/.claude/settings.json for the `claude-design-skillstack` marketplace
@@ -79,10 +80,10 @@ The user has accounts for Rive and Higgsfield as of 2026-05-21. Remotion commerc
 ### 1 · Install the official Remotion skills
 
 ```bash
-npx skills add remotion-dev/skills
+/plugin install remotion@bokendell-skills
 ```
 
-Installs to `~/.claude/skills/`. Auto-activates when Claude detects Remotion code in context. 117k weekly installs as of May 2026, maintained by the Remotion team. **No account needed for installation.** Commercial license required to USE Remotion in a product (see Accounts below).
+Installed as a marketplace pass-through, so it tracks upstream. Auto-activates when Claude detects Remotion code in context. 117k weekly installs as of May 2026, maintained by the Remotion team. **No account needed for installation.** Commercial license required to USE Remotion in a product (see Accounts below).
 
 ### 2 · Add the claude-design-skillstack marketplace
 

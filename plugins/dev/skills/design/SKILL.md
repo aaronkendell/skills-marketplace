@@ -72,17 +72,20 @@ This orchestrator delegates the actual taste/craft/finishing/heuristics/HTML-pro
 |---|---|
 | `/taste:design-taste-frontend` (v2; v1 fallback `/taste:design-taste-frontend-v1`) | `/plugin install taste@bokendell-skills` (Leonxlnx/taste-skill, sourced live). NOTE the invocable name is the SKILL.md `name:` (`design-taste-frontend`), NOT the folder `taste-skill`. The marketplace `skills` array must list each skill DIRECTORY — pointing at the bare `./skills` container registers zero skills. |
 | `/impeccable:impeccable` | `/plugin marketplace add pbakaus/impeccable` + `/plugin install impeccable@impeccable` |
-| `/emil-design-eng` + `/apple-design` (+ on-demand `/improve-animations`, `/review-animations`, `/animation-vocabulary`) | `npx skills add emilkowalski/skill` — installs all 5 as skills.sh universal skills (`.agents/skills/`, symlinked for Claude Code, tracked in `skills-lock.json`). `emil-design-eng` = Emil Kowalski's polish/component/motion philosophy; `apple-design` = Apple fluid-motion + materials + typography. The two are the always-load craft floor for app UI; the animation trio is motion-work-only. |
+| `/emil-design-eng` + `/apple-design` (+ on-demand `/animate`, `/animate-expo`, `/prototype`, `/improve-animations`, `/review-animations`, `/find-animation-opportunities`, `/animation-vocabulary`, `/write-swift`) | `/plugin install motion@bokendell-skills` — a PASS-THROUGH to `emilkowalski/skill`, so it tracks upstream instead of drifting (the previous vendored copies had already gone stale on the popover transform-origin guidance). `ask-sonner` and `pick-ui-library` are deliberately excluded — see the marketplace entry. Do NOT `npx skills add` these any more: that installs a SECOND copy into `.agents/skills`, and two copies compete to answer the same request. |
 | `/ui-ux-pro-max` | `/plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill` + `/plugin install ui-ux-pro-max@ui-ux-pro-max-skill` |
-| `/huashu-design` | `git clone https://github.com/alchaincyf/huashu-design ~/.claude/skills/huashu-design` *(upstream isn't a plugin — installs as user-scope skill; `git pull` to update)* |
+| `/huashu-design` | `/plugin install huashu-design@bokendell-skills` — a PASS-THROUGH to `alchaincyf/huashu-design` (single-skill repo, SKILL.md at the root). Was a loose `git clone` into `~/.claude/skills`, which meant one laptop had it and no worktree or cloud agent did. |
 
 **Verification:** quickly check each is present —
 ```bash
 ls ~/.claude/plugins/cache/bokendell-skills/taste/*/skills/ 2>/dev/null
 ls ~/.claude/plugins/cache/impeccable/impeccable/*/         2>/dev/null
 ls ~/.claude/plugins/cache/ui-ux-pro-max-skill/*/*/         2>/dev/null
-ls ~/.claude/skills/huashu-design/SKILL.md                  2>/dev/null
-ls ~/.claude/skills/{emil-design-eng,apple-design}/SKILL.md 2>/dev/null   # Emil (skills.sh)
+ls ~/.claude/plugins/cache/bokendell-skills/huashu-design/*/ 2>/dev/null
+ls ~/.claude/plugins/cache/bokendell-skills/motion/*/skills/  2>/dev/null   # Emil (motion pass-through)
+# NOTE: these are plugin skills, so they do NOT appear under ~/.claude/skills — an empty ls there
+# is not evidence they are missing. The authoritative check is whether /emil-design-eng and
+# /apple-design appear in the session's available-skills list.
 ```
 
 If any is missing, **stop and surface the install command to the user** rather than degrading silently.
