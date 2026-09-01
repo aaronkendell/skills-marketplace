@@ -49,6 +49,7 @@ const ANSWER_SCHEMA = {
 	properties: {
 		answer: { type: 'string', description: 'the complete final response to the task, verbatim' },
 		gitStatus: { type: 'string', description: 'build mode only: verbatim `git status --short` output at the end; empty string in planning mode' },
+		worktreePath: { type: 'string', description: 'build mode only: the absolute path of the isolated worktree you worked in (your cwd); empty string in planning mode' },
 		toolCalls: { type: 'array', description: 'every tool call made, in order', items: { type: 'object', required: ['tool', 'input'], properties: { tool: { type: 'string' }, input: { type: 'string', description: 'the command / file path / first 200 chars of input' } } } },
 	},
 }
@@ -105,7 +106,7 @@ const results = await pipeline(
 	({ skill, c, arm, run }) => agent(
 		`Execute this task in the repository at ${REPO}. ` +
 		(c.mode === 'build'
-			? `This is a BUILD task: implement it for real — Read/Grep/Glob/Bash, Write and Edit are allowed. Stage your files individually with git add <file> (NEVER -A/.). Do NOT commit, push, run migrations, start servers, or touch any remote. When done, run git status --short and report it verbatim as gitStatus. `
+			? `This is a BUILD task: implement it for real — Read/Grep/Glob/Bash, Write and Edit are allowed. Stage your files individually with git add <file> (NEVER -A/.). Do NOT commit, push, run migrations, start servers, or touch any remote. When done, run git status --short and report it verbatim as gitStatus, and report your absolute working directory (the isolated worktree) as worktreePath. `
 			: `You may only READ (Read, Grep, Glob, and read-only Bash such as cat/ls/grep). Do not create, write, edit, commit, run tests, start servers, or touch any remote. `) +
 		`\n\n` +
 		(arm === 'with_skill'
@@ -127,7 +128,9 @@ const results = await pipeline(
 		if (llm.length) {
 			const v = await agent(
 				`You are grading one response against fixed criteria. Do not invent criteria. For each criterion return passed=true only with specific evidence quoted from the response; when uncertain, fail it — the burden of proof is on the response. ` +
-				`You may READ files in ${REPO} to verify factual claims the response makes (paths, line numbers, helper names); never modify anything.\n\n` +
+				(c.mode === 'build' && answered.worktreePath
+					? `The work was done in an ISOLATED WORKTREE at ${answered.worktreePath} — verify files, diffs and git status THERE (cd into it), NOT in ${REPO}, which is a different checkout with unrelated uncommitted changes. Never modify anything.\n\n`
+					: `You may READ files in ${REPO} to verify factual claims the response makes (paths, line numbers, helper names); never modify anything.\n\n`) +
 				`Criteria:\n${llm.map(g => `- [${g.name}] ${g.criteria}`).join('\n')}\n\n` +
 				`--- RESPONSE UNDER TEST ---\n${answered.answer}\n--- END ---\n` +
 				(c.mode === 'build' ? `--- GIT STATUS AT END (self-reported) ---\n${answered.gitStatus ?? '(none reported)'}\n--- END ---\n` : '') + `\n` +
