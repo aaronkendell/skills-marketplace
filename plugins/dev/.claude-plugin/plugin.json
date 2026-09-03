@@ -1,6 +1,6 @@
 {
   "name": "dev",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "The dev loop: drive → draft-approach → implement → review-change → map/exercise-paths → commit-change → open-pr (draft). Linear integration, TDD, automated testing, code review. Works for golf, portfolio, and hive apps.",
   "author": {
     "name": "bokendell"
