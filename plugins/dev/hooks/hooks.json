@@ -6,7 +6,7 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "PLUGIN_ROOT=\"${CLAUDE_PLUGIN_ROOT:-$CODEX_PLUGIN_ROOT}\"; NODE_OPTIONS= pnpm exec tsx \"$PLUGIN_ROOT/hooks/workspace-context.ts\""
+						"command": "PLUGIN_ROOT=\"${CLAUDE_PLUGIN_ROOT:-$CODEX_PLUGIN_ROOT}\"; node --no-warnings \"$PLUGIN_ROOT/hooks/workspace-context.ts\""
 					}
 				]
 			}
@@ -16,7 +16,7 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "PLUGIN_ROOT=\"${CLAUDE_PLUGIN_ROOT:-$CODEX_PLUGIN_ROOT}\"; NODE_OPTIONS= pnpm exec tsx \"$PLUGIN_ROOT/hooks/docs-freshness.ts\""
+						"command": "PLUGIN_ROOT=\"${CLAUDE_PLUGIN_ROOT:-$CODEX_PLUGIN_ROOT}\"; node --no-warnings \"$PLUGIN_ROOT/hooks/docs-freshness.ts\""
 					}
 				]
 			}
@@ -27,7 +27,7 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "PLUGIN_ROOT=\"${CLAUDE_PLUGIN_ROOT:-$CODEX_PLUGIN_ROOT}\"; NODE_OPTIONS= pnpm exec tsx \"$PLUGIN_ROOT/hooks/copy-slop.ts\""
+						"command": "PLUGIN_ROOT=\"${CLAUDE_PLUGIN_ROOT:-$CODEX_PLUGIN_ROOT}\"; node --no-warnings \"$PLUGIN_ROOT/hooks/copy-slop.ts\""
 					}
 				]
 			}
