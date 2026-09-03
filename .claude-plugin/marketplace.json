@@ -148,7 +148,8 @@
 		{
 			"name": "dev",
 			"source": "./plugins/dev",
-			"description": "The dev loop: /drive routes any ticket, idea or agent branch through draft-approach → implement → review-change → map-paths/exercise-paths → commit-change → open-pr (draft). Solo-shaped: Linear + GitHub, local gate = lefthook/CI-equivalent, no teammate/chat machinery. Includes workspace, design, copy, docs, ci-local. Every primitive has refusal evals."
+			"description": "The dev loop: /drive routes any ticket, idea or agent branch through draft-approach → implement → review-change → map-paths/exercise-paths → commit-change → open-pr (draft). Solo-shaped: Linear + GitHub, local gate = lefthook/CI-equivalent, no teammate/chat machinery. Includes workspace, design, copy, docs, ci-local. Every primitive has refusal evals.",
+			"version": "2.1.0"
 		},
 		{
 			"name": "expo",
@@ -571,7 +572,8 @@
 		{
 			"name": "skill-watch",
 			"source": "./plugins/skill-watch",
-			"description": "Claude Code + Codex hook loop for skill activation, standards drift, swarm/arch-check review signals, and reviewable auto-rewrites into this marketplace working tree."
+			"description": "Claude Code + Codex hook loop for skill activation, standards drift, swarm/arch-check review signals, and reviewable auto-rewrites into this marketplace working tree.",
+			"version": "0.2.1"
 		},
 		{
 			"name": "skills",
