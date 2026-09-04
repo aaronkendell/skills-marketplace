@@ -18,5 +18,10 @@
     "id": "trig_018uNm2GTRA9CPd44mPjs1d9",
     "repo": "aaronkendell/golf",
     "does": "review, fix, gate on the merged head, merge commit into stage, retro, issue Done; never stage\u2192main"
+  },
+  "marketplace-ship": {
+    "id": "trig_01GcdMB45BEpzLwWwZxxNaB8",
+    "repo": "aaronkendell/skills-marketplace",
+    "does": "add or edit a skill, bump the plugin + marketplace version pair, open and self-merge the PR (docs-only repo, no CI)"
   }
 }

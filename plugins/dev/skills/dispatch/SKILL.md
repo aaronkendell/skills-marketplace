@@ -27,6 +27,10 @@ follow-up channel: say everything in the text.
 | `core-land` | aaronkendell/core | review, fix, gate on the merged head, squash merge, retro, issue Done |
 | `golf-ship` | aaronkendell/golf | same as core-ship, against `stage`, lefthook pre-push as the gate |
 | `golf-land` | aaronkendell/golf | review, fix, gate, merge commit into `stage`, retro; never stage → main |
+| `marketplace-ship` | aaronkendell/skills-marketplace | add or edit a skill, bump the plugin + marketplace version pair, open and self-merge the PR |
+
+`marketplace-ship` is the only routine that merges its own PR: the repo is docs-only with no PR workflows, so
+there is nothing for a land lane to review or gate.
 
 Releases are never a routine you can fire from here. core's "Version Packages" PR, Bagman's stage → main
 promotion and store submits are the owner's, by hand or by a release routine whose token lives elsewhere.
