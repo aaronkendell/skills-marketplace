@@ -47,9 +47,18 @@ For `core-land` the first line is the PR: `MIS-71 · land https://github.com/aar
 
 Each routine has its own fire token, generated once in the routine's edit form on claude.ai (shown once).
 Store it as `DISPATCH_TOKEN_<ROUTINE>` (`DISPATCH_TOKEN_CORE_SHIP`, `DISPATCH_TOKEN_CORE_LAND`) in Infisical
-project `bokendell`, path `/infrastructure/dispatch`, env `production`. The script reads the environment
-variable first, then Infisical through the local machine identity or the `INFISICAL_CLIENT_ID_BOKENDELL`
-pair in a cloud environment. A fire token can only fire; it cannot read runs, edit or disable the routine.
+project `bokendell`, path `/infrastructure/dispatch`, env `production`. One copy, one place. A fire token can
+only fire; it cannot read runs, edit or disable the routine.
+
+Who can read that path:
+
+- **A laptop session:** the local machine identity file has a `bokendell` account; the script uses it.
+- **A cloud session:** it has only its own app's identity (`INFISICAL_CLIENT_ID`, golf's or simrig's). Do not
+  copy the tokens into every app project; instead add each app identity to the `bokendell` project with a custom
+  role `dispatch-reader` (secrets: read; environment: production; secret path: `/infrastructure/dispatch`).
+  The script falls back to the app identity automatically. Adding an identity to the project and the role is a
+  one-time owner step in Infisical; revoking the role cuts that app's ability to dispatch.
+- Release routines' tokens never live at this path; they stay with the owner.
 
 ## After firing
 
