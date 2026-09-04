@@ -3,6 +3,26 @@
 What happened, what broke, what rule came out of it. Newest first. Stable rules graduate into a skill and leave
 this file.
 
+## 2026-09-04 · third wave: seven routines, three simrig tickets shipped and landed with no human in the loop
+
+Where it stands: seven routines across four repos (core, golf, skills-marketplace, simrig). SIM-239, SIM-291 and
+SIM-297 each went ship → land → merge without a person touching them, and each landing session wrote its own
+retro PR.
+
+Rules adopted:
+
+- The dominant failure mode is the sandbox permission prompt on a file the sandbox deems sensitive (`.npmrc`,
+  `lefthook.yml`). A parked session is invisible unless someone checks: `list_runs` reports `requires_action`,
+  and that is the signal an orchestrator polls for. The routine API accepts an `auto_mode_allow` field and
+  silently drops it, so pre-approval is not available — the owner clicks, or the edit happens locally.
+- A fire always starts a NEW session; there is no way to message a live one. An agent that needs something
+  stops and writes it on the ticket. That is the only inter-agent channel, and it is durable — which is why
+  Linear is the registry.
+- A landing session verifies, never trusts. The SIM-332 landing plants the violation each guard should catch;
+  the core landing rebuilt main in a worktree to diff the published types. Both found real defects.
+- Deploy archaeology: a GitHub run that fails with zero jobs is an invalid workflow file, not a failing step.
+  Golf had not deployed since 2026-08-11 for exactly that reason.
+
 ## 2026-09-04 · second wave: five routines, one stalled session, three weeks of deploys that never ran
 
 What broke:

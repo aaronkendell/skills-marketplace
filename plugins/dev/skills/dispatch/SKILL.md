@@ -28,6 +28,8 @@ follow-up channel: say everything in the text.
 | `golf-ship` | aaronkendell/golf | same as core-ship, against `stage`, lefthook pre-push as the gate |
 | `golf-land` | aaronkendell/golf | review, fix, gate, merge commit into `stage`, retro; never stage → main |
 | `marketplace-ship` | aaronkendell/skills-marketplace | add or edit a skill, bump the plugin + marketplace version pair, open and self-merge the PR |
+| `simrig-ship` | simrig-dev/simrig | ship the issue per the repo's own ship-issue skill; gate in session; PR ready, never merged |
+| `simrig-land` | simrig-dev/simrig | review and verify the PR's claims, gate on the merged head, merge commit, retro per retro-run |
 
 `marketplace-ship` is the only routine that merges its own PR: the repo is docs-only with no PR workflows, so
 there is nothing for a land lane to review or gate.
@@ -70,8 +72,12 @@ Who can read that path:
 
 1. Comment on the calling issue: `Dispatched core-ship · depth 1 · <time>` plus whatever the response
    returned (a session id or link). If the work is for another issue, link it as blocked-by.
-2. Do not wait and do not poll. State lives in Linear and the PR; the next tick or the next person reads it.
-3. Never dispatch a ticket that already has an open PR or a dispatch comment under two hours old.
+2. Also attach the session link to the issue — title `<routine> session`, url the claude.ai session URL —
+   because an attachment stays in the issue sidebar while a comment scrolls away. Keep both: the comment
+   carries routine, depth and time; the attachment carries the link.
+3. Linear is the registry of running agents. No separate index is kept anywhere else.
+4. Do not wait and do not poll. State lives in Linear and the PR; the next tick or the next person reads it.
+5. Never dispatch a ticket that already has an open PR or a dispatch comment under two hours old.
 
 ## When it fails
 

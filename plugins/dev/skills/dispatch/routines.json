@@ -23,5 +23,15 @@
     "id": "trig_01GcdMB45BEpzLwWwZxxNaB8",
     "repo": "aaronkendell/skills-marketplace",
     "does": "add or edit a skill, bump the plugin + marketplace version pair, open and self-merge the PR (docs-only repo, no CI)"
+  },
+  "simrig-ship": {
+    "id": "trig_01T8UcBUkztXCoqgxLpoeCyM",
+    "repo": "simrig-dev/simrig",
+    "does": "ship the issue per the repo's own ship-issue skill; gate in session; PR ready, never merged"
+  },
+  "simrig-land": {
+    "id": "trig_01U5dihcj5juQCXsY7gWycCT",
+    "repo": "simrig-dev/simrig",
+    "does": "review and verify the PR's claims, gate on the merged head, merge commit, retro per retro-run"
   }
 }
