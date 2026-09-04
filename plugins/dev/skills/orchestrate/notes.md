@@ -3,6 +3,32 @@
 What happened, what broke, what rule came out of it. Newest first. Stable rules graduate into a skill and leave
 this file.
 
+## 2026-09-04 · second wave: five routines, one stalled session, three weeks of deploys that never ran
+
+What broke:
+
+- A routine session hit a sandbox permission prompt on `.npmrc` and stalled indefinitely. Nobody can answer a
+  permission prompt from the API; the session burns until it is killed.
+- Landing a draft PR necessarily flips it to ready, which fired hosted CI on both core and golf.
+- Landing golf's own CI PR surfaced that both golf deploy workflows had been invalid since 2026-08-11 — a duplicate
+  job block nested under `permissions:`. GitHub recorded a zero-job failed run on every push, and no stage or
+  production deploy had run for three weeks.
+- A rig MCP 401 that a QA session diagnosed as a missing `Bearer` prefix was an empty `RIG_TOKEN` at session start.
+
+Rules adopted:
+
+- A routine prompt forbids editing credential files (`.npmrc`, anything holding a token) and says to describe the
+  needed change in the PR instead. All five routine prompts now carry that line.
+- Gate hosted PR workflows on a `ci` label, not on draft state. Done in core (#331) and golf (#89).
+- A failed run with zero jobs means an invalid workflow file, never a failing step. `actionlint` catches it in a
+  second; GOLF-495 puts it in the pre-push gate.
+- Anything an MCP server config interpolates has to exist in the environment before the session starts. The MCP
+  client expands `${VAR}` from the process environment at session start, so a SessionStart hook cannot fix it —
+  the `rig` CLI works because it reads Infisical at run time.
+
+Still open: the fire-token path is untested; every fire so far came from the owner's login. Five routines now
+exist (core ship/land, golf ship/land, marketplace ship).
+
 ## 2026-09-04 · first chain, MIS-69: ship 14 min, land 10 min, zero hosted CI until the ready flip
 
 What happened:
