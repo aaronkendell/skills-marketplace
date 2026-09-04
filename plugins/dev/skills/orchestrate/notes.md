@@ -3,6 +3,28 @@
 What happened, what broke, what rule came out of it. Newest first. Stable rules graduate into a skill and leave
 this file.
 
+## 2026-09-04 · fourth wave: the feedback loop pays for itself, and the routine prompts are the thing being debugged
+
+Where it stands: three sessions posted structured friction to the golf feedback log today. One of them caught a
+wrong secret claim in `dev:app-store` — a skill written the same evening, naming the Sign in with Apple key as the
+App Store Connect key — and cost itself fifteen minutes finding it.
+
+Rules adopted:
+
+- Read the feedback log before writing a skill, and distrust a skill written from a ticket rather than from the
+  running system: it will contain claims like that one. The log is how they get caught; it is worth the read.
+- Sessions criticise the routine prompt itself and are usually right. One reported the mandated pre-push gate is
+  unreachable from a stage branch in the sandbox; another that the mandated `gh pr merge` fails because gh is
+  unauthenticated there. A prompt rule the environment cannot satisfy is a bug in the prompt, not a session that
+  gave up — fix the prompt.
+- A gate must be proportionate to the diff. Demanding a full build and test run for an eight-file YAML change made
+  a session invent its own checks and then explain itself. Name the smaller gate for documentation- and
+  workflow-only changes rather than making every session improvise one.
+- Verify a private publish against the registry with a read token, never a bare `npm view`: unauthenticated it
+  returns a stale version and then a not-found, which reads exactly like a failed publish.
+- A landing session that ends without merging AND without commenting loses its findings. Commenting is not
+  optional; holding silently is worse than holding.
+
 ## 2026-09-04 · third wave: seven routines, three simrig tickets shipped and landed with no human in the loop
 
 Where it stands: seven routines across four repos (core, golf, skills-marketplace, simrig). SIM-239, SIM-291 and
