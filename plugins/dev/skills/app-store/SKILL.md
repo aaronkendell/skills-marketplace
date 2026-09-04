@@ -16,9 +16,15 @@ output, ships 23 agent skills of its own). This skill is only the bokendell conv
 | Listing as files (descriptions, keywords, release notes, review info, per locale) | `apps/mobile/store/` (`asc metadata init --dir`) |
 | Screenshots | `apps/mobile/store/screenshots/<locale>/<device>/`, applied with `asc screenshots apply` |
 | Scripts | `apps/mobile/package.json`: `store:pull`, `store:push` (metadata only), `store:submit` (build + review) |
-| Credentials | Infisical `<app>` project, `/infrastructure/apple`: `APPLE_KEY_ID`, `APPLE_ISSUER_ID`, `APPLE_PRIVATE_KEY`, `APPLE_TEAM_ID` |
+| Credentials | Infisical `<app>` project, `/infrastructure/apple`: `APPLE_ASC_KEY_ID`, `APPLE_ASC_ISSUER_ID`, `APPLE_ASC_PRIVATE_KEY`, plus the shared `APPLE_TEAM_ID` |
 | Hosted run | `.github/workflows/mobile-store.yml`, `workflow_dispatch` only, inputs `action` (push-metadata, submit) and `version` |
 | Runbook | `docs/runbooks/app-store.md`, linked from `docs/MAP.md` |
+
+The `ASC_` names are deliberate: `/infrastructure/apple` in an app's project already holds `APPLE_KEY_ID` and
+`APPLE_PRIVATE_KEY` for the **Sign in with Apple** key that better-auth reads, and that is a different Apple key —
+handing it to App Store Connect gets an opaque failure from Apple, not a useful error. The App Store Connect key may
+not exist yet in a given app's project; if it is missing, stop and say so on the ticket. Never reuse the auth key,
+and never rename it.
 
 `store:push` and `store:submit` refuse to run without an explicit confirmation flag. Nothing in this convention
 runs on push; a store write is a person or a release routine deciding, never a side effect of a merge.
@@ -33,9 +39,9 @@ runs on push; a store write is a person or a release routine deciding, never a s
 
 ## In a cloud session
 
-`asc auth login --bypass-keychain` with the four secrets read through the app's Infisical identity. Install with
-`curl -fsSL https://asccli.sh/install | bash` (Linux fine); if the environment's network allowlist blocks it, say so
-in the feedback comment and stop at scaffolding.
+`asc auth login --bypass-keychain` with the four `ASC_`/team secrets read through the app's Infisical identity.
+Install with `curl -fsSL https://asccli.sh/install | bash` (Linux fine); if the environment's network allowlist
+blocks it, say so in the feedback comment and stop at scaffolding.
 
 ## Release routine shape (level 1)
 
