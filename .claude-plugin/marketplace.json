@@ -149,7 +149,7 @@
 			"name": "dev",
 			"source": "./plugins/dev",
 			"description": "The dev loop: /drive routes any ticket, idea or agent branch through draft-approach → implement → review-change → map-paths/exercise-paths → commit-change → open-pr (draft). Solo-shaped: Linear + GitHub, local gate = lefthook/CI-equivalent, no teammate/chat machinery. Includes workspace, design, copy, docs, ci-local. Every primitive has refusal evals.",
-			"version": "2.2.0"
+			"version": "2.3.0"
 		},
 		{
 			"name": "expo",

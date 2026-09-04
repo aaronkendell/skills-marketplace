@@ -1,4 +1,22 @@
 {
-  "core-ship": { "id": "trig_01VU24uhwjmBJDsfic47wvtR", "repo": "aaronkendell/core", "does": "ship the task in the payload: branch, code, changeset, gate in session, draft PR, comments on the issue" },
-  "core-land": { "id": "trig_012rz9RsspRHgfLAUr9YaHJN", "repo": "aaronkendell/core", "does": "review, fix, gate on merged head, merge commit, retro, issue Done; never the Version Packages PR" }
+  "core-ship": {
+    "id": "trig_01VU24uhwjmBJDsfic47wvtR",
+    "repo": "aaronkendell/core",
+    "does": "ship the task in the payload: branch, code, changeset, gate in session, draft PR, comments on the issue"
+  },
+  "core-land": {
+    "id": "trig_012rz9RsspRHgfLAUr9YaHJN",
+    "repo": "aaronkendell/core",
+    "does": "review, fix, gate on merged head, merge commit, retro, issue Done; never the Version Packages PR"
+  },
+  "golf-ship": {
+    "id": "trig_01U8hQ28cPwibCYDpj849D5U",
+    "repo": "aaronkendell/golf",
+    "does": "ship the task in the payload against stage: branch, code, lefthook pre-push gate in session, draft PR, comments on the issue"
+  },
+  "golf-land": {
+    "id": "trig_018uNm2GTRA9CPd44mPjs1d9",
+    "repo": "aaronkendell/golf",
+    "does": "review, fix, gate on the merged head, merge commit into stage, retro, issue Done; never stage\u2192main"
+  }
 }

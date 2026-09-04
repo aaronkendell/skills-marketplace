@@ -24,7 +24,9 @@ follow-up channel: say everything in the text.
 | Routine | Repo | Does |
 |---|---|---|
 | `core-ship` | aaronkendell/core | branch, code, changeset, gate in session, draft PR, comments on the issue |
-| `core-land` | aaronkendell/core | review, fix, gate on the merged head, merge commit, retro, issue Done |
+| `core-land` | aaronkendell/core | review, fix, gate on the merged head, squash merge, retro, issue Done |
+| `golf-ship` | aaronkendell/golf | same as core-ship, against `stage`, lefthook pre-push as the gate |
+| `golf-land` | aaronkendell/golf | review, fix, gate, merge commit into `stage`, retro; never stage → main |
 
 Releases are never a routine you can fire from here. core's "Version Packages" PR, Bagman's stage → main
 promotion and store submits are the owner's, by hand or by a release routine whose token lives elsewhere.
