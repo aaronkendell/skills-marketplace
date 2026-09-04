@@ -2,7 +2,7 @@
 # dispatch.sh <routine> <text...>
 # Fires a saved claude.ai routine with the task text. Token: DISPATCH_TOKEN_<ROUTINE> from the environment,
 # else Infisical project bokendell /infrastructure/dispatch (env production) via the local machine identity
-# (~/.config/bokendell/infisical.json) or INFISICAL_CLIENT_ID_BOKENDELL / INFISICAL_CLIENT_SECRET_BOKENDELL.
+# (~/.config/bokendell/infisical.json), INFISICAL_CLIENT_ID_BOKENDELL, or the app's own INFISICAL_CLIENT_ID.
 set -euo pipefail
 ROUTINE="${1:?usage: dispatch.sh <routine> <text>}"; shift; TEXT="${*:?text required}"
 DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -15,7 +15,11 @@ if [ -z "$TOK" ]; then
   PID=1714e2f7-d947-45f8-8332-56017efbffb0; CFG="$HOME/.config/bokendell/infisical.json"
   if [ -f "$CFG" ]; then
     read -r CID CSEC < <(python3 -c "import json; a=json.load(open('$CFG'))['accounts']['bokendell']; print(a['clientId'], a['clientSecret'])")
-  else CID="${INFISICAL_CLIENT_ID_BOKENDELL:-}"; CSEC="${INFISICAL_CLIENT_SECRET_BOKENDELL:-}"; fi
+  else
+    # cloud: the bokendell identity if the environment has one, else the app's own identity, which reads
+    # bokendell /infrastructure/dispatch through the dispatch-reader role (see SKILL.md, Tokens)
+    CID="${INFISICAL_CLIENT_ID_BOKENDELL:-${INFISICAL_CLIENT_ID:-}}"; CSEC="${INFISICAL_CLIENT_SECRET_BOKENDELL:-${INFISICAL_CLIENT_SECRET:-}}"
+  fi
   if [ -n "$CID" ]; then
     IT="$(infisical login --method=universal-auth --client-id="$CID" --client-secret="$CSEC" --plain --silent)"
     TOK="$(INFISICAL_TOKEN="$IT" infisical secrets get "$KEY" --projectId="$PID" --path=/infrastructure/dispatch --env=production --plain --silent 2>/dev/null || true)"
