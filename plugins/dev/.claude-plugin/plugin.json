@@ -1,6 +1,6 @@
 {
   "name": "dev",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "description": "The dev loop: drive \u2192 draft-approach \u2192 implement \u2192 review-change \u2192 map/exercise-paths \u2192 commit-change \u2192 open-pr (draft). dispatch + orchestrate: fire another repo's cloud routine with the task text; one-tick orchestrator. Linear integration, TDD, automated testing, code review. Works for golf, portfolio, and hive apps.",
   "author": {
     "name": "bokendell"
