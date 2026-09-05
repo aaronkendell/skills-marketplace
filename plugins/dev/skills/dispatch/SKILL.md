@@ -28,11 +28,17 @@ follow-up channel: say everything in the text.
 | `golf-ship` | aaronkendell/golf | same as core-ship, against `stage`, lefthook pre-push as the gate |
 | `golf-land` | aaronkendell/golf | review, fix, gate, merge commit into `stage`, retro; never stage → main |
 | `marketplace-ship` | aaronkendell/skills-marketplace | add or edit a skill, bump the plugin + marketplace version pair, open and self-merge the PR |
-| `simrig-ship` | simrig-dev/simrig | ship the issue per the repo's own ship-issue skill; gate in session; PR ready, never merged |
-| `simrig-land` | simrig-dev/simrig | review and verify the PR's claims, gate on the merged head, merge commit, retro per retro-run |
+| `simrig-ship` | simrig-dev/simrig | ship against `main` per the repo's ship-issue skill; gate in session (lint, check-types, vitest, boundaries); PR ready for review, never merged |
+| `simrig-land` | simrig-dev/simrig | review and verify the PR's claims, fix, gate on the merged head, merge commit into `main`, retro per retro-run, issue Done |
+
+`simrig-ship` leases a device only when the payload says the task needs one; a payload that does not say so gets
+no device.
 
 `marketplace-ship` is the only routine that merges its own PR: the repo is docs-only with no PR workflows, so
 there is nothing for a land lane to review or gate.
+
+Whenever a routine is created or retired, update `routines.json` and this table in the same session — a routine
+that is not listed here is a routine no session can find.
 
 Releases are never a routine you can fire from here. core's "Version Packages" PR, Bagman's stage → main
 promotion and store submits are the owner's, by hand or by a release routine whose token lives elsewhere.

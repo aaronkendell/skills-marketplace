@@ -27,11 +27,11 @@
   "simrig-ship": {
     "id": "trig_01T8UcBUkztXCoqgxLpoeCyM",
     "repo": "simrig-dev/simrig",
-    "does": "ship the issue per the repo's own ship-issue skill; gate in session; PR ready, never merged"
+    "does": "ship the task in the payload against main per the repo's own ship-issue skill: branch, code, gate in session (lint, check-types, vitest, boundaries), PR ready for review, comment on the issue; never merges, and leases a device only when the payload says the task needs one"
   },
   "simrig-land": {
     "id": "trig_01U5dihcj5juQCXsY7gWycCT",
     "repo": "simrig-dev/simrig",
-    "does": "review and verify the PR's claims, gate on the merged head, merge commit, retro per retro-run"
+    "does": "review and verify the PR's claims, fix, gate on the merged head, merge commit into main, retro per retro-run, issue Done"
   }
 }
