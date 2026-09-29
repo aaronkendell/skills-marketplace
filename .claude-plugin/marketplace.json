@@ -152,6 +152,19 @@
 			"version": "2.5.0"
 		},
 		{
+			"name": "effect",
+			"source": {
+				"source": "github",
+				"repo": "Effect-TS/skills"
+			},
+			"description": "Effect-TS's official skills, passed through. effect-ts points agents at node_modules/effect/AGENTS.md, ai-docs/ and the shipped src/ for the installed Effect version (so the reference always matches the pinned version); effect-v3-to-v4 is the bounded migration guide. An app's own Effect standards doc (golf's effect.md) wins on conflict.",
+			"skills": [
+				"./skills/effect-ts",
+				"./skills/effect-v3-to-v4"
+			],
+			"strict": false
+		},
+		{
 			"name": "expo",
 			"source": {
 				"source": "git-subdir",
