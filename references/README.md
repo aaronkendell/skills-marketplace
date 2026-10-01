@@ -20,6 +20,7 @@ Structured context for agents. **Do NOT load everything** — use progressive di
 | Write an implementation plan | [templates/plan.md](./templates/plan.md) |
 | Know what standards are enforced and how | [enforcement-guide.md](./enforcement-guide.md) |
 | Review code before opening a PR | [review-criteria/README.md](./review-criteria/README.md) |
+| Look up Effect v4 APIs or idioms (pinned docs + bundled AI docs) | [effect-v4/README.md](./effect-v4/README.md) |
 
 ## What this is NOT
 - Not the full PRD or architecture docs → those are in `docs/apps/{app}/`

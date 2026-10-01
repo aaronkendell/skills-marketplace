@@ -1,0 +1,65 @@
+<!-- source: https://effect.website/docs/v4/error-management/yieldable-errors/ · fetched 2026-10-01 -->
+
+# Yieldable Errors
+
+Errors created with `Data.Error` and `Data.TaggedError` are yieldable. Inside [`Effect.gen`](/docs/v4/getting-started/using-generators/), yielding one is equivalent to passing it to [`Effect.fail`](/docs/v4/getting-started/creating-effects/#fail).
+
+## Data.Error
+
+Use `Data.Error` when the error does not need a discriminant tag.
+
+**Example** (Yielding a Custom Error)
+
+```ts
+import { Data, Effect, Exit } from "effect"
+
+class InvalidInput extends Data.Error<{
+  readonly message: string
+}> {}
+
+const program = Effect.gen(function* () {
+  return yield* new InvalidInput({ message: "Name is required" })
+})
+
+Effect.runSyncExit(program) // => Exit.fail(new InvalidInput({ message: "Name is required" }))
+```
+
+## Data.TaggedError
+
+`Data.TaggedError` adds a readonly `_tag` field. Tagged errors form discriminated unions that can be handled precisely with [`Effect.catchTag`](/docs/v4/error-management/expected-errors/#catchtag) and [`Effect.catchTags`](/docs/v4/error-management/expected-errors/#catchtags).
+
+**Example** (Handling Tagged Errors)
+
+```ts
+import { Data, Effect } from "effect"
+
+class NotFound extends Data.TaggedError("NotFound")<{
+  readonly id: string
+}> {}
+
+class PermissionDenied extends Data.TaggedError("PermissionDenied")<{
+  readonly id: string
+}> {}
+
+const loadUser = (
+  id: string,
+): Effect.Effect<string, NotFound | PermissionDenied> =>
+  Effect.gen(function* () {
+    if (id === "missing") {
+      return yield* new NotFound({ id })
+    }
+    return `user:${id}`
+  })
+
+const program = loadUser("missing").pipe(
+  Effect.catchTag("NotFound", (error) => Effect.succeed(`No user ${error.id}`)),
+)
+
+Effect.runSync(program) // => "No user missing"
+```
+
+Use tagged errors for domain errors that callers may need to distinguish. The class is both the error's constructor and its TypeScript type.
+
+> **Tags Must Be Unique**
+>
+> `Effect.catchTag` matches errors by comparing the `_tag` string, and TypeScript narrows unions the same way. Both mechanisms assume that each tagged error uses a unique tag, but TypeScript cannot enforce this: nothing stops two classes from passing the same tag string to `Data.TaggedError`. When that happens the two errors are indistinguishable, `Effect.catchTag` and `Effect.catchTags` catch both, and neither the compiler nor the runtime warns about it.
