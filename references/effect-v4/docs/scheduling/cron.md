@@ -1,0 +1,118 @@
+<!-- source: https://effect.website/docs/v4/scheduling/cron/ · fetched 2026-10-01 -->
+
+# Scheduling work with cron
+
+Use cron when work must run at a calendar time, such as 06:30 every weekday in
+New York. Use [`Schedule.spaced` or
+`Schedule.fixed`](/docs/v4/scheduling/choosing-and-combining-schedules#choose-a-starting-rule)
+when only the time between runs matters.
+
+## Define the calendar rule
+
+A cron expression has five fields: minutes, hours, days of the month, months,
+and weekdays, in that order.
+
+```text
+# ┌──────── minute (0-59)
+# │  ┌────── hour (0-23)
+# │  │ ┌──── day of month (1-31)
+# │  │ │ ┌── month (1-12)
+# │  │ │ │ ┌ weekday (0-7, Sunday is 0 or 7)
+# │  │ │ │ │
+  30 6 * * 1-5
+```
+
+This expression means 06:30, Monday through Friday. `*` allows every value in
+a field, and `1-5` covers Monday through Friday.
+
+Effect also accepts a sixth field for seconds at the beginning. With five
+fields, seconds default to `0`, so these expressions mean the same thing:
+
+```text
+30 6 * * 1-5
+0 30 6 * * 1-5
+```
+
+Fields also accept comma-separated values. In the minute field, `*/15` means
+every 15 minutes.
+
+> **Day and Weekday Rules Are Alternatives**
+>
+> When both the day-of-month and weekday fields contain specific values, a date
+> matches when either field matches. Leave one field as `*` unless the rule
+> intentionally needs both sets of dates.
+
+## Choose the time zone
+
+Use a named time zone such as `America/New_York` when the job should follow a
+local clock. Use `UTC` when its time must remain fixed throughout the year. Do
+not rely on the server's local time zone for a business rule.
+
+The UTC offset of a named local time zone changes when daylight saving time
+starts or ends. Some local times then disappear, while others occur twice. Test
+dates around both changes before choosing a local time for work that must run
+exactly once per business day.
+
+## Validate, preview, and run the job
+
+Parse values from configuration before starting the job. `Cron.parse` returns a
+`Result`; `Effect.fromResult` keeps a parse failure in the Effect error channel.
+An invalid expression or time zone therefore stops the program before the
+scheduled action can run.
+
+`Cron.sequence` previews the same parsed rule that the job will use. After the
+preview looks correct, pass that `Cron` to `Schedule.cron` and start the Effect
+in a fiber. Interrupt the fiber during application shutdown.
+
+**Example** (Validating and running a scheduled report)
+
+The application validates a report schedule from configuration, previews its
+next three runs, and starts the job in a fiber.
+
+```ts
+import { Cron, Effect, Fiber, Schedule } from "effect"
+
+const config = {
+  expression: "30 6 * * 1-5",
+  timeZone: "America/New_York",
+}
+
+let runs = 0
+const generateReport = Effect.sync(() => {
+  runs++
+})
+
+const reportJob = Effect.gen(function* () {
+  const configuredCron = yield* Effect.fromResult(
+    Cron.parse(config.expression, config.timeZone),
+  )
+
+  const dates = Cron.sequence(configuredCron, "2026-01-01T12:00:00Z")
+  const nextThree = Array.from({ length: 3 }, () =>
+    dates.next().value?.toISOString(),
+  )
+
+  nextThree // => ["2026-01-02T11:30:00.000Z", "2026-01-05T11:30:00.000Z", "2026-01-06T11:30:00.000Z"]
+
+  yield* Effect.schedule(generateReport, Schedule.cron(configuredCron))
+})
+
+// During application startup
+const reportFiber = Effect.runFork(reportJob)
+
+// During application shutdown
+await Effect.runPromise(Fiber.interrupt(reportFiber))
+
+runs // => 0
+```
+
+`Effect.schedule` waits for the first matching time, so the report does not run
+at startup. The test interrupts it before the first scheduled run. In the
+application, keep `reportFiber` for as long as the job should remain active.
+
+This schedule exists only in the running process. It does not recover a missed
+report after a restart. Work that must run despite downtime needs an external
+scheduler or a durable record of pending runs.
+
+See the [`Cron` API reference](/docs/v4/api/effect/Cron) for programmatic
+construction and date matching.
