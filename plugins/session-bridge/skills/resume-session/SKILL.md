@@ -40,7 +40,7 @@ python3 "$BIN" read <id> --json
 - **Codex:** `~/.codex/sessions/YYYY/MM/DD/rollout-<ts>-<uuid>.jsonl`
 - **Claude Code:** `~/.claude/projects/<slug-cwd>/<uuid>.jsonl` (one file per session)
 
-See `references/session-formats.md` for the record shapes if the CLI ever needs extending.
+See [`references/session-formats.md`](../../references/session-formats.md) for the record shapes if the CLI ever needs extending.
 
 ## Workflow
 
