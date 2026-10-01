@@ -1,6 +1,14 @@
 # Dependency Injection — Awilix Container Pattern
 
-Every backend app (golf, portfolio, hive) uses [Awilix](https://github.com/jeffijoe/awilix) for service composition. Single composition file (`container.ts`) per app, ports + adapters in shared packages, services consumed from a per-request container scope.
+> **golf is no longer on Awilix** (P6, 2026-10-01). golf composes every domain as Effect v4
+> layers: one `AppLayer` and one `golfRuntime` in `packages/composition/src/effect/`, domain
+> services as `Context.Service` classes, ports between domains filled in each domain's
+> composition slot. Its standard is golf's `docs/architecture/effect.md`, and its arch guards
+> fail on an `awilix` import, a container/resolver file or a `cradle` read. The golf-specific
+> notes below (`getCradle`, the OpenAPI fetch handler, the eager exports) are history. This
+> pattern applies to **portfolio and hive**.
+
+Every backend app on Awilix (portfolio, hive) uses [Awilix](https://github.com/jeffijoe/awilix) for service composition. Single composition file (`container.ts`) per app, ports + adapters in shared packages, services consumed from a per-request container scope.
 
 > Full migration history + decisions: `docs/architecture/di-refactor-plan.md`
 
