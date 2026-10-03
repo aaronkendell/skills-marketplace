@@ -1,6 +1,6 @@
 {
 	"name": "skill-watch",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Skill telemetry, drift detection, and self-improvement loop for bokendell Codex workflows.",
 	"author": {
 		"name": "bokendell"
