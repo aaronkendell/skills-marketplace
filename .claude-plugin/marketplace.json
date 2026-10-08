@@ -591,7 +591,7 @@
 		{
 			"name": "skills",
 			"source": "./plugins/skills",
-			"description": "Cross-cutting skill bundle: framework references, AI tooling, GitHub helpers, code/docs review, Expo helpers."
+			"description": "Cross-cutting skill bundle: framework references, AI tooling, GitHub helpers, browser verification (agent-browser, playwright-cli), code/docs review, Expo helpers."
 		},
 		{
 			"name": "taste",
