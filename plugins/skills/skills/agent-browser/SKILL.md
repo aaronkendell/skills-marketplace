@@ -59,11 +59,10 @@ Golf is passwordless: `/sign-in/email` is in better-auth `disabledPaths`, so sig
   address from golf Infisical `E2E_ADMIN_EMAIL` (path `/`, env `development` only) rather than hard-coding it.
   Create it in the database you point at with `pnpm provision:test-identities -- --only qa-browser-admin`
   (add `--no-publish` against a local database; the script refuses production).
-- **Development only.** Roster rule 2: a privileged identity gets the static code in development, on stage only
-  while stage's auth (`api.stage.bagman.io/api/auth/*`) sits behind Cloudflare Access (it does not: the API is
-  deliberately ungated), never in production. `local.golf.test` matches only the development branch of the
-  bypass, so on stage the same account gets a random code mailed nowhere. A gate test
-  (`test-identities.roster.test.ts`) fails on any roster entry that breaks this.
+- **Roster rule 2**: a privileged identity gets the static code in development, on stage only on the
+  `+e2e-access@dev.golf.test` tag (usable only with a valid Cloudflare Access JWT), never in production.
+  `local.golf.test` matches only the development branch. A gate test (`test-identities.roster.test.ts`) fails on
+  any roster entry that breaks this.
 - **Key-only identities (`qa-admin`, `qa-user`, …) stay tagless** (`*@dev.golf.test`, no `+e2e`): the API key is
   their only way in, so they cannot log into the admin UI.
 - **Local admin**: `apps/admin` (`pnpm dev`; port `PORT_BAGMAN_ADMIN`, default 3101) against a local API:
@@ -74,17 +73,26 @@ Golf is passwordless: `/sign-in/email` is in better-auth `disabledPaths`, so sig
   agent-browser --session qa snapshot -i     # the code field appears: fill 000000, click Sign in
   ```
   A non-admin `+e2e` address signs in too and is refused with "Admin access required".
-- **Stage admin (`https://admin.stage.bagman.io`)**: Cloudflare Access headers alone do not give you a user.
-  No static-OTP admin exists there until stage's auth is behind Access; use API keys for stage admin work.
+- **Stage admin (`https://admin.stage.bagman.io`)**: the host is behind Cloudflare Access, and the API's OTP
+  paths refuse the privileged stage admin (`qa-stage-admin+e2e-access@dev.golf.test`, role `admin`, code
+  `000000`, address in `E2E_ADMIN_EMAIL`, env `stage`) unless the request carries a valid
+  `Cf-Access-Jwt-Assertion` (the admin Worker forwards it). So every browser request must pass Access first:
+  send the service token headers, then sign in as usual.
+  ```bash
+  agent-browser --session qa --headers "{\"CF-Access-Client-Id\":\"$CF_ACCESS_CLIENT_ID\",\"CF-Access-Client-Secret\":\"$CF_ACCESS_CLIENT_SECRET\"}" open https://admin.stage.bagman.io/login   # email = E2E_ADMIN_EMAIL (stage), code 000000
+  ```
+  (`CF_ACCESS_CLIENT_ID/SECRET` from golf Infisical, env `stage`, path `/`.) Create the account first with
+  `pnpm provision:test-identities -- --only qa-stage-admin` against stage's database. Without Access the
+  address gets a 403 `ACCESS_REQUIRED` on every OTP path.
 - **`PLAYWRIGHT_TEST_ADMIN_PASSWORD` / `_USER_PASSWORD` are dead** (password sign-in is disabled);
-  `packages/e2e/admin` signs in by OTP with `E2E_ADMIN_EMAIL`. The keys remain in Infisical for Aaron to delete.
+  `packages/e2e/admin` signs in by OTP with `E2E_ADMIN_EMAIL`. The keys live at `/packages/e2e/admin` in every env until deleted.
 
 Where the secrets are (golf Infisical project, account `golf`; env slugs are `development`, `stage`,
 `production`, listed with `--recursive` from path `/`; nothing in GitHub Actions secrets on `aaronkendell/golf`):
 
 | Key | development | stage | production |
 |---|---|---|---|
-| `E2E_ADMIN_EMAIL` | yes | no | no |
+| `E2E_ADMIN_EMAIL` | yes (`qa-browser-admin+e2e@local.golf.test`) | yes (`qa-stage-admin+e2e-access@dev.golf.test`) | no |
 | `PLAYWRIGHT_TEST_BASE_URL` | yes | yes | yes |
 | `PLAYWRIGHT_TEST_ADMIN_EMAIL` / `_PASSWORD`, `_USER_EMAIL` / `_PASSWORD` (dead, to delete) | yes | yes | yes |
 | `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` | no | yes | yes |
