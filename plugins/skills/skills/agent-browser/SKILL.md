@@ -54,31 +54,43 @@ Golf is passwordless: `/sign-in/email` is in better-auth `disabledPaths`, so sig
 
 - **Deterministic code `000000`**: development env accepts any `<name>+e2e@<domain>`; stage accepts only
   `<name>+e2e@dev.golf.test`; production never. The account needs `role: admin` to enter golf admin.
-- **Privileged roster identities (`qa-admin`, `scripts/test-identities.roster.ts`) are deliberately tagless**
-  (`*@dev.golf.test`, no `+e2e`) and API-key only, so they cannot log into the admin UI.
-  `pnpm provision:test-identities` mints their keys into Infisical (`/apps/api`, env `development` and `stage`);
-  it refuses production. `scripts/qa-fixtures.ts` (`paid on`, `underfoot on`, `links`) sets awkward states.
-- **Local admin**: sign in as `agent-admin+e2e@dev.golf.test`, code `000000`, after that user has `role: admin`
-  in the local DB. Admin is `apps/admin` (`pnpm dev` from the workspace; port `PORT_BAGMAN_ADMIN`, default 3101).
-- **Stage admin (`https://admin.stage.bagman.io`)**: needs Cloudflare Access headers
-  (`--headers '{"CF-Access-Client-Id":"..","CF-Access-Client-Secret":".."}'`) **and** an admin user whose
-  address is `<name>+e2e@dev.golf.test`. **No such user exists yet.** Aaron must decide to add one as a deliberate
-  exception to the roster's "privileged = tagless" rule (on stage it makes the static code an admin walk-in, gated
-  only by Cloudflare Access), then add it to the roster as role `admin` and run `pnpm provision:test-identities`.
-- **Do not use `PLAYWRIGHT_TEST_ADMIN_EMAIL` / `_PASSWORD`.** They exist in golf Infisical (below) but are legacy
-  password fixtures: password sign-in is disabled, and the stage/prod emails are `@gmail.com` (a real person's
-  address). `packages/e2e/admin` still logs in with a password form and is stale for the same reason.
+- **The test admin is `qa-browser-admin`** (golf `packages/scripts/src/provision-test-identities/test-identities.roster.ts`,
+  branch `effect/test-admin`): `qa-browser-admin+e2e@local.golf.test`, role `admin`, code `000000`. Read the
+  address from golf Infisical `E2E_ADMIN_EMAIL` (path `/`, env `development` only) rather than hard-coding it.
+  Create it in the database you point at with `pnpm provision:test-identities -- --only qa-browser-admin`
+  (add `--no-publish` against a local database; the script refuses production).
+- **Development only.** Roster rule 2: a privileged identity gets the static code in development, on stage only
+  while stage's auth (`api.stage.bagman.io/api/auth/*`) sits behind Cloudflare Access (it does not: the API is
+  deliberately ungated), never in production. `local.golf.test` matches only the development branch of the
+  bypass, so on stage the same account gets a random code mailed nowhere. A gate test
+  (`test-identities.roster.test.ts`) fails on any roster entry that breaks this.
+- **Key-only identities (`qa-admin`, `qa-user`, …) stay tagless** (`*@dev.golf.test`, no `+e2e`): the API key is
+  their only way in, so they cannot log into the admin UI.
+- **Local admin**: `apps/admin` (`pnpm dev`; port `PORT_BAGMAN_ADMIN`, default 3101) against a local API:
+  ```bash
+  ADMIN=$(infisical secrets get E2E_ADMIN_EMAIL --projectId="$PID" --path=/ --env=development --plain --silent)
+  agent-browser --session qa open http://localhost:3101/login
+  agent-browser --session qa snapshot -i     # fill the email ref with "$ADMIN", click Sign in
+  agent-browser --session qa snapshot -i     # the code field appears: fill 000000, click Sign in
+  ```
+  A non-admin `+e2e` address signs in too and is refused with "Admin access required".
+- **Stage admin (`https://admin.stage.bagman.io`)**: Cloudflare Access headers alone do not give you a user.
+  No static-OTP admin exists there until stage's auth is behind Access; use API keys for stage admin work.
+- **`PLAYWRIGHT_TEST_ADMIN_PASSWORD` / `_USER_PASSWORD` are dead** (password sign-in is disabled);
+  `packages/e2e/admin` signs in by OTP with `E2E_ADMIN_EMAIL`. The keys remain in Infisical for Aaron to delete.
 
 Where the secrets are (golf Infisical project, account `golf`; env slugs are `development`, `stage`,
 `production`, listed with `--recursive` from path `/`; nothing in GitHub Actions secrets on `aaronkendell/golf`):
 
 | Key | development | stage | production |
 |---|---|---|---|
-| `PLAYWRIGHT_TEST_ADMIN_EMAIL` / `_PASSWORD`, `_USER_EMAIL` / `_PASSWORD`, `_BASE_URL` | yes | yes | yes |
+| `E2E_ADMIN_EMAIL` | yes | no | no |
+| `PLAYWRIGHT_TEST_BASE_URL` | yes | yes | yes |
+| `PLAYWRIGHT_TEST_ADMIN_EMAIL` / `_PASSWORD`, `_USER_EMAIL` / `_PASSWORD` (dead, to delete) | yes | yes | yes |
 | `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` | no | yes | yes |
 | `PLAYWRIGHT_TEST_API_KEY_{ADMIN,CREATOR,MEMBER,OUTSIDER}` | yes | yes | no |
 
-All at path `/`. `_BASE_URL` is `https://admin.development.bagman.io` / `https://admin.stage.bagman.io`.
+All at path `/`. `PLAYWRIGHT_TEST_BASE_URL` is `https://admin.development.bagman.io` / `https://admin.stage.bagman.io`.
 Fetch with the machine identity (workspace CLAUDE.md "Reading secrets"; never `infisical login`, never echo):
 
 ```bash
